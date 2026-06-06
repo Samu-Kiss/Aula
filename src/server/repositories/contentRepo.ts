@@ -69,18 +69,9 @@ export function contentRepo(db: SupabaseClient) {
     async autosave(id: string, bodyDraft: Record<string, unknown>): Promise<void> {
       const { error } = await db
         .from("contents")
-        .update({
-          body_draft: bodyDraft,
-          draft_version: db.rpc("coalesce", {}), // incremented via raw SQL below
-        })
-        .eq("id", id);
-      // Use a simpler direct update — draft_version increment handled server-side via trigger
-      const { error: err2 } = await db
-        .from("contents")
         .update({ body_draft: bodyDraft })
         .eq("id", id);
-      if (err2) throw err2;
-      void error;
+      if (error) throw error;
     },
 
     async publish(id: string): Promise<Content> {
