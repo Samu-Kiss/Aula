@@ -14,7 +14,7 @@
   --color-ink-soft: #6B665C;
   --color-ink-mute: #A8A398;
 
-  /* Acentos por clase */
+  /* Acentos por clase — definidos con y sin prefijo para que bg-indigo y bg-accent-indigo funcionen */
   --color-accent-indigo: #4C51BF;
   --color-accent-terracota: #C25733;
   --color-accent-bosque: #24755B;
@@ -23,6 +23,15 @@
   --color-accent-pizarra: #3F638A;
   --color-accent-borgona: #922F41;
   --color-accent-salvia: #737A43;
+
+  --color-indigo: #4C51BF;
+  --color-terracota: #C25733;
+  --color-bosque: #24755B;
+  --color-ciruela: #9B478A;
+  --color-ambar: #C18924;
+  --color-pizarra: #3F638A;
+  --color-borgona: #922F41;
+  --color-salvia: #737A43;
 
   /* Semánticos */
   --color-success: #24755B;
@@ -121,6 +130,123 @@ body {
 /* Bordes sutiles */
 .border-subtle {
   border: 0.5px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Prose — estilos para el editor Tiptap y el renderer de contenido rico */
+.prose-aula {
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.prose-aula p {
+  margin-bottom: 1rem;
+}
+
+.prose-aula p:last-child {
+  margin-bottom: 0;
+}
+
+.prose-aula h1 {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.2;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: var(--color-ink);
+}
+
+.prose-aula h2 {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-ink);
+}
+
+.prose-aula h3 {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-ink-soft);
+}
+
+.prose-aula ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.prose-aula ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.prose-aula li {
+  margin-bottom: 0.25rem;
+}
+
+.prose-aula li > p {
+  margin-bottom: 0;
+}
+
+.prose-aula blockquote {
+  border-left: 3px solid var(--color-ink-mute);
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: var(--color-ink-soft);
+  font-style: italic;
+}
+
+.prose-aula blockquote p {
+  margin-bottom: 0;
+}
+
+.prose-aula pre {
+  background-color: var(--color-surface-alt);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  overflow-x: auto;
+}
+
+.prose-aula code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.prose-aula pre code {
+  background: none;
+  padding: 0;
+}
+
+.prose-aula :not(pre) > code {
+  background-color: var(--color-surface-alt);
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+}
+
+.prose-aula strong {
+  font-weight: 600;
+}
+
+.prose-aula u {
+  text-decoration: underline;
+}
+
+.prose-aula hr {
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  margin: 1.5rem 0;
 }
 
 /* Reducción de movimiento */

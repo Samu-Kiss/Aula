@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import Underline from "@tiptap/extension-underline";
 import { publishContentAction } from "@/app/dashboard/clases/[id]/actions";
 
 type SaveStatus = "saved" | "saving" | "unsaved";
@@ -21,7 +22,7 @@ export function TiptapEditor({ contentId, classId, initialDraft, isPublished }: 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [StarterKit, Underline],
     content: (initialDraft?.doc as object) ? { type: "doc", ...(initialDraft.doc as object) } : initialDraft,
     editorProps: {
       attributes: {
@@ -80,6 +81,7 @@ export function TiptapEditor({ contentId, classId, initialDraft, isPublished }: 
         <div className="flex items-center gap-1">
           <ToolbarButton onClick={() => editor?.chain().focus().toggleBold().run()} active={editor?.isActive("bold")} label="N" title="Negrita" />
           <ToolbarButton onClick={() => editor?.chain().focus().toggleItalic().run()} active={editor?.isActive("italic")} label="I" title="Cursiva" className="italic" />
+          <ToolbarButton onClick={() => editor?.chain().focus().toggleUnderline().run()} active={editor?.isActive("underline")} label="S" title="Subrayado" className="underline" />
           <ToolbarButton onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} active={editor?.isActive("heading", { level: 2 })} label="H2" title="Título" />
           <ToolbarButton onClick={() => editor?.chain().focus().toggleBulletList().run()} active={editor?.isActive("bulletList")} label="•" title="Lista" />
           <ToolbarButton onClick={() => editor?.chain().focus().toggleOrderedList().run()} active={editor?.isActive("orderedList")} label="1." title="Lista numerada" />

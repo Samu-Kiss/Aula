@@ -2,7 +2,6 @@ interface Props {
   body: Record<string, unknown>;
 }
 
-// Renderizador básico de Tiptap JSON — se expandirá en F1-08 con el editor completo
 export function RichTextRenderer({ body }: Props) {
   const doc = body?.doc as { content?: TiptapNode[] } | undefined;
   if (!doc?.content) return null;
@@ -20,53 +19,78 @@ interface TiptapNode {
   type: string;
   content?: TiptapNode[];
   text?: string;
-  marks?: { type: string }[];
+  marks?: { type: string; attrs?: Record<string, unknown> }[];
   attrs?: Record<string, unknown>;
 }
 
-function TiptapNode({ node }: { node: TiptapNode }) {
-  const children = node.content?.map((n, i) => <TiptapNode key={i} node={n} />);
+function TiptapNode({ node, inList }: { node: TiptapNode; inList?: boolean }) {
+  const children = node.content?.map((n, i) => (
+    <TiptapNode
+      key={i}
+      node={n}
+      inList={node.type === "listItem" || inList}
+    />
+  ));
 
   switch (node.type) {
     case "paragraph":
-      return <p className="text-body text-ink mb-4 leading-relaxed">{children}</p>;
+      // Inside list items, avoid extra <p> wrapper — renders inline
+      if (inList) return <>{children}</>;
+      return <p>{children}</p>;
+
     case "heading": {
       const level = (node.attrs?.level as number) ?? 2;
-      if (level === 1) return <h1 className="text-h1 text-ink mt-8 mb-4">{children}</h1>;
-      if (level === 2) return <h2 className="text-h2 text-ink mt-6 mb-3">{children}</h2>;
-      return <h3 className="text-h2 text-ink-soft mt-4 mb-2">{children}</h3>;
+      if (level === 1) return <h1>{children}</h1>;
+      if (level === 2) return <h2>{children}</h2>;
+      return <h3>{children}</h3>;
     }
+
     case "bulletList":
-      return <ul className="list-disc pl-5 mb-4 space-y-1">{children}</ul>;
+      return <ul>{children}</ul>;
+
     case "orderedList":
-      return <ol className="list-decimal pl-5 mb-4 space-y-1">{children}</ol>;
+      return <ol>{children}</ol>;
+
     case "listItem":
-      return <li className="text-body text-ink">{children}</li>;
+      return <li>{children}</li>;
+
     case "blockquote":
-      return (
-        <blockquote className="border-l-2 border-ink-mute pl-4 my-4 text-body text-ink-soft italic">
-          {children}
-        </blockquote>
-      );
+      return <blockquote>{children}</blockquote>;
+
     case "codeBlock":
       return (
-        <pre className="bg-surface-alt rounded-[8px] p-4 mb-4 overflow-x-auto">
-          <code className="text-mono text-ink">{children}</code>
+        <pre>
+          <code>{children}</code>
         </pre>
       );
+
+    case "hardBreak":
+      return <br />;
+
     case "horizontalRule":
-      return <hr className="border-[rgba(0,0,0,0.08)] my-6" />;
+      return <hr />;
+
     case "text": {
       let el: React.ReactNode = node.text ?? "";
       if (node.marks) {
         for (const mark of node.marks) {
-          if (mark.type === "bold") el = <strong className="font-semibold">{el}</strong>;
-          if (mark.type === "italic") el = <em>{el}</em>;
-          if (mark.type === "code") el = <code className="text-mono bg-surface-alt px-1 rounded">{el}</code>;
+          if (mark.type === "bold") el = <strong>{el}</strong>;
+          else if (mark.type === "italic") el = <em>{el}</em>;
+          else if (mark.type === "underline") el = <u>{el}</u>;
+          else if (mark.type === "strike") el = <s>{el}</s>;
+          else if (mark.type === "code") el = <code>{el}</code>;
+          else if (mark.type === "link") {
+            el = (
+              <a href={mark.attrs?.href as string} target="_blank" rel="noopener noreferrer">
+                {el}
+              </a>
+            );
+          }
         }
       }
       return <>{el}</>;
     }
+
     default:
       return <>{children}</>;
   }
