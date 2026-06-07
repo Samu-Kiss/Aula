@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { classService } from "@/server/services/classService";
 import { moduleRepo } from "@/server/repositories/moduleRepo";
 import { contentRepo } from "@/server/repositories/contentRepo";
-import { Lockup } from "@/components/Lockup";
+import { ClassNav } from "@/components/public/ClassNav";
 
 interface Props {
   params: Promise<{ classSlug: string; moduleSlug: string }>;
@@ -31,7 +31,6 @@ export default async function ModulePage({ params }: Props) {
   const mod = await moduleRepo(supabase).findBySlug(cls.id, moduleSlug);
   if (!mod || !mod.is_published) notFound();
 
-  // Verificar disponibilidad
   const now = new Date();
   const unavailable =
     !mod.is_available ||
@@ -51,20 +50,16 @@ export default async function ModulePage({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-page">
-      <header className="px-6 py-12 md:px-12 md:py-16 max-w-4xl mx-auto border-b border-[rgba(0,0,0,0.08)]">
-        <Link
-          href={`/c/${classSlug}`}
-          className="text-mono text-ink-mute hover:text-ink transition-colors mb-6 block"
-        >
-          ← <Lockup title={cls.title} accent={cls.accent} splitAt={cls.lockup_split_at} className="text-sm" />
-        </Link>
-        <h1 className="text-h1 text-ink">{mod.title}</h1>
+      <ClassNav cls={cls} crumbs={[{ label: mod.title }]} />
+
+      <header className="px-5 py-10 md:px-10 md:py-14 max-w-4xl mx-auto">
+        <h1 className="text-h1 text-ink text-[clamp(24px,4vw,36px)]">{mod.title}</h1>
         {mod.description && (
-          <p className="text-body text-ink-soft mt-2">{mod.description}</p>
+          <p className="text-body text-ink-soft mt-2 max-w-xl">{mod.description}</p>
         )}
       </header>
 
-      <section className="px-6 py-10 md:px-12 max-w-4xl mx-auto">
+      <section className="px-5 pb-20 md:px-10 max-w-4xl mx-auto">
         {contents.length === 0 ? (
           <p className="text-body text-ink-soft">No hay contenidos disponibles todavía.</p>
         ) : (

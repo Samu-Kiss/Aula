@@ -61,6 +61,7 @@ export default async function ContentEditorPage({ params }: Props) {
           classId={classId}
           initialQuiz={initialQuiz}
           initialQuestions={initialQuestions as import("@/lib/types/db").QuizQuestion[]}
+          isPublished={content.is_published}
         />
       ) : (
         <div className="bg-surface rounded-[12px] border border-subtle p-8 text-center">

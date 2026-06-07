@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { moduleRepo } from "@/server/repositories/moduleRepo";
 import { contentRepo } from "@/server/repositories/contentRepo";
 import { CreateContentForm } from "./CreateContentForm";
+import { PublishModuleToggle } from "./PublishModuleToggle";
 
 interface Props {
   params: Promise<{ id: string; moduleId: string }>;
@@ -42,13 +43,11 @@ export default async function ModuleEditorPage({ params }: Props) {
             <p className="text-body text-ink-soft mt-1">{modData.description}</p>
           )}
         </div>
-        <span className={`text-mono px-2 py-0.5 rounded-[4px] mt-1 ${
-          modData.is_published
-            ? "bg-bosque/10 text-bosque"
-            : "bg-surface-alt text-ink-mute"
-        }`}>
-          {modData.is_published ? "Publicado" : "Borrador"}
-        </span>
+        <PublishModuleToggle
+          moduleId={moduleId}
+          classId={classId}
+          isPublished={modData.is_published}
+        />
       </div>
 
       {contents.length === 0 ? (

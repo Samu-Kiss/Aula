@@ -26,6 +26,7 @@ import {
   deleteQuestionAction,
   reorderQuestionsAction,
 } from "./quizActions";
+import { publishContentAction } from "@/app/dashboard/clases/[id]/actions";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -453,7 +454,23 @@ interface QuizSettingsProps {
   onUpdated: (q: Quiz) => void;
 }
 
+// Convierte datetime-local string a ISO para guardar, o null si vacío
+function localToIso(val: string): string | null {
+  if (!val) return null;
+  return new Date(val).toISOString();
+}
+// Convierte ISO a datetime-local string para el input
+function isoToLocal(iso: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  // datetime-local necesita "YYYY-MM-DDTHH:MM"
+  return d.toISOString().slice(0, 16);
+}
+
 function QuizSettings({ quiz, classId, onUpdated }: QuizSettingsProps) {
+  const [isAvailable, setIsAvailable] = useState(quiz.is_available ?? false);
+  const [opensAt, setOpensAt] = useState(isoToLocal(quiz.opens_at));
+  const [closesAt, setClosesAt] = useState(isoToLocal(quiz.closes_at));
   const [timeLimitMin, setTimeLimitMin] = useState<string>(
     quiz.time_limit_min != null ? String(quiz.time_limit_min) : ""
   );
@@ -471,6 +488,9 @@ function QuizSettings({ quiz, classId, onUpdated }: QuizSettingsProps) {
   function handleSave() {
     startSave(async () => {
       const result = await saveQuizSettingsAction(quiz.id, classId, {
+        is_available: isAvailable,
+        opens_at: localToIso(opensAt) as unknown as string,
+        closes_at: localToIso(closesAt) as unknown as string,
         time_limit_min: timeLimitMin ? Number(timeLimitMin) : null as unknown as number,
         attempts_allowed: attemptsAllowed,
         passing_score: passScore ? Number(passScore) : null as unknown as number,
@@ -487,7 +507,65 @@ function QuizSettings({ quiz, classId, onUpdated }: QuizSettingsProps) {
   }
 
   return (
-    <div className="space-y-5 max-w-lg">
+    <div className="space-y-6 max-w-lg">
+
+      {/* Disponibilidad */}
+      <div className="p-4 bg-surface border-subtle rounded-[10px] space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-caption font-medium text-ink">Disponible para estudiantes</p>
+            <p className="text-mono text-ink-mute mt-0.5">
+              {isAvailable ? "Los estudiantes pueden acceder al quiz" : "Quiz bloqueado — invisible para estudiantes"}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsAvailable((v) => !v)}
+            style={{ width: 40, height: 24, borderRadius: 999, flexShrink: 0 }}
+            className={`relative transition-colors ${isAvailable ? "bg-bosque" : "bg-ink-mute"}`}
+            role="switch"
+            aria-checked={isAvailable}
+          >
+            <span
+              style={{
+                position: "absolute",
+                top: 4,
+                left: isAvailable ? 20 : 4,
+                width: 16,
+                height: 16,
+                borderRadius: "50%",
+                background: "white",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                transition: "left 0.15s ease",
+              }}
+            />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-caption text-ink-mute block mb-1">Abre</label>
+            <input
+              type="datetime-local"
+              value={opensAt}
+              onChange={(e) => setOpensAt(e.target.value)}
+              className="w-full border border-subtle rounded-[8px] px-3 py-1.5 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30"
+            />
+          </div>
+          <div>
+            <label className="text-caption text-ink-mute block mb-1">Cierra</label>
+            <input
+              type="datetime-local"
+              value={closesAt}
+              onChange={(e) => setClosesAt(e.target.value)}
+              className="w-full border border-subtle rounded-[8px] px-3 py-1.5 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30"
+            />
+          </div>
+        </div>
+        <p className="text-mono text-ink-mute">Dejar las fechas vacías para sin ventana de tiempo.</p>
+      </div>
+
+      {/* Tiempo */}
       <div>
         <label className="text-caption font-medium text-ink block mb-1">
           Tiempo límite (minutos)
@@ -504,6 +582,7 @@ function QuizSettings({ quiz, classId, onUpdated }: QuizSettingsProps) {
         <p className="text-caption text-ink-mute mt-1">Dejar vacío para sin límite de tiempo.</p>
       </div>
 
+      {/* Intentos */}
       <div>
         <label className="text-caption font-medium text-ink block mb-1">Intentos permitidos</label>
         <input
@@ -516,6 +595,7 @@ function QuizSettings({ quiz, classId, onUpdated }: QuizSettingsProps) {
         />
       </div>
 
+      {/* Puntaje mínimo */}
       <div>
         <label className="text-caption font-medium text-ink block mb-1">
           Puntaje mínimo para aprobar (%)
@@ -531,6 +611,7 @@ function QuizSettings({ quiz, classId, onUpdated }: QuizSettingsProps) {
         />
       </div>
 
+      {/* Mostrar respuestas */}
       <div>
         <label className="text-caption font-medium text-ink block mb-1">Mostrar respuestas correctas</label>
         <div className="flex gap-2 flex-wrap">
@@ -572,14 +653,17 @@ interface Props {
   classId: string;
   initialQuiz: Quiz | null;
   initialQuestions: QuizQuestion[];
+  isPublished: boolean;
 }
 
-export function QuizEditor({ contentId, classId, initialQuiz, initialQuestions }: Props) {
+export function QuizEditor({ contentId, classId, initialQuiz, initialQuestions, isPublished }: Props) {
   const [quiz, setQuiz] = useState<Quiz | null>(initialQuiz);
   const [questions, setQuestions] = useState<QuizQuestion[]>(initialQuestions);
   const [tab, setTab] = useState<"questions" | "settings">("questions");
   const [showAddForm, setShowAddForm] = useState(false);
+  const [published, setPublished] = useState(isPublished);
   const [initializing, startInit] = useTransition();
+  const [publishing, startPublish] = useTransition();
 
   useEffect(() => {
     if (!quiz) {
@@ -620,6 +704,27 @@ export function QuizEditor({ contentId, classId, initialQuiz, initialQuestions }
 
   return (
     <div className="space-y-5">
+      {/* Header con botón publicar */}
+      <div className="flex items-center justify-end mb-1">
+        <button
+          type="button"
+          disabled={publishing}
+          onClick={() => {
+            startPublish(async () => {
+              const result = await publishContentAction(contentId, classId);
+              if (result.ok) setPublished(true);
+            });
+          }}
+          className={`h-8 px-4 rounded-[8px] text-caption font-bold transition-colors disabled:opacity-50 ${
+            published
+              ? "bg-surface-alt text-ink-soft hover:bg-surface-alt"
+              : "bg-ink text-surface hover:bg-ink/90"
+          }`}
+        >
+          {publishing ? "Publicando…" : published ? "Publicar cambios" : "Publicar"}
+        </button>
+      </div>
+
       {/* Tabs */}
       <div className="flex gap-1 border-b border-subtle">
         {(["questions", "settings"] as const).map((t) => (

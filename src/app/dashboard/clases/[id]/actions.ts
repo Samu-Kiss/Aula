@@ -85,3 +85,41 @@ export async function publishContentAction(contentId: string, classId: string) {
   revalidatePath(`/dashboard/clases/${classId}`);
   return { ok: true };
 }
+
+export async function publishModuleAction(moduleId: string, classId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "No autenticado." };
+  await supabase.from("modules").update({ is_published: true, is_available: true }).eq("id", moduleId);
+  revalidatePath(`/dashboard/clases/${classId}`);
+  return { ok: true };
+}
+
+export async function unpublishModuleAction(moduleId: string, classId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "No autenticado." };
+  await supabase.from("modules").update({ is_published: false }).eq("id", moduleId);
+  revalidatePath(`/dashboard/clases/${classId}`);
+  return { ok: true };
+}
+
+export async function publishClassAction(classId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "No autenticado." };
+  await supabase.from("classes").update({ is_published: true }).eq("id", classId);
+  revalidatePath(`/dashboard/clases/${classId}`);
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+export async function unpublishClassAction(classId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "No autenticado." };
+  await supabase.from("classes").update({ is_published: false }).eq("id", classId);
+  revalidatePath(`/dashboard/clases/${classId}`);
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
