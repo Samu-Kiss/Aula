@@ -16,11 +16,26 @@ export async function POST(request: NextRequest) {
   }
 
   const { email, first_name } = parsed.data;
+  const supabase = createServiceClient();
+
+  // ── Rate limiting: máx 3 códigos por email en los últimos 10 min ─────────────
+  const windowStart = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+  const { count } = await supabase
+    .from("student_email_codes")
+    .select("id", { count: "exact", head: true })
+    .eq("email", email)
+    .gte("created_at", windowStart);
+
+  if ((count ?? 0) >= 3) {
+    return NextResponse.json(
+      { error: "rate_limited", message: "Demasiados intentos. Espera unos minutos." },
+      { status: 429 }
+    );
+  }
+
   const code = generateCode();
   const codeHash = hashCode(code);
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 min
-
-  const supabase = createServiceClient();
 
   // Guardar código hasheado
   const { error } = await supabase.from("student_email_codes").insert({

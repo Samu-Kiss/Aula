@@ -70,6 +70,8 @@ function IdentStep1({ onSent }: Step1Props) {
       const data = await res.json();
       if (data.ok) {
         onSent({ email, firstName, lastName, rememberMe });
+      } else if (data.error === "rate_limited") {
+        setError("Demasiados intentos. Espera 10 minutos antes de pedir otro código.");
       } else {
         setError("No se pudo enviar el código. Intenta de nuevo.");
       }

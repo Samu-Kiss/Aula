@@ -123,3 +123,50 @@ export async function unpublishClassAction(classId: string) {
   revalidatePath("/dashboard");
   return { ok: true };
 }
+
+export async function updateClassMetaAction(
+  classId: string,
+  fields: { title?: string; slug?: string; description?: string }
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "No autenticado." };
+
+  // Validaciones básicas
+  if (fields.title !== undefined && fields.title.trim().length < 3) {
+    return { ok: false, error: "El título debe tener al menos 3 caracteres." };
+  }
+  if (fields.slug !== undefined) {
+    if (!/^[a-z0-9-]+$/.test(fields.slug)) {
+      return { ok: false, error: "El slug solo puede tener letras minúsculas, números y guiones." };
+    }
+    if (fields.slug.length < 3) {
+      return { ok: false, error: "El slug debe tener al menos 3 caracteres." };
+    }
+    // Verificar unicidad
+    const { data: existing } = await supabase
+      .from("classes")
+      .select("id")
+      .eq("slug", fields.slug)
+      .neq("id", classId)
+      .is("deleted_at", null)
+      .maybeSingle();
+    if (existing) return { ok: false, error: "Ese slug ya está en uso. Elige otro." };
+  }
+
+  const { error } = await supabase
+    .from("classes")
+    .update({
+      ...(fields.title !== undefined && { title: fields.title.trim() }),
+      ...(fields.slug !== undefined && { slug: fields.slug.trim() }),
+      ...(fields.description !== undefined && { description: fields.description.trim() || null }),
+    })
+    .eq("id", classId);
+
+  if (error) return { ok: false, error: "No se pudo guardar. Intenta de nuevo." };
+
+  revalidatePath(`/dashboard/clases/${classId}`);
+  revalidatePath(`/dashboard/clases/${classId}/configuracion`);
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
