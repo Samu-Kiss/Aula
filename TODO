@@ -53,16 +53,16 @@
 - [x] `F3-07` Export CSV de calificaciones (client-side con BOM; endpoint REST pendiente)
 
 ### Fase 4 — Robustez
-- [ ] `F4-01` Availability windows para módulos y quizzes (`opens_at`, `closes_at`, `is_available`)
-- [ ] `F4-02` Funciones de dominio puras con tests: `getModuleEffectiveState`, `getQuizEffectiveState`, `calculateAttemptScore`, `calculateGradebookFinal`, `canStartAttempt`, `canSubmitAttempt`, `sanitizeQuestionForPublic`
-- [ ] `F4-03` Control transaccional de `attempts_allowed` (race conditions)
-- [ ] `F4-04` RLS completo en Supabase (todas las políticas de §10.2)
-- [ ] `F4-05` Rate limiting en endpoints sensibles (§10.5) usando tabla `rate_limits`
-- [ ] `F4-06` Anti-cheating: registrar `tab_blur/focus`, `paste/copy`, `duplicate_instance` en `attempt_events`
-- [ ] `F4-07` Timer authoritative del servidor + alertas en pantalla (5 min, 1 min, 30s)
-- [ ] `F4-08` Offline handling + sync al reconectar
-- [ ] `F4-09` Política de caché por estado efectivo (`revalidatePath` al publicar)
-- [ ] `F4-10` Suite de tests E2E Playwright: flujos críticos (§18.2)
+- [x] `F4-01` Availability windows para módulos y quizzes (`opens_at`, `closes_at`, `is_available`) — Quiz: UI ya existía en QuizEditor; Módulo: nuevo `ModuleAvailabilityForm` + `saveModuleAvailabilityAction`
+- [x] `F4-02` Funciones de dominio puras con tests: `getModuleEffectiveState`, `getQuizEffectiveState`, `calculateAttemptScore`, `calculateGradebookFinal`, `canStartAttempt`, `canSubmitAttempt`, `sanitizeQuestionForPublic` — `src/lib/domain/quiz.ts` + `gradebook.ts`; 38 tests vitest
+- [x] `F4-03` Control transaccional de `attempts_allowed` (race conditions) — `unique(quiz_id, student_id, attempt_number)` en DB; catch `23505` en ambas restricciones; retry con `findInProgress`
+- [x] `F4-04` RLS completo en Supabase (todas las políticas de §10.2) — `supabase/migrations/20260607000000_full_rls.sql`
+- [x] `F4-05` Rate limiting en endpoints sensibles (§10.5) usando tabla `rate_limits` — `src/lib/rateLimit.ts`; aplicado en `POST /api/quizzes/[id]/attempts` (10 req/5min) y `POST /api/attempts/[id]/events` (60 req/min)
+- [x] `F4-06` Anti-cheating: registrar `tab_blur/focus`, `paste/copy`, `duplicate_instance` en `attempt_events` — `POST /api/attempts/[id]/events`; listeners en `AttemptView` (visibilitychange, paste, copy, localStorage heartbeat)
+- [x] `F4-07` Timer authoritative del servidor + alertas en pantalla (5 min, 1 min, 30s) — `useTimer` ampliado con milestones; banner de alerta con colores en `AttemptView`
+- [x] `F4-08` Offline handling + sync al reconectar — `useOnline` hook en `AttemptView`; banner offline; cola offline; flush al reconectar + evento `reconnect`
+- [x] `F4-09` Política de caché por estado efectivo (`revalidatePath` al publicar) — `publishContentAction`, `publishModuleAction`, `unpublishModuleAction` revalidan `/c/[classSlug]`
+- [x] `F4-10` Suite de tests E2E Playwright: flujos críticos (§18.2) — `playwright.config.ts` + `e2e/smoke.spec.ts` (6 smoke tests: landing, auth redirect, 404, API auth)
 
 ### Fase 5 — Experiencia avanzada
 - [ ] `F5-01` Contenido tipo `video` (embed YouTube/Vimeo)

@@ -82,6 +82,9 @@ export async function publishContentAction(contentId: string, classId: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "No autenticado." };
   await contentRepo(supabase).publish(contentId);
+  // F4-09: revalidate public routes
+  const { data: cls } = await supabase.from("classes").select("slug").eq("id", classId).maybeSingle();
+  if (cls?.slug) revalidatePath(`/c/${cls.slug}`);
   revalidatePath(`/dashboard/clases/${classId}`);
   return { ok: true };
 }
@@ -91,6 +94,9 @@ export async function publishModuleAction(moduleId: string, classId: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "No autenticado." };
   await supabase.from("modules").update({ is_published: true, is_available: true }).eq("id", moduleId);
+  // F4-09: revalidate public route too
+  const { data: cls } = await supabase.from("classes").select("slug").eq("id", classId).maybeSingle();
+  if (cls?.slug) revalidatePath(`/c/${cls.slug}`);
   revalidatePath(`/dashboard/clases/${classId}`);
   return { ok: true };
 }
@@ -100,8 +106,48 @@ export async function unpublishModuleAction(moduleId: string, classId: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "No autenticado." };
   await supabase.from("modules").update({ is_published: false }).eq("id", moduleId);
+  // F4-09: revalidate public route too
+  const { data: cls } = await supabase.from("classes").select("slug").eq("id", classId).maybeSingle();
+  if (cls?.slug) revalidatePath(`/c/${cls.slug}`);
   revalidatePath(`/dashboard/clases/${classId}`);
   return { ok: true };
+}
+
+// F4-01: save module availability window
+export async function saveModuleAvailabilityAction(
+  moduleId: string,
+  classId: string,
+  fields: { is_available: boolean; opens_at: string | null; closes_at: string | null }
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { ok: false, error: "No autenticado." };
+
+    // Verify professor owns this module's class
+    const { data: cls } = await supabase
+      .from("classes")
+      .select("id, slug")
+      .eq("id", classId)
+      .eq("professor_id", user.id)
+      .maybeSingle();
+    if (!cls) return { ok: false, error: "No autorizado." };
+
+    await supabase
+      .from("modules")
+      .update({
+        is_available: fields.is_available,
+        opens_at: fields.opens_at,
+        closes_at: fields.closes_at,
+      })
+      .eq("id", moduleId);
+
+    revalidatePath(`/dashboard/clases/${classId}`);
+    if (cls.slug) revalidatePath(`/c/${cls.slug}`);
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "No se pudieron guardar los ajustes." };
+  }
 }
 
 export async function publishClassAction(classId: string) {

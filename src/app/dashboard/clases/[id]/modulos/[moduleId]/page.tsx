@@ -5,6 +5,7 @@ import { moduleRepo } from "@/server/repositories/moduleRepo";
 import { contentRepo } from "@/server/repositories/contentRepo";
 import { CreateContentForm } from "./CreateContentForm";
 import { PublishModuleToggle } from "./PublishModuleToggle";
+import { ModuleAvailabilityForm } from "./ModuleAvailabilityForm";
 
 interface Props {
   params: Promise<{ id: string; moduleId: string }>;
@@ -81,6 +82,11 @@ export default async function ModuleEditorPage({ params }: Props) {
       )}
 
       <CreateContentForm moduleId={moduleId} classId={classId} />
+
+      {/* F4-01: Availability window controls */}
+      <div className="mt-8">
+        <ModuleAvailabilityForm module={modData as import("@/lib/types/db").Module} classId={classId} />
+      </div>
     </div>
   );
 }

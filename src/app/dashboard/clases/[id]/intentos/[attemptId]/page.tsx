@@ -34,9 +34,10 @@ export default async function AttemptDetailPage({ params }: Props) {
   const attempt = await aRepo.findById(attemptId);
   if (!attempt) notFound();
 
-  const [questions, answers] = await Promise.all([
+  const [questions, answers, events] = await Promise.all([
     aRepo.listQuestions(attemptId),
     aRepo.listAnswers(attemptId),
+    aRepo.listEventsByAttempt(attemptId),
   ]);
 
   const quiz = attempt.quiz_id ? await quizRepo(svc).findById(attempt.quiz_id) : null;
@@ -111,6 +112,83 @@ export default async function AttemptDetailPage({ params }: Props) {
           )}
         </div>
       </div>
+
+      {/* Anti-cheating events */}
+      {events.length > 0 && (
+        <div className="bg-surface rounded-[12px] border border-subtle p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-caption font-medium text-ink">Actividad durante el intento</p>
+            <span className="text-mono text-ink-mute">{events.length} evento{events.length !== 1 ? "s" : ""}</span>
+          </div>
+
+          {/* Summary counts */}
+          <div className="flex flex-wrap gap-2">
+            {(["tab_blur", "paste", "copy", "duplicate_instance_attempt", "reconnect", "time_expired"] as const)
+              .map((type) => {
+                const count = events.filter((e) => e.type === type).length;
+                if (count === 0) return null;
+                const isFlag = ["tab_blur", "paste", "copy", "duplicate_instance_attempt"].includes(type);
+                return (
+                  <span
+                    key={type}
+                    className={`flex items-center gap-1.5 text-caption px-2.5 py-1 rounded-[6px] ${
+                      isFlag
+                        ? "bg-ambar/10 text-ambar font-medium"
+                        : "bg-surface-alt text-ink-soft"
+                    }`}
+                  >
+                    {isFlag && "🚩 "}
+                    {({
+                      tab_blur: "Cambio de pestaña",
+                      paste: "Pegar",
+                      copy: "Copiar",
+                      duplicate_instance_attempt: "Otra pestaña",
+                      reconnect: "Reconexión",
+                      time_expired: "Tiempo agotado",
+                    } as Record<string, string>)[type]}
+                    <span className="font-bold">{count}×</span>
+                  </span>
+                );
+              })}
+          </div>
+
+          {/* Timeline */}
+          <div className="border border-subtle rounded-[8px] overflow-hidden">
+            <table className="w-full text-mono text-[12px]">
+              <thead>
+                <tr className="bg-surface-alt border-b border-[rgba(0,0,0,0.06)]">
+                  <th className="text-left text-ink-mute font-medium px-3 py-2">Hora</th>
+                  <th className="text-left text-ink-mute font-medium px-3 py-2">Evento</th>
+                </tr>
+              </thead>
+              <tbody>
+                {events.map((ev) => {
+                  const isFlag = ["tab_blur", "paste", "copy", "duplicate_instance_attempt"].includes(ev.type);
+                  return (
+                    <tr key={ev.id} className={`border-b border-[rgba(0,0,0,0.04)] last:border-0 ${isFlag ? "bg-ambar/3" : ""}`}>
+                      <td className="px-3 py-1.5 text-ink-mute whitespace-nowrap">
+                        {new Date(ev.occurred_at).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                      </td>
+                      <td className={`px-3 py-1.5 ${isFlag ? "text-ambar font-medium" : "text-ink-soft"}`}>
+                        {({
+                          tab_blur: "🚩 Cambió de pestaña",
+                          tab_focus: "Regresó a la pestaña",
+                          paste: "🚩 Pegó texto",
+                          copy: "🚩 Copió texto",
+                          duplicate_instance_attempt: "🚩 Abrió otra pestaña con el quiz",
+                          time_expired: "Tiempo agotado",
+                          reconnect: "Se reconectó",
+                          submit_blocked: "Envío bloqueado",
+                        } as Record<string, string>)[ev.type] ?? ev.type}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Questions + answers */}
       <div className="space-y-4">

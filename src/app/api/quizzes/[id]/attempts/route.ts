@@ -4,6 +4,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { getStudentFromCookie } from "@/lib/auth/studentJwt";
 import { quizRepo } from "@/server/repositories/quizRepo";
 import { attemptRepo } from "@/server/repositories/attemptRepo";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
@@ -42,6 +43,15 @@ export async function POST(
   const supabase = createServiceClient();
   const qRepo = quizRepo(supabase);
   const aRepo = attemptRepo(supabase);
+
+  // F4-05: Rate limiting — max 10 attempt starts per student per 5 minutes
+  const rl = await checkRateLimit(supabase, student.student_id, "start_attempt", 10, 300);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "rate_limited", message: "Demasiados intentos. Espera unos minutos." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } }
+    );
+  }
 
   // 2. Cargar quiz y verificar disponibilidad
   const quiz = await qRepo.findById(quizId);
@@ -162,15 +172,24 @@ export async function POST(
       idempotency_key: idempotencyKey,
     });
   } catch (err: unknown) {
-    // unique violation en idempotency_key → doble click, buscar intento existente
+    // F4-03: unique violation on either idempotency_key or (quiz_id, student_id, attempt_number)
+    // Both can occur under concurrent requests. In either case, look for the existing in-progress attempt.
     const e = err as { code?: string };
     if (e?.code === "23505") {
       const retry = await aRepo.findInProgress(quizId, student.student_id);
       if (retry) {
         const qs = await aRepo.listQuestions(retry.id);
         const as = await aRepo.listAnswers(retry.id);
-        return NextResponse.json({ attempt: retry, questions: qs, answers: as, session_token: sessionToken, resumed: true });
+        return NextResponse.json({
+          attempt: retry,
+          questions: qs,
+          answers: as,
+          session_token: sessionToken,
+          resumed: true,
+        });
       }
+      // No in-progress attempt found despite unique violation — attempts_allowed was just hit
+      return NextResponse.json({ error: "attempts_exhausted" }, { status: 403 });
     }
     throw err;
   }

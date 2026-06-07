@@ -158,5 +158,30 @@ export function attemptRepo(db: SupabaseClient) {
       if (error) throw error;
       return data;
     },
+
+    /** Bulk-fetch anti-cheating events for a list of attempt IDs. */
+    async listEventsByAttemptIds(
+      attemptIds: string[]
+    ): Promise<{ attempt_id: string; type: string; occurred_at: string }[]> {
+      if (attemptIds.length === 0) return [];
+      const { data } = await db
+        .from("attempt_events")
+        .select("attempt_id, type, occurred_at")
+        .in("attempt_id", attemptIds)
+        .order("occurred_at", { ascending: true });
+      return (data ?? []) as { attempt_id: string; type: string; occurred_at: string }[];
+    },
+
+    /** Fetch all anti-cheating events for one attempt. */
+    async listEventsByAttempt(
+      attemptId: string
+    ): Promise<{ id: string; type: string; occurred_at: string; payload: Record<string, unknown> | null }[]> {
+      const { data } = await db
+        .from("attempt_events")
+        .select("id, type, occurred_at, payload")
+        .eq("attempt_id", attemptId)
+        .order("occurred_at", { ascending: true });
+      return (data ?? []) as { id: string; type: string; occurred_at: string; payload: Record<string, unknown> | null }[];
+    },
   };
 }
