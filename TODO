@@ -1,0 +1,81 @@
+## TODOs — Plataforma Aula
+
+### Fase 0 — Setup
+- [ ] `F0-01` Inicializar proyecto Next.js 15 (App Router) + TypeScript
+- [ ] `F0-02` Configurar Tailwind CSS con tokens del sistema visual (colores, tipografía, radios, espaciado)
+- [ ] `F0-03` Configurar fuentes (Inter Display + Fraunces vía next/font)
+- [ ] `F0-04` Supabase: proyecto local (`supabase init`) + migración inicial con el schema SQL completo
+- [ ] `F0-05` Auth de profesor con Supabase Auth — login, sesión, middleware de protección
+- [ ] `F0-06` Layout base: shell del dashboard + shell público
+- [ ] `F0-07` Variables de entorno (`.env.local` + `.env.example`)
+- [ ] `F0-08` Sentry: instalación + scrubbing de PII
+- [ ] `F0-09` CI: GitHub Actions (lint, typecheck, build)
+
+### Fase 1 — Contenido público
+- [ ] `F1-01` Estructura de carpetas (`/features`, `/lib`, `/server/services`, `/server/repositories`)
+- [ ] `F1-02` Schemas Zod: `class`, `module`, `content` (§11.3)
+- [ ] `F1-03` Repos + Services: `classRepo`, `moduleRepo`, `contentRepo`, `classService`
+- [ ] `F1-04` Dashboard: listado de clases + onboarding vacío
+- [ ] `F1-05` Dashboard: crear clase (título, slug auto, acento, descripción)
+- [ ] `F1-06` Dashboard: editor de clase — sidebar de módulos con drag & drop (dnd-kit)
+- [ ] `F1-07` Dashboard: crear/editar módulo
+- [ ] `F1-08` Dashboard: crear/editar contenido tipo `rich_text` con Tiptap + autosave
+- [ ] `F1-09` Publicación: `body_draft` → `body_published` con botón "Publicar cambios"
+- [ ] `F1-10` Componente Lockup tipográfico (italic serif + sans bold con color de acento)
+- [ ] `F1-11` Ruta pública `/c/[classSlug]` — landing de clase con lockup + lista de módulos
+- [ ] `F1-12` Ruta pública `/c/[classSlug]/[moduleSlug]` — lista de contenidos del módulo
+- [ ] `F1-13` Ruta pública `/c/[classSlug]/[moduleSlug]/[contentSlug]` — renderizar contenido
+- [ ] `F1-14` Preview del profesor (`/dashboard/clases/[id]/preview`)
+- [ ] `F1-15` Páginas de error `/404` y `/500`
+- [ ] `F1-16` `robots.txt` (noindex) + Open Graph básico
+
+### Fase 2 — Quiz básico
+- [ ] `F2-01` Schemas Zod: `quiz`, `quizQuestion`, `studentSession`, `attempt`, `answer`
+- [ ] `F2-02` Migración SQL: `quizzes`, `quiz_questions`, `attempts`, `attempt_questions`, `answers`
+- [ ] `F2-03` Migración SQL: `students`, `class_students`, `student_email_codes`
+- [ ] `F2-04` Dashboard: editor de quiz (preguntas tipo `single_choice`, `true_false`, `short_answer`)
+- [ ] `F2-05` Auth estudiante: `/api/student/session` (solicitar código) + `/api/student/session/verify` (verificar + JWT cookie)
+- [ ] `F2-06` Vista pública de quiz: pantalla de inicio + modal de identificación
+- [ ] `F2-07` `POST /api/quizzes/[id]/attempts` — iniciar intento con control transaccional + snapshot de preguntas
+- [ ] `F2-08` UI del intento: renderizar preguntas, auto-guardado con debounce (`PATCH /api/attempts/[id]/answers/batch`)
+- [ ] `F2-09` `POST /api/attempts/[id]/submit` — submit, auto-calificación, update de status
+- [ ] `F2-10` Vista de resultado post-submit (según `show_correct_answers`)
+- [ ] `F2-11` Vista `quiz_questions_public` en Supabase (sin respuestas correctas, §10.3)
+- [ ] `F2-12` Dashboard: lista de intentos `/dashboard/clases/[id]/intentos`
+
+### Fase 3 — Gradebook simple
+- [ ] `F3-01` Migración SQL: `grade_categories`, `grade_items`, `grades`, `grade_audit_log`
+- [ ] `F3-02` Dashboard: importar roster de estudiantes (CSV) + vista `/estudiantes`
+- [ ] `F3-03` Dashboard: categorías y pesos `/calificaciones/categorias`
+- [ ] `F3-04` Auto-población de `grades` al calificar un quiz
+- [ ] `F3-05` Dashboard: gradebook table `/calificaciones` (estudiantes × items, nota final)
+- [ ] `F3-06` Edición inline de notas manuales + auditoría (`grade_audit_log`)
+- [ ] `F3-07` Export CSV de calificaciones (`GET /api/classes/[id]/grades/export`)
+
+### Fase 4 — Robustez
+- [ ] `F4-01` Availability windows para módulos y quizzes (`opens_at`, `closes_at`, `is_available`)
+- [ ] `F4-02` Funciones de dominio puras con tests: `getModuleEffectiveState`, `getQuizEffectiveState`, `calculateAttemptScore`, `calculateGradebookFinal`, `canStartAttempt`, `canSubmitAttempt`, `sanitizeQuestionForPublic`
+- [ ] `F4-03` Control transaccional de `attempts_allowed` (race conditions)
+- [ ] `F4-04` RLS completo en Supabase (todas las políticas de §10.2)
+- [ ] `F4-05` Rate limiting en endpoints sensibles (§10.5) usando tabla `rate_limits`
+- [ ] `F4-06` Anti-cheating: registrar `tab_blur/focus`, `paste/copy`, `duplicate_instance` en `attempt_events`
+- [ ] `F4-07` Timer authoritative del servidor + alertas en pantalla (5 min, 1 min, 30s)
+- [ ] `F4-08` Offline handling + sync al reconectar
+- [ ] `F4-09` Política de caché por estado efectivo (`revalidatePath` al publicar)
+- [ ] `F4-10` Suite de tests E2E Playwright: flujos críticos (§18.2)
+
+### Fase 5 — Experiencia avanzada
+- [ ] `F5-01` Contenido tipo `video` (embed YouTube/Vimeo)
+- [ ] `F5-02` Contenido tipo `map` con Mapbox GL JS + estilo custom + markers en color de acento
+- [ ] `F5-03` Contenido tipo `file` con upload a Cloudflare R2 + URL firmada
+- [ ] `F5-04` Pregunta tipo `map_pin` en quizzes
+- [ ] `F5-05` Revisión manual de intentos con preguntas `short_answer` no auto-calificables
+- [ ] `F5-06` Emails transaccionales con Resend (intento recibido, nota lista, código de verificación)
+- [ ] `F5-07` Notificaciones in-app para el profesor (tabla `notifications`, §14.1)
+- [ ] `F5-08` Dashboard admin `/dashboard/admin` con métricas y anti-cheating insights
+- [ ] `F5-09` Soft delete + archivo recuperable `/dashboard/archivo`
+- [ ] `F5-10` Anonimización del estudiante (`/api/student/anonymize`)
+- [ ] `F5-11` Duplicar clase, módulo y quiz
+- [ ] `F5-12` OG image dinámica (`/api/og`) con lockup y acento
+- [ ] `F5-13` Accessibility audit (axe-core/playwright + revisión manual)
+- [ ] `F5-14` Responsive completo (mobile, tablet, desktop)
