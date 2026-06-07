@@ -23,7 +23,7 @@ export async function ensureQuizAction(contentId: string): Promise<Quiz> {
 export async function saveQuizSettingsAction(
   quizId: string,
   classId: string,
-  fields: Partial<Pick<Quiz, "time_limit_min" | "attempts_allowed" | "passing_score" | "show_correct_answers" | "is_available" | "opens_at" | "closes_at">>
+  fields: Partial<Pick<Quiz, "time_limit_min" | "attempts_allowed" | "passing_score" | "show_correct_answers" | "is_available" | "opens_at" | "closes_at" | "attempt_scoring">>
 ): Promise<{ ok: true; quiz: Quiz } | { ok: false; error: string }> {
   try {
     const supabase = await authedSupabase();

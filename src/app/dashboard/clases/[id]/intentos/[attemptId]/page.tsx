@@ -173,6 +173,7 @@ export default async function AttemptDetailPage({ params }: Props) {
                   {isManual && answer && (
                     <GradeAnswerForm
                       answerId={answer.id}
+                      attemptId={attemptId}
                       currentPoints={answer.points_awarded}
                       maxPoints={q.points}
                       currentFeedback={answer.feedback}

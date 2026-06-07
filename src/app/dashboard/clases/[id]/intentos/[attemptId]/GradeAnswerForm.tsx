@@ -5,13 +5,14 @@ import { gradeAnswerAction } from "../actions";
 
 interface Props {
   answerId: string;
+  attemptId: string;
   currentPoints: number | null;
   maxPoints: number;
   currentFeedback: string | null;
   classId: string;
 }
 
-export function GradeAnswerForm({ answerId, currentPoints, maxPoints, currentFeedback, classId }: Props) {
+export function GradeAnswerForm({ answerId, attemptId, currentPoints, maxPoints, currentFeedback, classId }: Props) {
   const [points, setPoints] = useState(currentPoints?.toString() ?? "");
   const [feedback, setFeedback] = useState(currentFeedback ?? "");
   const [saved, setSaved] = useState(currentPoints != null);
@@ -27,7 +28,7 @@ export function GradeAnswerForm({ answerId, currentPoints, maxPoints, currentFee
     }
     setError("");
     startPending(async () => {
-      const result = await gradeAnswerAction(answerId, pts, feedback || null, classId);
+      const result = await gradeAnswerAction(answerId, pts, feedback || null, classId, attemptId);
       if (result.ok) {
         setSaved(true);
       } else {

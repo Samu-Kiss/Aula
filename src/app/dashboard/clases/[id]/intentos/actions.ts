@@ -1,52 +1,50 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 
 // Calificar manualmente una respuesta de tipo short_answer
 export async function gradeAnswerAction(
   answerId: string,
   pointsAwarded: number,
   feedback: string | null,
-  classId: string
+  classId: string,
+  attemptId: string
 ): Promise<{ ok: boolean; error?: string }> {
-  const supabase = await createClient();
-
-  // Verificar que el profe es dueño de la clase
-  const { data: { user } } = await supabase.auth.getUser();
+  // Verificar que el profe está autenticado
+  const authSupabase = await createClient();
+  const { data: { user } } = await authSupabase.auth.getUser();
   if (!user) return { ok: false, error: "not_authenticated" };
 
+  // Usar service client para escribir datos de estudiantes (RLS no permite al profe)
+  const svc = createServiceClient();
+
   // Actualizar la respuesta
-  const { error: answerError } = await supabase
+  const { error: answerError } = await svc
     .from("answers")
     .update({ points_awarded: pointsAwarded, feedback, is_correct: pointsAwarded > 0 })
     .eq("id", answerId);
   if (answerError) return { ok: false, error: answerError.message };
 
-  // Recalcular score del intento
-  const { data: answer } = await supabase
+  // Recalcular score del intento sumando todos los points_awarded
+  const { data: allAnswers } = await svc
     .from("answers")
-    .select("attempt_id")
-    .eq("id", answerId)
-    .single();
+    .select("points_awarded")
+    .eq("attempt_id", attemptId);
 
-  if (answer) {
-    const { data: allAnswers } = await supabase
-      .from("answers")
-      .select("points_awarded")
-      .eq("attempt_id", answer.attempt_id);
+  const newScore = (allAnswers ?? []).reduce(
+    (acc, a) => acc + (a.points_awarded ?? 0),
+    0
+  );
 
-    const newScore = (allAnswers ?? []).reduce(
-      (acc, a) => acc + (a.points_awarded ?? 0),
-      0
-    );
+  await svc
+    .from("attempts")
+    .update({ score: newScore, status: "graded" })
+    .eq("id", attemptId);
 
-    await supabase
-      .from("attempts")
-      .update({ score: newScore, status: "graded" })
-      .eq("id", answer.attempt_id);
-  }
-
+  // Invalidar todas las páginas relevantes
   revalidatePath(`/dashboard/clases/${classId}/intentos`);
+  revalidatePath(`/dashboard/clases/${classId}/intentos/${attemptId}`);
+  revalidatePath(`/dashboard/clases/${classId}/gradebook`);
   return { ok: true };
 }

@@ -481,6 +481,9 @@ function QuizSettings({ quiz, classId, onUpdated }: QuizSettingsProps) {
   const [showCorrect, setShowCorrect] = useState<Quiz["show_correct_answers"]>(
     quiz.show_correct_answers ?? "after_submit"
   );
+  const [attemptScoring, setAttemptScoring] = useState<Quiz["attempt_scoring"]>(
+    quiz.attempt_scoring ?? "best"
+  );
   const [saving, startSave] = useTransition();
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
@@ -495,6 +498,7 @@ function QuizSettings({ quiz, classId, onUpdated }: QuizSettingsProps) {
         attempts_allowed: attemptsAllowed,
         passing_score: passScore ? Number(passScore) : null as unknown as number,
         show_correct_answers: showCorrect,
+        attempt_scoring: attemptScoring,
       });
       if (result.ok) {
         onUpdated(result.quiz);
@@ -594,6 +598,37 @@ function QuizSettings({ quiz, classId, onUpdated }: QuizSettingsProps) {
           className="w-24 border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30"
         />
       </div>
+
+      {/* Calificación final — solo si hay más de 1 intento */}
+      {attemptsAllowed > 1 && (
+        <div>
+          <label className="text-caption font-medium text-ink block mb-2">
+            Calificación final (con múltiples intentos)
+          </label>
+          <div className="flex gap-2">
+            {([
+              { value: "best", label: "Mejor intento", desc: "Se usa el intento con mayor puntaje" },
+              { value: "average", label: "Promedio", desc: "Promedio de todos los intentos" },
+            ] as const).map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setAttemptScoring(opt.value)}
+                className={`flex-1 px-3 py-2.5 rounded-[8px] text-left transition-colors border ${
+                  attemptScoring === opt.value
+                    ? "bg-indigo/8 border-indigo/30 text-ink"
+                    : "bg-surface border-subtle text-ink-soft hover:text-ink"
+                }`}
+              >
+                <p className={`text-caption font-medium ${attemptScoring === opt.value ? "text-indigo" : ""}`}>
+                  {opt.label}
+                </p>
+                <p className="text-mono text-ink-mute mt-0.5">{opt.desc}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Puntaje mínimo */}
       <div>

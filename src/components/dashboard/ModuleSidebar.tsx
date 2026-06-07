@@ -188,6 +188,16 @@ export function ModuleSidebar({ classId, initialModules }: Props) {
 
       <div className="px-3 py-3 border-t border-[rgba(0,0,0,0.08)] space-y-0.5">
         <Link
+          href={`/dashboard/clases/${classId}/gradebook`}
+          className={`flex items-center h-8 px-3 rounded-[8px] text-body transition-colors ${
+            pathname.includes("gradebook")
+              ? "bg-surface-alt text-ink font-medium"
+              : "text-ink-soft hover:bg-surface-alt hover:text-ink"
+          }`}
+        >
+          Gradebook
+        </Link>
+        <Link
           href={`/dashboard/clases/${classId}/intentos`}
           className={`flex items-center h-8 px-3 rounded-[8px] text-body transition-colors ${
             pathname.includes("intentos")
