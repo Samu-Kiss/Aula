@@ -168,7 +168,7 @@ export function ModuleSidebar({ classId, initialModules }: Props) {
           Vista general
         </Link>
 
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <DndContext id="module-sidebar-dnd" sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={modules.map((m) => m.id)} strategy={verticalListSortingStrategy}>
             {modules.map((mod) => (
               <SortableModule
@@ -188,14 +188,24 @@ export function ModuleSidebar({ classId, initialModules }: Props) {
 
       <div className="px-3 py-3 border-t border-[rgba(0,0,0,0.08)] space-y-0.5">
         <Link
-          href={`/dashboard/clases/${classId}/gradebook`}
+          href={`/dashboard/clases/${classId}/calificaciones`}
           className={`flex items-center h-8 px-3 rounded-[8px] text-body transition-colors ${
-            pathname.includes("gradebook")
+            pathname.includes("calificaciones")
               ? "bg-surface-alt text-ink font-medium"
               : "text-ink-soft hover:bg-surface-alt hover:text-ink"
           }`}
         >
-          Gradebook
+          Calificaciones
+        </Link>
+        <Link
+          href={`/dashboard/clases/${classId}/estudiantes`}
+          className={`flex items-center h-8 px-3 rounded-[8px] text-body transition-colors ${
+            pathname.includes("estudiantes")
+              ? "bg-surface-alt text-ink font-medium"
+              : "text-ink-soft hover:bg-surface-alt hover:text-ink"
+          }`}
+        >
+          Estudiantes
         </Link>
         <Link
           href={`/dashboard/clases/${classId}/intentos`}
@@ -205,7 +215,7 @@ export function ModuleSidebar({ classId, initialModules }: Props) {
               : "text-ink-soft hover:bg-surface-alt hover:text-ink"
           }`}
         >
-          Intentos
+          Quices
         </Link>
         <Link
           href={`/dashboard/clases/${classId}/configuracion`}

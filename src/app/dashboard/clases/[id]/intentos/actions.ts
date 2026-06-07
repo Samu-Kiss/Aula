@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { gradeRepo } from "@/server/repositories/gradeRepo";
 
 // Calificar manualmente una respuesta de tipo short_answer
 export async function gradeAnswerAction(
@@ -37,14 +38,53 @@ export async function gradeAnswerAction(
     0
   );
 
-  await svc
+  const updatedAttempt = await svc
     .from("attempts")
     .update({ score: newScore, status: "graded" })
-    .eq("id", attemptId);
+    .eq("id", attemptId)
+    .select("quiz_id, student_id, max_score")
+    .single();
 
-  // Invalidar todas las páginas relevantes
+  // Auto-populate grade_items linked to this quiz (F3-04)
+  if (updatedAttempt.data) {
+    try {
+      const { quiz_id, student_id, max_score } = updatedAttempt.data;
+      if (quiz_id) {
+        const quizRow = await svc
+          .from("quizzes")
+          .select("content_id")
+          .eq("id", quiz_id)
+          .maybeSingle();
+        if (quizRow.data?.content_id) {
+          const contentRow = await svc
+            .from("contents")
+            .select("module_id")
+            .eq("id", quizRow.data.content_id)
+            .maybeSingle();
+          const moduleRow = contentRow.data?.module_id
+            ? await svc.from("modules").select("class_id").eq("id", contentRow.data.module_id).maybeSingle()
+            : null;
+          if (moduleRow?.data?.class_id) {
+            const repo = gradeRepo(svc);
+            const gradeItem = await repo.findItemByQuiz(quiz_id, moduleRow.data.class_id);
+            if (gradeItem) {
+              const normalizedScore =
+                gradeItem.max_score > 0 && (max_score ?? 0) > 0
+                  ? (newScore / (max_score ?? newScore)) * gradeItem.max_score
+                  : newScore;
+              await repo.upsertGrade(gradeItem.id, student_id, normalizedScore);
+            }
+          }
+        }
+      }
+    } catch {
+      // Best-effort
+    }
+  }
+
   revalidatePath(`/dashboard/clases/${classId}/intentos`);
   revalidatePath(`/dashboard/clases/${classId}/intentos/${attemptId}`);
   revalidatePath(`/dashboard/clases/${classId}/gradebook`);
+  revalidatePath(`/dashboard/clases/${classId}/calificaciones`);
   return { ok: true };
 }

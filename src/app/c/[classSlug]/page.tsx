@@ -4,7 +4,9 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { classService } from "@/server/services/classService";
 import { moduleRepo } from "@/server/repositories/moduleRepo";
+import { getStudentFromCookie } from "@/lib/auth/studentJwt";
 import { Lockup } from "@/components/Lockup";
+import { SelfEnrollBanner } from "./SelfEnrollBanner";
 
 interface Props {
   params: Promise<{ classSlug: string }>;
@@ -33,7 +35,24 @@ export default async function ClassLandingPage({ params }: Props) {
   const cls = await classService(supabase).getBySlug(classSlug);
   if (!cls) notFound();
 
-  const modules = await moduleRepo(supabase).listPublishedByClass(cls.id);
+  const [modules, student] = await Promise.all([
+    moduleRepo(supabase).listPublishedByClass(cls.id),
+    getStudentFromCookie(),
+  ]);
+
+  // Resolve display name for one-click enroll banner
+  let studentName: string | null = null;
+  if (student) {
+    const { data: row } = await supabase
+      .from("students")
+      .select("first_name, last_name, display_name")
+      .eq("id", student.student_id)
+      .maybeSingle();
+    if (row) {
+      const composed = [row.first_name, row.last_name].filter(Boolean).join(" ");
+      studentName = row.display_name ?? (composed || null);
+    }
+  }
 
   return (
     <main className="min-h-screen bg-page">
@@ -49,6 +68,15 @@ export default async function ClassLandingPage({ params }: Props) {
           className="text-[clamp(48px,7vw,96px)]"
         />
       </header>
+
+      {/* Self-enroll banner */}
+      <section className="px-6 pb-8 md:px-12 max-w-4xl mx-auto">
+        <SelfEnrollBanner
+          classId={cls.id}
+          existingEmail={student?.email ?? null}
+          existingName={studentName}
+        />
+      </section>
 
       {/* Módulos */}
       <section className="px-6 pb-24 md:px-12 max-w-4xl mx-auto">

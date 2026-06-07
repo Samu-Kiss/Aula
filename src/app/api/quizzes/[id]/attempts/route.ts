@@ -60,6 +60,31 @@ export async function POST(
     return NextResponse.json({ error: "quiz_closed" }, { status: 403 });
   }
 
+  // 2b. Auto-inscribir al estudiante en la clase si aún no está en el roster
+  // contents.class_id no existe — hay que pasar por modules
+  if (quiz.content_id) {
+    const { data: contentRow } = await supabase
+      .from("contents")
+      .select("module_id")
+      .eq("id", quiz.content_id)
+      .maybeSingle();
+    if (contentRow?.module_id) {
+      const { data: moduleRow } = await supabase
+        .from("modules")
+        .select("class_id")
+        .eq("id", contentRow.module_id)
+        .maybeSingle();
+      if (moduleRow?.class_id) {
+        await supabase
+          .from("class_students")
+          .upsert(
+            { class_id: moduleRow.class_id, student_id: student.student_id, status: "active" },
+            { onConflict: "class_id,student_id" }
+          );
+      }
+    }
+  }
+
   // 3. Verificar si ya hay un intento en progreso para este estudiante → retomar
   const existing = await aRepo.findInProgress(quizId, student.student_id);
   if (existing) {

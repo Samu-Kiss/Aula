@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getStudentFromCookie } from "@/lib/auth/studentJwt";
 import { attemptRepo } from "@/server/repositories/attemptRepo";
+import { gradeRepo } from "@/server/repositories/gradeRepo";
 
 // POST /api/attempts/[id]/submit — entregar intento y auto-calificar
 export async function POST(
@@ -97,6 +98,30 @@ export async function POST(
     .eq("id", attemptId)
     .select()
     .single();
+
+  // Auto-populate grade_items linked to this quiz (F3-04)
+  // contents.class_id doesn't exist — go through modules
+  try {
+    const { data: quizRow } = await supabase.from("quizzes").select("content_id").eq("id", attempt.quiz_id!).maybeSingle();
+    if (quizRow?.content_id) {
+      const { data: contentRow } = await supabase.from("contents").select("module_id").eq("id", quizRow.content_id).maybeSingle();
+      if (contentRow?.module_id) {
+        const { data: moduleRow } = await supabase.from("modules").select("class_id").eq("id", contentRow.module_id).maybeSingle();
+        if (moduleRow?.class_id) {
+          const repo = gradeRepo(supabase);
+          const gradeItem = await repo.findItemByQuiz(attempt.quiz_id!, moduleRow.class_id);
+          if (gradeItem) {
+            const normalizedScore = gradeItem.max_score > 0 && maxScore > 0
+              ? (totalScore / maxScore) * gradeItem.max_score
+              : totalScore;
+            await repo.upsertGrade(gradeItem.id, attempt.student_id, normalizedScore);
+          }
+        }
+      }
+    }
+  } catch {
+    // Grade population is best-effort; don't fail the submit
+  }
 
   return NextResponse.json({ ok: true, attempt: updated.data, score: totalScore, max_score: maxScore });
 }
