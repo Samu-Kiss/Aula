@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import type { Quiz } from "@/lib/types/db";
+import { useState, useEffect, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import type { Quiz, Attempt } from "@/lib/types/db";
 import type { StudentPayload } from "@/lib/auth/studentJwt";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -17,6 +18,7 @@ interface Props {
   classSlug: string;
   moduleSlug: string;
   initialStudent: StudentPayload | null;
+  initialAttempts: Attempt[];
 }
 
 type Step = "identify_1" | "identify_2" | "landing";
@@ -233,15 +235,63 @@ interface LandingProps {
   student: { email: string; firstName: string; lastName: string };
   availability: ReturnType<typeof quizAvailability>;
   onSignOut: () => void;
+  classSlug: string;
+  moduleSlug: string;
+  initialAttempts: Attempt[];
 }
 
-function QuizLanding({ quiz, content, student, availability, onSignOut }: LandingProps) {
+function pct(score: number | null, max: number | null) {
+  if (score == null || !max) return "—";
+  return `${Math.round((score / max) * 100)}%`;
+}
+
+function QuizLanding({ quiz, content, student, availability, onSignOut, classSlug, moduleSlug, initialAttempts }: LandingProps) {
+  const router = useRouter();
   const [signingOut, startSignOut] = useTransition();
+  const [starting, startBegin] = useTransition();
+  const [startError, setStartError] = useState("");
+  const [attempts, setAttempts] = useState<Attempt[]>(initialAttempts);
+
+  // Si el estudiante acaba de identificarse (sin intentos cargados server-side), buscarlos
+  useEffect(() => {
+    if (initialAttempts.length > 0) return;
+    fetch(`/api/quizzes/${quiz.id}/attempts`)
+      .then((r) => r.json())
+      .then((d) => { if (Array.isArray(d.attempts)) setAttempts(d.attempts); })
+      .catch(() => {});
+  }, [quiz.id, initialAttempts.length]);
+
+  const finishedCount = attempts.length;
+  const attemptsLeft = Math.max(0, quiz.attempts_allowed - finishedCount);
+  const canStart = availability === "available" && attemptsLeft > 0;
 
   function handleSignOut() {
     startSignOut(async () => {
       await fetch("/api/student/session", { method: "DELETE" });
       onSignOut();
+    });
+  }
+
+  function handleStart() {
+    setStartError("");
+    startBegin(async () => {
+      const res = await fetch(`/api/quizzes/${quiz.id}/attempts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idempotency_key: crypto.randomUUID() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        router.push(`/c/${classSlug}/${moduleSlug}/${content.slug}/intento/${data.attempt.id}`);
+      } else {
+        const msgs: Record<string, string> = {
+          attempts_exhausted: "Ya usaste todos tus intentos permitidos.",
+          quiz_unavailable: "El quiz no está disponible.",
+          quiz_closed: "El período del quiz ha cerrado.",
+          quiz_has_no_questions: "Este quiz no tiene preguntas todavía.",
+        };
+        setStartError(msgs[data.error] ?? "No se pudo iniciar. Intenta de nuevo.");
+      }
     });
   }
 
@@ -264,12 +314,11 @@ function QuizLanding({ quiz, content, student, availability, onSignOut }: Landin
         </button>
       </div>
 
-      {/* Quiz info */}
+      {/* Quiz info cards */}
       <div className="space-y-3">
         {quiz.instructions && (
           <p className="text-body text-ink-soft">{quiz.instructions}</p>
         )}
-
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {quiz.time_limit_min != null && (
             <div className="p-4 bg-surface border-subtle rounded-[10px]">
@@ -278,8 +327,10 @@ function QuizLanding({ quiz, content, student, availability, onSignOut }: Landin
             </div>
           )}
           <div className="p-4 bg-surface border-subtle rounded-[10px]">
-            <p className="text-caption text-ink-mute mb-1">Intentos permitidos</p>
-            <p className="text-body text-ink font-medium">{quiz.attempts_allowed}</p>
+            <p className="text-caption text-ink-mute mb-1">Intentos</p>
+            <p className="text-body text-ink font-medium">
+              {finishedCount} / {quiz.attempts_allowed}
+            </p>
           </div>
           {quiz.passing_score != null && (
             <div className="p-4 bg-surface border-subtle rounded-[10px]">
@@ -290,20 +341,70 @@ function QuizLanding({ quiz, content, student, availability, onSignOut }: Landin
         </div>
       </div>
 
-      {/* Availability state / CTA */}
+      {/* Past attempts list */}
+      {attempts.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-caption text-ink-mute">Tus intentos</p>
+          <div className="rounded-[10px] border border-subtle overflow-hidden">
+            {attempts.map((a, i) => {
+              const percentage = pct(a.score, a.max_score);
+              const passing =
+                quiz.passing_score != null && a.score != null && a.max_score
+                  ? (a.score / a.max_score) * 100 >= quiz.passing_score
+                  : null;
+
+              return (
+                <div
+                  key={a.id}
+                  className={`flex items-center gap-4 px-4 py-3 bg-surface ${
+                    i < attempts.length - 1 ? "border-b border-[rgba(0,0,0,0.05)]" : ""
+                  }`}
+                >
+                  <span className="text-mono text-ink-mute w-6 shrink-0">#{a.attempt_number}</span>
+                  <div className="flex-1">
+                    <p className="text-body text-ink font-medium">
+                      {a.score ?? "—"} / {a.max_score ?? "—"} pts
+                      <span className={`ml-2 text-caption ${
+                        passing === true ? "text-bosque" :
+                        passing === false ? "text-borgona" :
+                        "text-ink-soft"
+                      }`}>
+                        {percentage}
+                        {passing === true && " · Aprobado"}
+                        {passing === false && " · Reprobado"}
+                      </span>
+                    </p>
+                    <p className="text-mono text-ink-mute">
+                      {a.submitted_at
+                        ? new Date(a.submitted_at).toLocaleString("es", { dateStyle: "medium", timeStyle: "short" })
+                        : "—"}
+                    </p>
+                  </div>
+                  <a
+                    href={`/c/${classSlug}/${moduleSlug}/${content.slug}?resultado=${a.id}`}
+                    className="text-caption text-indigo hover:text-indigo/70 transition-colors shrink-0"
+                  >
+                    Ver →
+                  </a>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Availability state */}
       {availability === "disabled" && (
         <div className="p-5 bg-surface-alt rounded-[10px] text-center">
           <p className="text-body text-ink-soft">Esta evaluación no está disponible en este momento.</p>
         </div>
       )}
-
       {availability === "not_open" && quiz.opens_at && (
         <div className="p-5 bg-surface-alt rounded-[10px] text-center">
           <p className="text-caption text-ink-mute mb-1">Disponible desde</p>
           <p className="text-body text-ink">{formatDate(quiz.opens_at)}</p>
         </div>
       )}
-
       {availability === "closed" && (
         <div className="p-5 bg-surface-alt rounded-[10px] text-center">
           <p className="text-body text-ink-soft">El período de esta evaluación ha cerrado.</p>
@@ -313,16 +414,27 @@ function QuizLanding({ quiz, content, student, availability, onSignOut }: Landin
         </div>
       )}
 
-      {availability === "available" && (
-        <div className="space-y-2">
-          <button
-            type="button"
-            disabled
-            className="w-full py-3 bg-ink text-surface rounded-[10px] text-caption font-bold opacity-40"
-          >
-            Iniciar evaluación →
-          </button>
-          <p className="text-mono text-ink-mute text-center">El flujo de presentación llega en la siguiente fase.</p>
+      {/* CTA */}
+      {startError && <p className="text-caption text-borgona text-center">{startError}</p>}
+
+      {canStart && (
+        <button
+          type="button"
+          disabled={starting}
+          onClick={handleStart}
+          className="w-full py-3 bg-ink text-surface rounded-[10px] text-caption font-bold hover:bg-ink/90 disabled:opacity-50 transition-colors"
+        >
+          {starting
+            ? "Iniciando…"
+            : finishedCount > 0
+            ? `Nuevo intento (${attemptsLeft} restante${attemptsLeft !== 1 ? "s" : ""})`
+            : "Iniciar evaluación →"}
+        </button>
+      )}
+
+      {availability === "available" && attemptsLeft === 0 && (
+        <div className="p-4 bg-surface-alt rounded-[10px] text-center">
+          <p className="text-body text-ink-soft">Usaste todos tus intentos permitidos.</p>
         </div>
       )}
     </div>
@@ -331,7 +443,7 @@ function QuizLanding({ quiz, content, student, availability, onSignOut }: Landin
 
 // ─── QuizAccess (root) ────────────────────────────────────────────────────────
 
-export function QuizAccess({ quiz, content, classSlug, moduleSlug, initialStudent }: Props) {
+export function QuizAccess({ quiz, content, classSlug, moduleSlug, initialStudent, initialAttempts }: Props) {
   // If student is pre-identified from cookie, jump straight to landing
   const [step, setStep] = useState<Step>(initialStudent ? "landing" : "identify_1");
   const [studentData, setStudentData] = useState<{
@@ -404,6 +516,9 @@ export function QuizAccess({ quiz, content, classSlug, moduleSlug, initialStuden
         content={content}
         student={studentData}
         availability={availability}
+        classSlug={classSlug}
+        moduleSlug={moduleSlug}
+        initialAttempts={step === "landing" && initialStudent ? initialAttempts : []}
         onSignOut={() => {
           setStudentData(null);
           setFormBuffer(null);

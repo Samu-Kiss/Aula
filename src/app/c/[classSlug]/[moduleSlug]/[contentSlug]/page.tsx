@@ -5,13 +5,16 @@ import { classService } from "@/server/services/classService";
 import { moduleRepo } from "@/server/repositories/moduleRepo";
 import { contentRepo } from "@/server/repositories/contentRepo";
 import { quizRepo } from "@/server/repositories/quizRepo";
+import { attemptRepo } from "@/server/repositories/attemptRepo";
 import { getStudentFromCookie } from "@/lib/auth/studentJwt";
 import { ClassNav } from "@/components/public/ClassNav";
 import { RichTextRenderer } from "@/components/content/RichTextRenderer";
 import { QuizAccess } from "@/components/quiz/QuizAccess";
+import { QuizResult } from "@/components/quiz/QuizResult";
 
 interface Props {
   params: Promise<{ classSlug: string; moduleSlug: string; contentSlug: string }>;
+  searchParams: Promise<{ resultado?: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -26,8 +29,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: `${content.title} — ${cls.title}` };
 }
 
-export default async function ContentPage({ params }: Props) {
+export default async function ContentPage({ params, searchParams }: Props) {
   const { classSlug, moduleSlug, contentSlug } = await params;
+  const { resultado: resultadoId } = await searchParams;
   const supabase = await createClient();
 
   const cls = await classService(supabase).getBySlug(classSlug);
@@ -49,10 +53,50 @@ export default async function ContentPage({ params }: Props) {
   // Para quizzes: cargar datos con service client y leer cookie del estudiante
   let quiz = null;
   let initialStudent = null;
+  let initialAttempts: import("@/lib/types/db").Attempt[] = [];
+  let resultData: {
+    attempt: import("@/lib/types/db").Attempt;
+    questions: import("@/lib/types/db").AttemptQuestion[];
+    answers: import("@/lib/types/db").Answer[];
+    studentName: { firstName: string; lastName: string; email: string };
+  } | null = null;
+
   if (content.type === "quiz") {
     const svc = createServiceClient();
     quiz = await quizRepo(svc).findByContentId(content.id);
     initialStudent = await getStudentFromCookie();
+
+    // Cargar intentos previos si el estudiante está identificado
+    if (initialStudent && quiz) {
+      initialAttempts = await attemptRepo(svc).listFinishedByStudent(
+        quiz.id,
+        initialStudent.student_id
+      );
+    }
+
+    // Cargar resultado si viene el param ?resultado=
+    if (resultadoId && initialStudent) {
+      const aRepo = attemptRepo(svc);
+      const attempt = await aRepo.findById(resultadoId);
+      if (attempt && attempt.student_id === initialStudent.student_id) {
+        const [questions, answers, studentRow] = await Promise.all([
+          aRepo.listQuestions(resultadoId),
+          aRepo.listAnswers(resultadoId),
+          svc.from("students").select("first_name, last_name, email").eq("id", attempt.student_id).single(),
+        ]);
+        const s = studentRow.data;
+        resultData = {
+          attempt,
+          questions,
+          answers,
+          studentName: {
+            firstName: s?.first_name ?? "",
+            lastName: s?.last_name ?? "",
+            email: s?.email ?? initialStudent.email,
+          },
+        };
+      }
+    }
   }
 
   const TYPE_LABEL: Record<string, string> = {
@@ -91,13 +135,24 @@ export default async function ContentPage({ params }: Props) {
         {content.type === "file" && (
           <p className="text-body text-ink-soft">Archivo — próximamente.</p>
         )}
-        {content.type === "quiz" && (
+        {content.type === "quiz" && resultData && quiz && (
+          <QuizResult
+            attempt={resultData.attempt}
+            quiz={quiz}
+            questions={resultData.questions}
+            answers={resultData.answers}
+            contentUrl={`/c/${classSlug}/${moduleSlug}/${contentSlug}`}
+            student={resultData.studentName}
+          />
+        )}
+        {content.type === "quiz" && !resultData && (
           <QuizAccess
             quiz={quiz}
             content={{ title: content.title, slug: content.slug }}
             classSlug={classSlug}
             moduleSlug={moduleSlug}
             initialStudent={initialStudent}
+            initialAttempts={initialAttempts}
           />
         )}
       </article>
