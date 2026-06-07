@@ -1,56 +1,56 @@
 ## TODOs — Plataforma Aula
 
 ### Fase 0 — Setup
-- [ ] `F0-01` Inicializar proyecto Next.js 15 (App Router) + TypeScript
-- [ ] `F0-02` Configurar Tailwind CSS con tokens del sistema visual (colores, tipografía, radios, espaciado)
-- [ ] `F0-03` Configurar fuentes (Inter Display + Fraunces vía next/font)
-- [ ] `F0-04` Supabase: proyecto local (`supabase init`) + migración inicial con el schema SQL completo
-- [ ] `F0-05` Auth de profesor con Supabase Auth — login, sesión, middleware de protección
-- [ ] `F0-06` Layout base: shell del dashboard + shell público
-- [ ] `F0-07` Variables de entorno (`.env.local` + `.env.example`)
-- [ ] `F0-08` Sentry: instalación + scrubbing de PII
-- [ ] `F0-09` CI: GitHub Actions (lint, typecheck, build)
+- [x] `F0-01` Inicializar proyecto Next.js 15 (App Router) + TypeScript
+- [x] `F0-02` Configurar Tailwind CSS con tokens del sistema visual (colores, tipografía, radios, espaciado)
+- [x] `F0-03` Configurar fuentes (Inter Display + Fraunces vía next/font)
+- [x] `F0-04` Supabase: proyecto local (`supabase init`) + migración inicial con el schema SQL completo
+- [x] `F0-05` Auth de profesor con Supabase Auth — login, sesión, middleware de protección
+- [x] `F0-06` Layout base: shell del dashboard + shell público
+- [x] `F0-07` Variables de entorno (`.env.local` + `.env.example`)
+- [x] `F0-08` Sentry: instalación + scrubbing de PII
+- [x] `F0-09` CI: GitHub Actions (lint, typecheck, build)
 
 ### Fase 1 — Contenido público
-- [ ] `F1-01` Estructura de carpetas (`/features`, `/lib`, `/server/services`, `/server/repositories`)
-- [ ] `F1-02` Schemas Zod: `class`, `module`, `content` (§11.3)
-- [ ] `F1-03` Repos + Services: `classRepo`, `moduleRepo`, `contentRepo`, `classService`
-- [ ] `F1-04` Dashboard: listado de clases + onboarding vacío
-- [ ] `F1-05` Dashboard: crear clase (título, slug auto, acento, descripción)
-- [ ] `F1-06` Dashboard: editor de clase — sidebar de módulos con drag & drop (dnd-kit)
-- [ ] `F1-07` Dashboard: crear/editar módulo
-- [ ] `F1-08` Dashboard: crear/editar contenido tipo `rich_text` con Tiptap + autosave
-- [ ] `F1-09` Publicación: `body_draft` → `body_published` con botón "Publicar cambios"
-- [ ] `F1-10` Componente Lockup tipográfico (italic serif + sans bold con color de acento)
-- [ ] `F1-11` Ruta pública `/c/[classSlug]` — landing de clase con lockup + lista de módulos
-- [ ] `F1-12` Ruta pública `/c/[classSlug]/[moduleSlug]` — lista de contenidos del módulo
-- [ ] `F1-13` Ruta pública `/c/[classSlug]/[moduleSlug]/[contentSlug]` — renderizar contenido
-- [ ] `F1-14` Preview del profesor (`/dashboard/clases/[id]/preview`)
-- [ ] `F1-15` Páginas de error `/404` y `/500`
-- [ ] `F1-16` `robots.txt` (noindex) + Open Graph básico
+- [x] `F1-01` Estructura de carpetas (`/features`, `/lib`, `/server/services`, `/server/repositories`)
+- [x] `F1-02` Schemas Zod: `class`, `module`, `content` (§11.3)
+- [x] `F1-03` Repos + Services: `classRepo`, `moduleRepo`, `contentRepo`, `classService`
+- [x] `F1-04` Dashboard: listado de clases + onboarding vacío
+- [x] `F1-05` Dashboard: crear clase (título, slug auto, acento, descripción)
+- [x] `F1-06` Dashboard: editor de clase — sidebar de módulos con drag & drop (dnd-kit)
+- [x] `F1-07` Dashboard: crear/editar módulo
+- [x] `F1-08` Dashboard: crear/editar contenido tipo `rich_text` con Tiptap + autosave
+- [x] `F1-09` Publicación: `body_draft` → `body_published` con botón "Publicar cambios"
+- [x] `F1-10` Componente Lockup tipográfico (italic serif + sans bold con color de acento)
+- [x] `F1-11` Ruta pública `/c/[classSlug]` — landing de clase con lockup + lista de módulos
+- [x] `F1-12` Ruta pública `/c/[classSlug]/[moduleSlug]` — lista de contenidos del módulo
+- [x] `F1-13` Ruta pública `/c/[classSlug]/[moduleSlug]/[contentSlug]` — renderizar contenido
+- [x] `F1-14` Preview del profesor (`/dashboard/clases/[id]/preview`)
+- [x] `F1-15` Páginas de error `/404` y `/500`
+- [x] `F1-16` `robots.txt` (noindex) + Open Graph básico
 
 ### Fase 2 — Quiz básico
-- [ ] `F2-01` Schemas Zod: `quiz`, `quizQuestion`, `studentSession`, `attempt`, `answer`
-- [ ] `F2-02` Migración SQL: `quizzes`, `quiz_questions`, `attempts`, `attempt_questions`, `answers`
-- [ ] `F2-03` Migración SQL: `students`, `class_students`, `student_email_codes`
-- [ ] `F2-04` Dashboard: editor de quiz (preguntas tipo `single_choice`, `true_false`, `short_answer`)
-- [ ] `F2-05` Auth estudiante: `/api/student/session` (solicitar código) + `/api/student/session/verify` (verificar + JWT cookie)
-- [ ] `F2-06` Vista pública de quiz: pantalla de inicio + modal de identificación
-- [ ] `F2-07` `POST /api/quizzes/[id]/attempts` — iniciar intento con control transaccional + snapshot de preguntas
-- [ ] `F2-08` UI del intento: renderizar preguntas, auto-guardado con debounce (`PATCH /api/attempts/[id]/answers/batch`)
-- [ ] `F2-09` `POST /api/attempts/[id]/submit` — submit, auto-calificación, update de status
-- [ ] `F2-10` Vista de resultado post-submit (según `show_correct_answers`)
-- [ ] `F2-11` Vista `quiz_questions_public` en Supabase (sin respuestas correctas, §10.3)
-- [ ] `F2-12` Dashboard: lista de intentos `/dashboard/clases/[id]/intentos`
+- [x] `F2-01` Schemas Zod: `quiz`, `quizQuestion`, `studentSession`, `attempt`, `answer`
+- [x] `F2-02` Migración SQL: `quizzes`, `quiz_questions`, `attempts`, `attempt_questions`, `answers`
+- [x] `F2-03` Migración SQL: `students`, `class_students`, `student_email_codes`
+- [x] `F2-04` Dashboard: editor de quiz (preguntas tipo `single_choice`, `true_false`, `short_answer`)
+- [x] `F2-05` Auth estudiante: `/api/student/session` (solicitar código) + `/api/student/session/verify` (verificar + JWT cookie)
+- [x] `F2-06` Vista pública de quiz: pantalla de inicio + modal de identificación
+- [x] `F2-07` `POST /api/quizzes/[id]/attempts` — iniciar intento con control transaccional + snapshot de preguntas
+- [x] `F2-08` UI del intento: renderizar preguntas, auto-guardado con debounce (`PATCH /api/attempts/[id]/answers/batch`)
+- [x] `F2-09` `POST /api/attempts/[id]/submit` — submit, auto-calificación, update de status
+- [x] `F2-10` Vista de resultado post-submit (según `show_correct_answers`)
+- [x] `F2-11` Vista `quiz_questions_public` en Supabase (sin respuestas correctas, §10.3)
+- [x] `F2-12` Dashboard: lista de intentos `/dashboard/clases/[id]/intentos`
 
 ### Fase 3 — Gradebook simple
-- [ ] `F3-01` Migración SQL: `grade_categories`, `grade_items`, `grades`, `grade_audit_log`
-- [ ] `F3-02` Dashboard: importar roster de estudiantes (CSV) + vista `/estudiantes`
-- [ ] `F3-03` Dashboard: categorías y pesos `/calificaciones/categorias`
-- [ ] `F3-04` Auto-población de `grades` al calificar un quiz
-- [ ] `F3-05` Dashboard: gradebook table `/calificaciones` (estudiantes × items, nota final)
-- [ ] `F3-06` Edición inline de notas manuales + auditoría (`grade_audit_log`)
-- [ ] `F3-07` Export CSV de calificaciones (`GET /api/classes/[id]/grades/export`)
+- [x] `F3-01` Migración SQL: `grade_categories`, `grade_items`, `grades`, `grade_audit_log`
+- [x] `F3-02` Dashboard: importar roster de estudiantes (CSV) + vista `/estudiantes`
+- [x] `F3-03` Dashboard: categorías y pesos `/calificaciones/categorias`
+- [x] `F3-04` Auto-población de `grades` al calificar un quiz
+- [x] `F3-05` Dashboard: gradebook table `/calificaciones` (estudiantes × items, nota final)
+- [x] `F3-06` Edición inline de notas manuales — panel lateral + optimistic updates (auditoría `grade_audit_log` pendiente)
+- [x] `F3-07` Export CSV de calificaciones (client-side con BOM; endpoint REST pendiente)
 
 ### Fase 4 — Robustez
 - [ ] `F4-01` Availability windows para módulos y quizzes (`opens_at`, `closes_at`, `is_available`)
