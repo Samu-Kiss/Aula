@@ -75,26 +75,10 @@ export function MapRenderer({ body, accent }: Props) {
     if (!containerRef.current || !TOKEN) return;
     mapboxgl.accessToken = TOKEN;
 
-    // Build initial bounds from all content so the first frame already shows everything.
-    const allPts: [number, number][] = [
-      ...markers.map((m): [number, number] => [m.lng, m.lat]),
-      ...routes.flatMap((r) => r.points as [number, number][]),
-      ...areas.flatMap((a) => a.points as [number, number][]),
-    ];
-    const initBounds = allPts.length > 0
-      ? allPts.reduce(
-          (b, pt) => b.extend(pt),
-          new mapboxgl.LngLatBounds(allPts[0], allPts[0])
-        )
-      : null;
-
     const map = new mapboxgl.Map({
       container: containerRef.current,
       style: "mapbox://styles/mapbox/light-v11",
-      interactive: true,
-      ...(initBounds
-        ? { bounds: initBounds, fitBoundsOptions: { padding: 60, maxZoom: 16 } }
-        : { center, zoom }),
+      center, zoom, interactive: true,
     });
     mapRef.current = map;
     map.addControl(new mapboxgl.NavigationControl(), "top-right");
@@ -212,6 +196,19 @@ export function MapRenderer({ body, accent }: Props) {
         cleanup.push(() => mk.remove());
       });
 
+      // ── Auto-fit to all content on first load ────────────────────────────
+      const fitPts: [number, number][] = [
+        ...markers.map((m): [number, number] => [m.lng, m.lat]),
+        ...routes.flatMap((r) => r.points as [number, number][]),
+        ...areas.flatMap((a) => a.points as [number, number][]),
+      ];
+      if (fitPts.length > 0) {
+        const bounds = fitPts.reduce(
+          (b, pt) => b.extend(pt),
+          new mapboxgl.LngLatBounds(fitPts[0], fitPts[0])
+        );
+        map.fitBounds(bounds, { padding: 60, maxZoom: 16, duration: 0 });
+      }
     });
 
     return () => {
@@ -256,9 +253,10 @@ export function MapRenderer({ body, accent }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* Map */}
-      <div className="relative w-full rounded-[12px] overflow-hidden shadow-sm" style={{ height: 480 }}>
-        <div ref={containerRef} className="absolute inset-0" />
+      {/* Map — wrapper is relative so the button can overlay the canvas */}
+      <div className="relative w-full rounded-[12px] shadow-sm" style={{ height: 480 }}>
+        {/* Mapbox mounts inside this div; overflow-hidden clips the canvas to the rounded corners */}
+        <div ref={containerRef} className="absolute inset-0 rounded-[12px] overflow-hidden" />
         {allPtsForFit.length > 0 && (
           <button
             onClick={handleRecenter}
