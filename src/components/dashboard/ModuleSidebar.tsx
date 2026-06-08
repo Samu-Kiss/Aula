@@ -19,7 +19,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Module } from "@/lib/types/db";
-import { createModuleAction, reorderModulesAction } from "@/app/dashboard/clases/[id]/actions";
+import { createModuleAction, reorderModulesAction, duplicateModuleAction } from "@/app/dashboard/clases/[id]/actions";
 
 function SortableModule({
   mod,
@@ -32,12 +32,21 @@ function SortableModule({
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: mod.id });
+  const [isPendingDup, startDuplicate] = useTransition();
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.4 : 1,
   };
+
+  function handleDuplicate(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    startDuplicate(async () => {
+      await duplicateModuleAction(mod.id, classId);
+    });
+  }
 
   return (
     <div ref={setNodeRef} style={style} className="flex items-center gap-1 group">
@@ -63,6 +72,25 @@ function SortableModule({
           <span className="ml-auto shrink-0 w-1.5 h-1.5 rounded-full bg-ink-mute" />
         )}
       </Link>
+      {/* Duplicate button — appears on hover */}
+      <button
+        onClick={handleDuplicate}
+        disabled={isPendingDup}
+        title="Duplicar módulo"
+        className="p-1 text-ink-mute opacity-0 group-hover:opacity-100 hover:text-ink transition-colors disabled:opacity-30 shrink-0"
+        aria-label="Duplicar módulo"
+      >
+        {isPendingDup ? (
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="animate-spin">
+            <circle cx="6" cy="6" r="4" strokeDasharray="16" strokeDashoffset="8" />
+          </svg>
+        ) : (
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />
+            <path d="M1.5 8.5V1.5h7" />
+          </svg>
+        )}
+      </button>
     </div>
   );
 }

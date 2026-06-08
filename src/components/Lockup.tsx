@@ -20,11 +20,25 @@ interface Props {
 
 export function Lockup({ title, accent, splitAt, className = "" }: Props) {
   const words = title.trim().split(/\s+/);
+  const accentColor = ACCENT_COLORS[accent];
+
+  // Single word with no explicit split → all accent serif, no sans portion
+  if (words.length === 1 && splitAt == null) {
+    return (
+      <span className={`inline-flex items-baseline leading-none ${className}`}>
+        <span className="font-serif italic" style={{ color: accentColor }}>
+          {words[0]}
+        </span>
+      </span>
+    );
+  }
+
   let italic: string;
   let bold: string;
 
   if (words.length === 1) {
-    const mid = splitAt ?? Math.ceil(words[0].length / 2);
+    // splitAt was explicitly set on a single word — honour it
+    const mid = splitAt!;
     italic = words[0].slice(0, mid);
     bold = words[0].slice(mid);
   } else {
@@ -32,8 +46,6 @@ export function Lockup({ title, accent, splitAt, className = "" }: Props) {
     italic = words.slice(0, split).join(" ");
     bold = words.slice(split).join(" ");
   }
-
-  const accentColor = ACCENT_COLORS[accent];
 
   return (
     <span className={`inline-flex flex-wrap items-baseline leading-none ${className}`}>
@@ -47,7 +59,7 @@ export function Lockup({ title, accent, splitAt, className = "" }: Props) {
         className="font-sans font-black text-ink"
         style={{ marginLeft: "-0.02em", letterSpacing: "-0.04em" }}
       >
-        {bold ? ` ${bold}` : ""}
+        {bold ? ` ${bold}` : ""}
       </span>
     </span>
   );

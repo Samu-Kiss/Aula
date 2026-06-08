@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   DndContext,
   closestCenter,
@@ -18,7 +19,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Content } from "@/lib/types/db";
-import { reorderContentsAction, deleteContentAction } from "@/app/dashboard/clases/[id]/actions";
+import { reorderContentsAction, deleteContentAction, duplicateContentAction } from "@/app/dashboard/clases/[id]/actions";
 
 const CONTENT_LABELS: Record<string, string> = {
   rich_text: "Lectura",
@@ -34,17 +35,20 @@ function SortableContent({
   classId,
   moduleId,
   onDeleted,
+  onDuplicated,
 }: {
   content: Content;
   index: number;
   classId: string;
   moduleId: string;
   onDeleted: (id: string) => void;
+  onDuplicated: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: content.id });
   const [confirming, setConfirming] = useState(false);
   const [deleting, startDelete] = useTransition();
+  const [duplicating, startDuplicate] = useTransition();
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -56,6 +60,13 @@ function SortableContent({
     startDelete(async () => {
       await deleteContentAction(content.id, classId);
       onDeleted(content.id);
+    });
+  }
+
+  function handleDuplicate() {
+    startDuplicate(async () => {
+      await duplicateContentAction(content.id, moduleId, classId);
+      onDuplicated();
     });
   }
 
@@ -89,8 +100,28 @@ function SortableContent({
         </span>
       </Link>
 
-      {/* Delete button — appears on hover */}
-      <div className="opacity-0 group-hover:opacity-100 flex items-center shrink-0 transition-opacity">
+      {/* Actions — appear on hover */}
+      <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 shrink-0 transition-opacity">
+        {/* Duplicate button */}
+        <button
+          onClick={handleDuplicate}
+          disabled={duplicating}
+          title="Duplicar contenido"
+          className="p-1.5 text-ink-mute hover:text-ink transition-colors disabled:opacity-40"
+        >
+          {duplicating ? (
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="animate-spin">
+              <circle cx="7" cy="7" r="5" strokeDasharray="20" strokeDashoffset="10" />
+            </svg>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="4" y="4" width="8" height="8" rx="1.5" />
+              <path d="M2 10V2h8" />
+            </svg>
+          )}
+        </button>
+
+        {/* Delete button */}
         {confirming ? (
           <div className="flex items-center gap-1">
             <button
@@ -132,9 +163,14 @@ interface Props {
 export function ContentList({ classId, moduleId, initialContents }: Props) {
   const [contents, setContents] = useState(initialContents);
   const [, startTransition] = useTransition();
+  const router = useRouter();
 
   function handleDeleted(id: string) {
     setContents((prev) => prev.filter((c) => c.id !== id));
+  }
+
+  function handleDuplicated() {
+    router.refresh();
   }
 
   const sensors = useSensors(
@@ -186,6 +222,7 @@ export function ContentList({ classId, moduleId, initialContents }: Props) {
                 classId={classId}
                 moduleId={moduleId}
                 onDeleted={handleDeleted}
+                onDuplicated={handleDuplicated}
               />
             </li>
           ))}

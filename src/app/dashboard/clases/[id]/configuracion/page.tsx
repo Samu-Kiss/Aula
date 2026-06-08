@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { classService } from "@/server/services/classService";
 import { PublishClassToggle } from "./PublishClassToggle";
 import { ClassMetaForm } from "./ClassMetaForm";
+import { DeleteClassButton } from "./DeleteClassButton";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -47,6 +48,17 @@ export default async function ConfiguracionPage({ params }: Props) {
           Los módulos y contenidos tienen su propia visibilidad independiente.
         </p>
         <PublishClassToggle classId={id} isPublished={cls.is_published} />
+      </section>
+
+      {/* Zona de peligro */}
+      <section className="border border-borgona/25 rounded-[12px] p-6">
+        <h2 className="text-h2 text-borgona mb-1">Zona de peligro</h2>
+        <p className="text-body text-ink-soft mb-5">
+          Eliminar la clase borra permanentemente todos sus módulos, contenidos y configuración.
+          Los intentos de estudiantes y calificaciones se conservan en la base de datos pero
+          dejarán de ser accesibles.
+        </p>
+        <DeleteClassButton classId={id} classTitle={cls.title} />
       </section>
     </div>
   );

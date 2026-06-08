@@ -75,10 +75,8 @@
 - [ ] `F5-08` Dashboard admin `/dashboard/admin` con métricas y anti-cheating insights
 - [ ] `F5-09` Soft delete + archivo recuperable `/dashboard/archivo`
 - [ ] `F5-10` Anonimización del estudiante (`/api/student/anonymize`)
-- [ ] `F5-11` Duplicar clase, módulo y quiz
+- [x] `F5-11` Duplicar clase, módulo y quiz
 - [ ] `F5-12` OG image dinámica (`/api/og`) con lockup y acento
-- [ ] `F5-13` Accessibility audit (axe-core/playwright + revisión manual)
-- [ ] `F5-14` Responsive completo (mobile, tablet, desktop)
 - [ ] `F5-15` Landing en `/` — página de presentación de la plataforma con lockup, propuesta de valor y CTA al login del profesor; actualmente la ruta raíz redirige directo al dashboard
 - [ ] `F5-16` QR de acceso por clase — generar QR con la URL pública `/c/[classSlug]` en el dashboard del profesor; vista de pantalla completa para proyectar en clase y opción de descargar como PNG para compartir
 - [X] `F5-17` Links en lecturas — extensión Tiptap Link en el editor de contenido `rich_text`; soporte de href en el renderer público (actualmente se pierde al serializar a HTML)
@@ -89,3 +87,44 @@
 - [X] `F5-22` Sidebar navigation dentro de cada módulo
 - [X] `F5-23` Permitir al profesor hacer rutas entre puntos del mapa (puede hacer varias rutas) y permitirle nombrar los puntos que pone en el mapa
 - [X] `F5-24` Funciones avanzadas de mapa, que a partir de un archivo (puede ser un json), se coloquen los puntos, las rutas y las tarjetas, también permitir áreas
+
+### Fase 6 — Revisión integral de UX
+
+#### 6.1 Flujos críticos
+- [ ] `F6-01` Revisar flujo completo del profesor nuevo
+- [ ] `F6-02` Revisar flujo completo del estudiante nuevo
+- [ ] `F6-03` Revisar flujo de creación, edición, publicación y preview de una clase
+- [ ] `F6-04` Revisar flujo de intento de quiz de inicio a resultado
+- [ ] `F6-05` Revisar flujo de calificación, revisión manual y gradebook
+
+#### 6.2 Navegabilidad
+- [ ] `F6-06` Revisar navegación del dashboard: sidebar, breadcrumbs, tabs y retornos
+- [ ] `F6-07` Revisar navegación pública: clase, módulo, contenido, quiz y regreso al módulo
+- [ ] `F6-08` Revisar claridad de ubicación actual del usuario en cada pantalla
+- [ ] `F6-09` Revisar consistencia de rutas, títulos de página y acciones disponibles
+
+#### 6.3 Claridad de interfaz
+- [ ] `F6-10` Revisar microcopy, labels, ayudas y mensajes de error
+- [ ] `F6-11` Revisar estados vacíos, estados de carga y estados de error
+- [ ] `F6-12` Revisar claridad de estados: borrador, publicado, disponible, cerrado, enviado, calificado y pendiente
+- [ ] `F6-13` Revisar jerarquía visual de acciones primarias, secundarias y destructivas
+
+#### 6.4 Consistencia UI
+- [ ] `F6-14` Unificar cards, formularios, modales, tablas, badges, alerts, banners y tooltips
+- [ ] `F6-15` Revisar spacing, radios, bordes, sombras, tipografía, iconos y alineaciones
+- [ ] `F6-16` Revisar consistencia de tokens de diseño usando Tailwind y el sistema visual definido
+- [ ] `F6-17` Revisar uso consistente del color de acento del aula
+
+#### 6.5 Responsive y accesibilidad
+- [ ] `F6-18` Responsive completo en mobile, tablet y desktop
+- [ ] `F6-19` Accessibility audit con axe-core/playwright
+- [ ] `F6-20` Revisión manual de accesibilidad: contraste, foco, teclado, labels y estructura semántica
+- [ ] `F6-21` Revisar tamaños de click/tap y usabilidad en pantallas pequeñas
+
+#### 6.6 Pruebas de usuario y cierre
+- [ ] `F6-22` Crear checklist heurístico UI/UX para evaluar la plataforma
+- [ ] `F6-23` Hacer prueba manual tipo usuario nuevo con escenarios guiados
+- [ ] `F6-24` Registrar fricciones, dudas, pasos innecesarios y puntos confusos
+- [ ] `F6-25` Priorizar mejoras UX: bloqueantes, importantes, deseables y deuda visual
+- [ ] `F6-26` Aplicar refinamientos finales sin agregar nuevas funcionalidades
+- [ ] `F6-27` Documentar criterios UX para futuras features

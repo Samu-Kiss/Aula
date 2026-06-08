@@ -10,10 +10,26 @@ export async function loginAction(formData: FormData) {
   const password = formData.get("password") as string;
   const next = (formData.get("next") as string) || "/dashboard";
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  let authFailed = false;
+  let serviceDown = false;
 
-  if (error) {
-    redirect(`/login?error=${encodeURIComponent("Correo o contraseña incorrectos.")}`);
+  try {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) authFailed = true;
+  } catch {
+    // fetch failed — Supabase unreachable
+    serviceDown = true;
+  }
+
+  if (serviceDown) {
+    redirect(
+      `/login?error=${encodeURIComponent("Servicio no disponible. Intenta de nuevo en unos minutos.")}`
+    );
+  }
+  if (authFailed) {
+    redirect(
+      `/login?error=${encodeURIComponent("Correo o contraseña incorrectos.")}`
+    );
   }
 
   redirect(next);
@@ -21,6 +37,10 @@ export async function loginAction(formData: FormData) {
 
 export async function logoutAction() {
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  try {
+    await supabase.auth.signOut();
+  } catch {
+    // If backend is down, sign out locally by clearing the cookie via redirect.
+  }
   redirect("/login");
 }

@@ -2,34 +2,40 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { classService } from "@/server/services/classService";
 import { Lockup } from "@/components/Lockup";
+import { DuplicateClassButton } from "./DuplicateClassButton";
 import type { Class } from "@/lib/types/db";
 
 function ClassCard({ cls }: { cls: Class }) {
   return (
-    <Link
-      href={`/dashboard/clases/${cls.id}`}
-      className="block p-6 bg-surface rounded-[12px] border-subtle hover:border-ink/20 transition-colors group"
-    >
-      <Lockup
-        title={cls.title}
-        accent={cls.accent}
-        splitAt={cls.lockup_split_at}
-        className="text-[28px]"
-      />
-      {cls.description && (
-        <p className="text-body text-ink-soft mt-3 line-clamp-2">{cls.description}</p>
-      )}
-      <div className="flex items-center gap-3 mt-4">
-        <span className={`inline-flex items-center h-5 px-2 rounded-[4px] text-mono ${
-          cls.is_published
-            ? "bg-bosque/10 text-bosque"
-            : "bg-surface-alt text-ink-mute"
-        }`}>
-          {cls.is_published ? "Publicada" : "Borrador"}
-        </span>
-        <span className="text-mono text-ink-mute">/c/{cls.slug}</span>
+    <div className="relative group/card">
+      <Link
+        href={`/dashboard/clases/${cls.id}`}
+        className="block p-6 bg-surface rounded-[12px] border-subtle hover:border-ink/20 transition-colors group"
+      >
+        <Lockup
+          title={cls.title}
+          accent={cls.accent}
+          splitAt={cls.lockup_split_at}
+          className="text-[28px]"
+        />
+        {cls.description && (
+          <p className="text-body text-ink-soft mt-3 line-clamp-2">{cls.description}</p>
+        )}
+        <div className="flex items-center gap-3 mt-4">
+          <span className={`inline-flex items-center h-5 px-2 rounded-[4px] text-mono ${
+            cls.is_published
+              ? "bg-bosque/10 text-bosque"
+              : "bg-surface-alt text-ink-mute"
+          }`}>
+            {cls.is_published ? "Publicada" : "Borrador"}
+          </span>
+          <span className="text-mono text-ink-mute">/c/{cls.slug}</span>
+        </div>
+      </Link>
+      <div className="absolute top-3 right-3 opacity-0 group-hover/card:opacity-100 transition-opacity">
+        <DuplicateClassButton classId={cls.id} />
       </div>
-    </Link>
+    </div>
   );
 }
 
