@@ -24,27 +24,55 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 export function ModuleContentsSidebar({ contents, accent }: Props) {
-  const [activeSlug, setActiveSlug] = useState<string | null>(null);
+  const [activeSlug, setActiveSlug] = useState<string | null>(contents[0]?.slug ?? null);
   const hex = accentHex(accent);
+  const locked = useRef(false);
 
   useEffect(() => {
-    const observers: IntersectionObserver[] = [];
+    const slugs = contents.map((c) => c.slug);
+    let rafId: number;
+    let lastY = -1;
 
-    contents.forEach(({ slug }) => {
-      const el = document.getElementById(slug);
-      if (!el) return;
-      const obs = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) setActiveSlug(slug);
-        },
-        { rootMargin: "-20% 0px -60% 0px", threshold: 0 }
-      );
-      obs.observe(el);
-      observers.push(obs);
-    });
+    function detect() {
+      // getBoundingClientRect doesn't depend on which element scrolls —
+      // it always returns position relative to the visible viewport.
+      if (!locked.current) {
+        // At the very top of the page, always show the first section —
+        // avoids false positives when section 1 is short and section 2's
+        // top is already inside any reasonable threshold.
+        if (window.scrollY < 50) {
+          setActiveSlug(slugs[0] ?? null);
+        } else {
+          // 40% of viewport scales with screen size (works on 4K).
+          const triggerY = window.innerHeight * 0.4;
+          let active = slugs[0] ?? null;
+          for (const slug of slugs) {
+            const el = document.getElementById(slug);
+            if (!el) continue;
+            if (el.getBoundingClientRect().top <= triggerY) active = slug;
+          }
+          setActiveSlug(active);
+        }
+      }
+      rafId = requestAnimationFrame(detect);
+    }
 
-    return () => observers.forEach((o) => o.disconnect());
-  }, [contents]);
+    rafId = requestAnimationFrame(detect);
+    return () => cancelAnimationFrame(rafId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function handleClick(slug: string) {
+    setActiveSlug(slug);
+    locked.current = true;
+    const el = document.getElementById(slug);
+    if (el) {
+      const top = el.getBoundingClientRect().top + window.scrollY - 80;
+      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    }
+    // Release lock after smooth scroll animation (~700ms)
+    setTimeout(() => { locked.current = false; }, 800);
+  }
 
   return (
     <nav aria-label="Contenidos del módulo">
@@ -55,11 +83,7 @@ export function ModuleContentsSidebar({ contents, accent }: Props) {
             <li key={c.id}>
               <a
                 href={`#${c.slug}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById(c.slug)?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  setActiveSlug(c.slug);
-                }}
+                onClick={(e) => { e.preventDefault(); handleClick(c.slug); }}
                 className={`flex items-start gap-2 px-2 py-2 rounded-[6px] transition-colors group ${
                   isActive ? "bg-surface" : "hover:bg-surface"
                 }`}
