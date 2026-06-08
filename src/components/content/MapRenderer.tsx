@@ -10,8 +10,9 @@ import { MAP_PALETTE } from "@/app/dashboard/clases/[id]/modulos/[moduleId]/cont
 interface MapCard   { title: string; body: Record<string, unknown>; }
 interface MapMarker { id?: string; lng: number; lat: number; color?: string; card?: MapCard; label?: string; categoryId?: string; }
 interface MapRoute  { id?: string; points: [number, number][]; color?: string; card?: MapCard; name?: string | null; categoryId?: string; }
+interface MapArea   { id?: string; points: [number, number][]; color?: string; card?: MapCard; name?: string | null; }
 
-interface SelectedCard { type: "marker" | "route"; index: number; card: MapCard; color?: string; }
+interface SelectedCard { type: "marker" | "route" | "area"; index: number; card: MapCard; color?: string; }
 
 interface Props {
   body: Record<string, unknown> | null;
@@ -41,6 +42,7 @@ export function MapRenderer({ body, accent }: Props) {
   const zoom        = (body?.zoom        as number            | undefined) ?? 11;
   const markers     = (body?.markers     as MapMarker[]       | undefined) ?? [];
   const routes      = (body?.routes      as MapRoute[]        | undefined) ?? [];
+  const areas       = (body?.areas       as MapArea[]         | undefined) ?? [];
   const colorLabels = (body?.colorLabels as Record<string,string> | undefined) ?? {};
 
   // Backwards compat: old data had markerCategories/routeCategories
@@ -61,6 +63,9 @@ export function MapRenderer({ body, accent }: Props) {
   function routeColor(r: MapRoute, i: number) {
     return r.color ?? (r.categoryId ? catColors.get(r.categoryId) : undefined) ?? MAP_PALETTE[i % MAP_PALETTE.length];
   }
+  function areaColor(a: MapArea, i: number) {
+    return a.color ?? MAP_PALETTE[i % MAP_PALETTE.length];
+  }
 
   const setSelectedRef = useRef(setSelectedCard);
   useEffect(() => { setSelectedRef.current = setSelectedCard; }, []);
@@ -78,6 +83,31 @@ export function MapRenderer({ body, accent }: Props) {
 
     map.on("load", () => {
       const routeLayerIds: string[] = [];
+
+      // ── Areas (rendered first so they sit beneath routes & markers) ──────────
+      areas.forEach((area, i) => {
+        if (area.points.length < 3) return;
+        const color = areaColor(area, i);
+        const card: MapCard = area.card ?? { title: area.name ?? "", body: {} };
+        const src = `area-${i}`;
+        const fill = `area-fill-${i}`;
+        const line = `area-line-${i}`;
+        const ring = [...area.points, area.points[0]];
+
+        map.addSource(src, {
+          type: "geojson",
+          data: { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [ring] } },
+        });
+        map.addLayer({ id: fill, type: "fill", source: src, paint: { "fill-color": color, "fill-opacity": 0.18 } });
+        map.addLayer({ id: line, type: "line", source: src, paint: { "line-color": color, "line-width": 2 } });
+
+        const hasContent = card.title || (card.body && Object.keys(card.body).length > 0);
+        if (hasContent) {
+          map.on("click", fill, () => setSelectedRef.current({ type: "area", index: i, card, color }));
+          map.on("mouseenter", fill, () => { map.getCanvas().style.cursor = "pointer"; });
+          map.on("mouseleave", fill, () => { map.getCanvas().style.cursor = ""; });
+        }
+      });
 
       // ── Routes ──────────────────────────────────────────────────────────────
       routes.forEach((route, i) => {
@@ -176,12 +206,14 @@ export function MapRenderer({ body, accent }: Props) {
   // Legend: only colors that have a non-empty label, and are actually used on the map
   const usedMarkerColors = new Set(markers.map((m, i) => markerColor(m, i)));
   const usedRouteColors  = new Set(routes.map((r, i) => routeColor(r, i)));
+  const usedAreaColors   = new Set(areas.map((a, i) => areaColor(a, i)));
   const legendEntries = MAP_PALETTE
-    .filter((c) => effectiveColorLabels[c]?.trim() && (usedMarkerColors.has(c) || usedRouteColors.has(c)))
+    .filter((c) => effectiveColorLabels[c]?.trim() && (usedMarkerColors.has(c) || usedRouteColors.has(c) || usedAreaColors.has(c)))
     .map((c) => ({
       color: c,
       label: effectiveColorLabels[c],
       isRoute: usedRouteColors.has(c) && !usedMarkerColors.has(c),
+      isArea: usedAreaColors.has(c) && !usedMarkerColors.has(c) && !usedRouteColors.has(c),
     }));
 
   return (
@@ -199,10 +231,14 @@ export function MapRenderer({ body, accent }: Props) {
             {selectedCard.color && (
               selectedCard.type === "marker"
                 ? <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: selectedCard.color }} />
-                : <svg width="16" height="3" viewBox="0 0 16 3"><line x1="0" y1="1.5" x2="16" y2="1.5" stroke={selectedCard.color} strokeWidth="2" strokeDasharray="4 3" /></svg>
+                : selectedCard.type === "area"
+                  ? <span className="w-3 h-3 rounded-[3px] shrink-0 border" style={{ background: `${selectedCard.color}40`, borderColor: selectedCard.color }} />
+                  : <svg width="16" height="3" viewBox="0 0 16 3"><line x1="0" y1="1.5" x2="16" y2="1.5" stroke={selectedCard.color} strokeWidth="2" strokeDasharray="4 3" /></svg>
             )}
             <span className="text-mono text-ink-mute text-[11px] uppercase tracking-wide">
-              {selectedCard.type === "marker" ? `Punto ${selectedCard.index + 1}` : `Ruta ${selectedCard.index + 1}`}
+              {selectedCard.type === "marker" ? `Punto ${selectedCard.index + 1}`
+                : selectedCard.type === "route" ? `Ruta ${selectedCard.index + 1}`
+                : `Área ${selectedCard.index + 1}`}
             </span>
           </div>
           {selectedCard.card.title && <h3 className="text-h3 text-ink mb-3">{selectedCard.card.title}</h3>}
@@ -215,11 +251,13 @@ export function MapRenderer({ body, accent }: Props) {
       {/* Legend — only shown when colors have named labels */}
       {legendEntries.length > 0 && (
         <div className="flex flex-wrap gap-x-5 gap-y-2 px-1">
-          {legendEntries.map(({ color, label, isRoute }) => (
+          {legendEntries.map(({ color, label, isRoute, isArea }) => (
             <div key={color} className="flex items-center gap-1.5">
-              {isRoute
-                ? <svg width="16" height="4" viewBox="0 0 16 4" className="shrink-0"><line x1="0" y1="2" x2="16" y2="2" stroke={color} strokeWidth="2" strokeDasharray="4 3" /></svg>
-                : <span className="w-3 h-3 rounded-full shrink-0" style={{ background: color }} />
+              {isArea
+                ? <span className="w-3 h-3 rounded-[3px] shrink-0 border" style={{ background: `${color}40`, borderColor: color }} />
+                : isRoute
+                  ? <svg width="16" height="4" viewBox="0 0 16 4" className="shrink-0"><line x1="0" y1="2" x2="16" y2="2" stroke={color} strokeWidth="2" strokeDasharray="4 3" /></svg>
+                  : <span className="w-3 h-3 rounded-full shrink-0" style={{ background: color }} />
               }
               <span className="text-caption text-ink-soft">{label}</span>
             </div>

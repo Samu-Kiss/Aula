@@ -14,7 +14,7 @@ export interface MapCard { title: string; body: Record<string, unknown>; }
 export const MAP_PALETTE = Object.values(ACCENT_HEX);
 
 interface Props {
-  entityType: "marker" | "route";
+  entityType: "marker" | "route" | "area";
   entityIndex: number;
   initialCard: MapCard;
   initialColor: string | undefined;
@@ -138,7 +138,9 @@ export function MapCardEditor({
     img.src = src;
   }
 
-  const entityLabel = entityType === "marker" ? `Punto ${entityIndex + 1}` : `Ruta ${entityIndex + 1}`;
+  const entityLabel = entityType === "marker" ? `Punto ${entityIndex + 1}`
+    : entityType === "route" ? `Ruta ${entityIndex + 1}`
+    : `Área ${entityIndex + 1}`;
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -178,7 +180,7 @@ export function MapCardEditor({
         value={title}
         onChange={(e) => handleTitleChange(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); editor?.commands.focus(); } }}
-        placeholder={entityType === "marker" ? "Nombre del lugar" : "Nombre de la ruta"}
+        placeholder={entityType === "marker" ? "Nombre del lugar" : entityType === "route" ? "Nombre de la ruta" : "Nombre del área"}
         className="mx-3 mb-2 px-2.5 py-1.5 text-[13px] font-semibold rounded-[6px] border border-subtle bg-page focus:outline-none focus:ring-1 focus:ring-ink/20 shrink-0"
       />
 

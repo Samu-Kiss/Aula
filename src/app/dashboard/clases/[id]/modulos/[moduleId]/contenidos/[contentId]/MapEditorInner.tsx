@@ -11,8 +11,9 @@ import type { MapCard } from "./MapCardEditor";
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface MapMarker { id: string; lng: number; lat: number; color?: string; card: MapCard; }
 interface MapRoute  { id: string; points: [number, number][]; color?: string; card: MapCard; }
-type Selection = { type: "marker" | "route"; id: string } | null;
-type Mode = "marker" | "route";
+interface MapArea   { id: string; points: [number, number][]; color?: string; card: MapCard; }
+type Selection = { type: "marker" | "route" | "area"; id: string } | null;
+type Mode = "marker" | "route" | "area";
 type SaveStatus = "saved" | "saving" | "unsaved";
 
 interface Props {
@@ -27,6 +28,97 @@ const DEFAULT_ZOOM = 11;
 
 function uid() { return crypto.randomUUID(); }
 function emptyCard(): MapCard { return { title: "", body: {} }; }
+
+const HEX_RE = /^#[0-9a-fA-F]{6}$/;
+function normColor(c: unknown): string | undefined {
+  return typeof c === "string" && HEX_RE.test(c.trim()) ? c.trim() : undefined;
+}
+
+// Wrap plain text (with optional line breaks) into the Tiptap doc shape the
+// card editor/renderer expect: { doc: { type: "doc", content: [...] } }.
+function textToCardBody(text: unknown): Record<string, unknown> {
+  if (typeof text !== "string" || !text.trim()) return {};
+  const paragraphs = text.split(/\n{2,}/).map((p) => ({
+    type: "paragraph",
+    content: p.trim() ? [{ type: "text", text: p.trim() }] : [],
+  }));
+  return { doc: { type: "doc", content: paragraphs } };
+}
+
+// ─── File import ────────────────────────────────────────────────────────────
+interface ImportResult { markers: MapMarker[]; routes: MapRoute[]; areas: MapArea[]; }
+
+function cardFromProps(props: Record<string, unknown>): MapCard {
+  const title = (props.title ?? props.name ?? props.label ?? "") as string;
+  const bodyText = props.description ?? props.body ?? props.desc ?? props.text;
+  return { title: typeof title === "string" ? title : "", body: textToCardBody(bodyText) };
+}
+
+// Parse a GeoJSON FeatureCollection (Point→marker, LineString→route, Polygon→area).
+function parseGeoJSON(fc: Record<string, unknown>): ImportResult {
+  const out: ImportResult = { markers: [], routes: [], areas: [] };
+  const features = (fc.features as Record<string, unknown>[] | undefined) ?? [];
+  for (const f of features) {
+    const geom = f.geometry as Record<string, unknown> | undefined;
+    if (!geom) continue;
+    const props = (f.properties as Record<string, unknown>) ?? {};
+    const color = normColor(props.color ?? props["marker-color"] ?? props.stroke ?? props.fill);
+    const card = cardFromProps(props);
+    const coords = geom.coordinates as unknown;
+    switch (geom.type) {
+      case "Point": {
+        const [lng, lat] = coords as [number, number];
+        out.markers.push({ id: uid(), lng, lat, color, card });
+        break;
+      }
+      case "MultiPoint":
+        for (const [lng, lat] of coords as [number, number][])
+          out.markers.push({ id: uid(), lng, lat, color, card: { ...card } });
+        break;
+      case "LineString":
+        out.routes.push({ id: uid(), points: coords as [number, number][], color, card });
+        break;
+      case "MultiLineString":
+        for (const line of coords as [number, number][][])
+          out.routes.push({ id: uid(), points: line, color, card: { ...card } });
+        break;
+      case "Polygon":
+        out.areas.push({ id: uid(), points: (coords as [number, number][][])[0], color, card });
+        break;
+      case "MultiPolygon":
+        for (const poly of coords as [number, number][][][])
+          out.areas.push({ id: uid(), points: poly[0], color, card: { ...card } });
+        break;
+    }
+  }
+  return out;
+}
+
+// Parse the native Aula map export shape ({ markers, routes, areas }).
+function parseNative(data: Record<string, unknown>): ImportResult {
+  const m = migrate(data);
+  const rawAreas = (data.areas as unknown[]) ?? [];
+  const areas: MapArea[] = rawAreas.map((a) => {
+    const o = a as Record<string, unknown>;
+    return {
+      id: uid(),
+      points: o.points as [number, number][],
+      color: normColor(o.color),
+      card: (o.card as MapCard | undefined) ?? { title: (o.name as string) ?? "", body: {} },
+    };
+  });
+  return {
+    markers: m.markers.map((x) => ({ ...x, id: uid() })),
+    routes: m.routes.map((x) => ({ ...x, id: uid() })),
+    areas,
+  };
+}
+
+function parseImport(raw: string): ImportResult {
+  const data = JSON.parse(raw) as Record<string, unknown>;
+  if (data.type === "FeatureCollection" || Array.isArray(data.features)) return parseGeoJSON(data);
+  return parseNative(data);
+}
 
 // ─── Migration ────────────────────────────────────────────────────────────────
 function migrate(draft: Record<string, unknown>) {
@@ -68,6 +160,17 @@ function migrate(draft: Record<string, unknown>) {
     };
   });
 
+  const rawAreas = (draft?.areas as unknown[]) ?? [];
+  const areas: MapArea[] = rawAreas.map((a) => {
+    const o = a as Record<string, unknown>;
+    return {
+      id:     (o.id as string) ?? uid(),
+      points: o.points as [number, number][],
+      color:  (o.color as string | undefined),
+      card:   (o.card as MapCard | undefined) ?? { title: (o.name as string) ?? "", body: {} },
+    };
+  });
+
   const colorLabels: Record<string, string> = {
     ...migratedLabels,
     ...(draft?.colorLabels as Record<string, string> | undefined),
@@ -78,6 +181,7 @@ function migrate(draft: Record<string, unknown>) {
     zoom:   (draft?.zoom   as number            | undefined) ?? DEFAULT_ZOOM,
     markers,
     routes,
+    areas,
     colorLabels,
   };
 }
@@ -89,13 +193,17 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
   const markerEls        = useRef<mapboxgl.Marker[]>([]);
   const routeLayerIds    = useRef<string[]>([]);
   const routeWaypointEls = useRef<mapboxgl.Marker[]>([]);
+  const areaLayerIds     = useRef<string[]>([]);
   const drawingEls       = useRef<mapboxgl.Marker[]>([]);
+  const fileInputRef     = useRef<HTMLInputElement>(null);
 
   const initial = migrate(initialDraft);
 
   const [markers,     setMarkers]     = useState<MapMarker[]>(initial.markers);
   const [routes,      setRoutes]      = useState<MapRoute[]>(initial.routes);
+  const [areas,       setAreas]       = useState<MapArea[]>(initial.areas);
   const [colorLabels, setColorLabels] = useState<Record<string, string>>(initial.colorLabels);
+  const [importError, setImportError] = useState<string | null>(null);
   const [mode,        setMode]        = useState<Mode>("marker");
   const [mapReady,    setMapReady]    = useState(false);
   const [selectedId,  setSelectedId]  = useState<Selection>(null);
@@ -109,8 +217,8 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
   const accentColor = accentHex(accent) ?? "#1A1814";
 
   // State ref for stale-closure–safe map handlers
-  const stateRef = useRef({ mode, markers, routes, colorLabels });
-  useEffect(() => { stateRef.current = { mode, markers, routes, colorLabels }; });
+  const stateRef = useRef({ mode, markers, routes, areas, colorLabels });
+  useEffect(() => { stateRef.current = { mode, markers, routes, areas, colorLabels }; });
 
   // ── Save ──────────────────────────────────────────────────────────────────
   const saveRef = useRef<((overrides?: Record<string, unknown>) => Promise<void>) | null>(null);
@@ -123,6 +231,7 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
       zoom:   map ? map.getZoom() : initial.zoom,
       markers:     s.markers,
       routes:      s.routes,
+      areas:       s.areas,
       colorLabels: s.colorLabels,
       ...overrides,
     };
@@ -160,7 +269,7 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
           return updated;
         });
         setSelectedId({ type: "marker", id: newId });
-      } else if (m === "route") {
+      } else if (m === "route" || m === "area") {
         setDrawingPoints((prev) => [...prev, [lng, lat]]);
       }
     });
@@ -230,6 +339,34 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
     });
   }, [routes, mapReady]);
 
+  // ── Sync areas ────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+    areaLayerIds.current.forEach((id) => {
+      if (map.getLayer(`${id}-fill`)) map.removeLayer(`${id}-fill`);
+      if (map.getLayer(`${id}-line`)) map.removeLayer(`${id}-line`);
+      if (map.getSource(id)) map.removeSource(id);
+    });
+    areaLayerIds.current = [];
+
+    areas.forEach((area, i) => {
+      if (area.points.length < 3) return;
+      const color = area.color ?? MAP_PALETTE[i % MAP_PALETTE.length];
+      const id = `area-${area.id}`;
+      const ring = [...area.points, area.points[0]]; // close the ring
+      map.addSource(id, {
+        type: "geojson",
+        data: { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [ring] } },
+      });
+      map.addLayer({ id: `${id}-fill`, type: "fill", source: id, paint: { "fill-color": color, "fill-opacity": 0.18 } });
+      map.addLayer({ id: `${id}-line`, type: "line", source: id, paint: { "line-color": color, "line-width": 2 } });
+      areaLayerIds.current.push(id);
+      const onClick = () => setSelectedId({ type: "area", id: area.id });
+      map.on("click", `${id}-fill`, onClick);
+    });
+  }, [areas, mapReady]);
+
   // ── Sync drawing preview ──────────────────────────────────────────────────
   useEffect(() => {
     const map = mapRef.current;
@@ -260,10 +397,16 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
         setTimeout(() => saveRef.current?.({ markers: updated }), 0);
         return updated;
       });
-    } else {
+    } else if (selectedId.type === "route") {
       setRoutes((prev) => {
         const updated = prev.map((r) => r.id === selectedId.id ? { ...r, card, color } : r);
         setTimeout(() => saveRef.current?.({ routes: updated }), 0);
+        return updated;
+      });
+    } else {
+      setAreas((prev) => {
+        const updated = prev.map((a) => a.id === selectedId.id ? { ...a, card, color } : a);
+        setTimeout(() => saveRef.current?.({ areas: updated }), 0);
         return updated;
       });
     }
@@ -273,18 +416,151 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
     if (!selectedId) return;
     if (selectedId.type === "marker") {
       setMarkers((prev) => { const u = prev.filter((m) => m.id !== selectedId.id); setTimeout(() => saveRef.current?.({ markers: u }), 0); return u; });
-    } else {
+    } else if (selectedId.type === "route") {
       setRoutes((prev) => { const u = prev.filter((r) => r.id !== selectedId.id); setTimeout(() => saveRef.current?.({ routes: u }), 0); return u; });
+    } else {
+      setAreas((prev) => { const u = prev.filter((a) => a.id !== selectedId.id); setTimeout(() => saveRef.current?.({ areas: u }), 0); return u; });
     }
     setSelectedId(null);
   }
 
-  function finishRoute() {
-    if (drawingPoints.length < 2) { setDrawingPoints([]); return; }
+  function finishDrawing() {
+    const min = mode === "area" ? 3 : 2;
+    if (drawingPoints.length < min) { setDrawingPoints([]); return; }
     const newId = uid();
-    setRoutes((prev) => { const u = [...prev, { id: newId, points: drawingPoints, card: emptyCard() }]; setTimeout(() => saveRef.current?.({ routes: u }), 0); return u; });
-    setSelectedId({ type: "route", id: newId });
+    if (mode === "area") {
+      setAreas((prev) => { const u = [...prev, { id: newId, points: drawingPoints, card: emptyCard() }]; setTimeout(() => saveRef.current?.({ areas: u }), 0); return u; });
+      setSelectedId({ type: "area", id: newId });
+    } else {
+      setRoutes((prev) => { const u = [...prev, { id: newId, points: drawingPoints, card: emptyCard() }]; setTimeout(() => saveRef.current?.({ routes: u }), 0); return u; });
+      setSelectedId({ type: "route", id: newId });
+    }
     setDrawingPoints([]);
+  }
+
+  // ── Import from JSON / GeoJSON file ─────────────────────────────────────────
+  async function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-importing the same file
+    if (!file) return;
+    setImportError(null);
+    try {
+      const text = await file.text();
+      const result = parseImport(text);
+      if (!result.markers.length && !result.routes.length && !result.areas.length) {
+        setImportError("El archivo no contiene puntos, rutas ni áreas reconocibles.");
+        return;
+      }
+      const nextMarkers = [...stateRef.current.markers, ...result.markers];
+      const nextRoutes  = [...stateRef.current.routes,  ...result.routes];
+      const nextAreas   = [...stateRef.current.areas,   ...result.areas];
+      setMarkers(nextMarkers);
+      setRoutes(nextRoutes);
+      setAreas(nextAreas);
+      setSelectedId(null);
+      setTimeout(() => saveRef.current?.({ markers: nextMarkers, routes: nextRoutes, areas: nextAreas }), 0);
+
+      // Fit the map to all imported geometry
+      const all = [
+        ...result.markers.map((m) => [m.lng, m.lat] as [number, number]),
+        ...result.routes.flatMap((r) => r.points),
+        ...result.areas.flatMap((a) => a.points),
+      ];
+      const map = mapRef.current;
+      if (map && all.length) {
+        const bounds = all.reduce(
+          (b, pt) => b.extend(pt),
+          new mapboxgl.LngLatBounds(all[0], all[0])
+        );
+        map.fitBounds(bounds, { padding: 60, maxZoom: 15, duration: 600 });
+      }
+    } catch {
+      setImportError("No se pudo leer el archivo. Asegúrate de que sea JSON o GeoJSON válido.");
+    }
+  }
+
+  // ── Center map on a set of coordinates ──────────────────────────────────────
+  function flyToPoints(pts: [number, number][]) {
+    const map = mapRef.current;
+    if (!map || !pts.length) return;
+    if (pts.length === 1) {
+      map.flyTo({ center: pts[0], zoom: Math.max(map.getZoom(), 14), speed: 1.4 });
+    } else {
+      const bounds = pts.reduce(
+        (b, pt) => b.extend(pt),
+        new mapboxgl.LngLatBounds(pts[0], pts[0])
+      );
+      map.fitBounds(bounds, { padding: 80, maxZoom: 16, duration: 700 });
+    }
+  }
+
+  // ── Export as GeoJSON ────────────────────────────────────────────────────────
+  function handleExport() {
+    const s = stateRef.current;
+    const features: Record<string, unknown>[] = [
+      ...s.markers.map((m) => ({
+        type: "Feature",
+        properties: { title: m.card.title || null, color: m.color ?? null },
+        geometry: { type: "Point", coordinates: [m.lng, m.lat] },
+      })),
+      ...s.routes.map((r) => ({
+        type: "Feature",
+        properties: { title: r.card.title || null, color: r.color ?? null },
+        geometry: { type: "LineString", coordinates: r.points },
+      })),
+      ...s.areas.map((a) => ({
+        type: "Feature",
+        properties: { title: a.card.title || null, color: a.color ?? null },
+        geometry: { type: "Polygon", coordinates: [[...a.points, a.points[0]]] },
+      })),
+    ];
+    const fc = { type: "FeatureCollection", features };
+    const blob = new Blob([JSON.stringify(fc, null, 2)], { type: "application/geo+json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "mapa.geojson"; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ── Download sample template ──────────────────────────────────────────────
+  function handleDownloadSample() {
+    const map = mapRef.current;
+    const cx = map ? map.getCenter().lng : DEFAULT_CENTER[0];
+    const cy = map ? map.getCenter().lat : DEFAULT_CENTER[1];
+    const d = 0.008; // ~900 m offset
+    const sample = {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          properties: { title: "Punto de interés A", description: "Descripción opcional del lugar.", color: "#2563EB" },
+          geometry: { type: "Point", coordinates: [cx, cy + d] },
+        },
+        {
+          type: "Feature",
+          properties: { title: "Punto de interés B", description: "Otro lugar relevante.", color: "#16A34A" },
+          geometry: { type: "Point", coordinates: [cx + d, cy - d] },
+        },
+        {
+          type: "Feature",
+          properties: { title: "Ruta principal", description: "Recorrido entre los puntos A y B.", color: "#DC2626" },
+          geometry: { type: "LineString", coordinates: [[cx, cy + d], [cx + d / 2, cy], [cx + d, cy - d]] },
+        },
+        {
+          type: "Feature",
+          properties: { title: "Zona de interés", description: "Área delimitada en el mapa.", color: "#7C3AED" },
+          geometry: {
+            type: "Polygon",
+            coordinates: [[[cx - d, cy - d], [cx - d, cy + d], [cx + d / 2, cy + d], [cx + d / 2, cy - d], [cx - d, cy - d]]],
+          },
+        },
+      ],
+    };
+    const blob = new Blob([JSON.stringify(sample, null, 2)], { type: "application/geo+json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "plantilla-mapa.geojson"; a.click();
+    URL.revokeObjectURL(url);
   }
 
   function handleColorLabelChange(color: string, label: string) {
@@ -311,20 +587,24 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
 
   const selectedMarker = selectedId?.type === "marker" ? markers.find((m) => m.id === selectedId.id) ?? null : null;
   const selectedRoute  = selectedId?.type === "route"  ? routes.find((r)  => r.id === selectedId.id) ?? null : null;
-  const selectedEntity = selectedMarker ?? selectedRoute;
-  const selectedEntityIndex = selectedMarker ? markers.indexOf(selectedMarker) : selectedRoute ? routes.indexOf(selectedRoute) : -1;
+  const selectedArea   = selectedId?.type === "area"   ? areas.find((a)  => a.id === selectedId.id) ?? null : null;
+  const selectedEntity = selectedMarker ?? selectedRoute ?? selectedArea;
+  const selectedEntityIndex = selectedMarker ? markers.indexOf(selectedMarker)
+    : selectedRoute ? routes.indexOf(selectedRoute)
+    : selectedArea ? areas.indexOf(selectedArea) : -1;
 
   // Colors currently in use on the map
   const usedColors = Array.from(new Set([
     ...markers.flatMap((m) => (m.color ? [m.color] : [])),
     ...routes.flatMap((r) => (r.color ? [r.color] : [])),
+    ...areas.flatMap((a) => (a.color ? [a.color] : [])),
   ]));
 
   // Card placeholder text
   const placeholderText = mode === "marker"
     ? "Haz clic en el mapa para añadir un punto, o toca un punto para editar su tarjeta."
     : drawingPoints.length === 0
-      ? "Haz clic en el mapa para trazar una ruta."
+      ? mode === "area" ? "Haz clic en el mapa para trazar un área (mínimo 3 puntos)." : "Haz clic en el mapa para trazar una ruta."
       : `${drawingPoints.length} punto${drawingPoints.length !== 1 ? "s" : ""} — sigue o finaliza.`;
 
   return (
@@ -333,16 +613,36 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
       <div className="flex items-center gap-3">
         {/* Mode toggle — small segmented control */}
         <div className="inline-flex items-center bg-surface-alt border border-subtle rounded-[7px] p-0.5 gap-0.5">
-          {(["marker", "route"] as Mode[]).map((m) => (
+          {(["marker", "route", "area"] as Mode[]).map((m) => (
             <button key={m}
               onClick={() => { if (m !== mode) { setDrawingPoints([]); setMode(m); } }}
               className={`h-6 px-2.5 rounded-[5px] text-[12px] font-medium transition-colors whitespace-nowrap ${
                 mode === m ? "bg-page shadow-sm text-ink" : "text-ink-mute hover:text-ink"
               }`}
             >
-              {m === "marker" ? "Punto" : "Ruta"}
+              {m === "marker" ? "Punto" : m === "route" ? "Ruta" : "Área"}
             </button>
           ))}
+        </div>
+
+        {/* Import / Export / Sample — grouped */}
+        <div className="inline-flex items-center border border-subtle rounded-[6px] divide-x divide-subtle">
+          <input ref={fileInputRef} type="file" accept=".json,.geojson,application/json,application/geo+json"
+            onChange={handleImportFile} className="hidden" />
+          <button onClick={() => fileInputRef.current?.click()} title="Importar desde archivo GeoJSON o JSON"
+            className="text-mono text-[12px] px-2.5 h-6 text-ink-soft hover:text-ink hover:bg-surface-alt transition-colors rounded-l-[5px]">
+            Importar
+          </button>
+          <button onClick={handleExport}
+            disabled={!markers.length && !routes.length && !areas.length}
+            title="Exportar como GeoJSON"
+            className="text-mono text-[12px] px-2.5 h-6 text-ink-soft hover:text-ink hover:bg-surface-alt transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+            Exportar
+          </button>
+          <button onClick={handleDownloadSample} title="Descargar plantilla GeoJSON de ejemplo"
+            className="text-mono text-[12px] px-2.5 h-6 text-ink-soft hover:text-ink hover:bg-surface-alt transition-colors rounded-r-[5px]">
+            Plantilla
+          </button>
         </div>
         <span className="text-mono text-ink-mute text-[11px]">
           {saveStatus === "saved" ? "Guardado" : saveStatus === "saving" ? "Guardando…" : "Sin guardar"}
@@ -362,16 +662,32 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
         {/* Card panel */}
         <div className="md:w-[380px] md:shrink-0 min-h-[200px] md:h-[440px] bg-surface rounded-[12px] border border-subtle flex flex-col overflow-hidden">
           {selectedEntity && selectedId ? (
-            <MapCardEditor
-              key={selectedId.id}
-              entityType={selectedId.type}
-              entityIndex={selectedEntityIndex}
-              initialCard={selectedEntity.card}
-              initialColor={selectedEntity.color}
-              accentColor={accentColor}
-              onUpdate={handleCardUpdate}
-              onDelete={handleDelete}
-            />
+            <div className="flex flex-col h-full min-h-0">
+              {/* Centrar — solo visible cuando hay selección */}
+              <div className="flex justify-end px-3 pt-2 shrink-0">
+                <button
+                  onClick={() => {
+                    if (selectedMarker) flyToPoints([[selectedMarker.lng, selectedMarker.lat]]);
+                    else if (selectedRoute) flyToPoints(selectedRoute.points);
+                    else if (selectedArea)  flyToPoints(selectedArea.points);
+                  }}
+                  className="text-mono text-[11px] text-ink-mute hover:text-ink transition-colors flex items-center gap-1"
+                  title="Centrar el mapa en este elemento"
+                >
+                  <span>⊙</span><span>Centrar</span>
+                </button>
+              </div>
+              <MapCardEditor
+                key={selectedId.id}
+                entityType={selectedId.type}
+                entityIndex={selectedEntityIndex}
+                initialCard={selectedEntity.card}
+                initialColor={selectedEntity.color}
+                accentColor={accentColor}
+                onUpdate={handleCardUpdate}
+                onDelete={handleDelete}
+              />
+            </div>
           ) : (
             <div className="flex-1 flex items-center justify-center p-6 text-center">
               <p className="text-caption text-ink-mute leading-relaxed">{placeholderText}</p>
@@ -380,13 +696,20 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
         </div>
       </div>
 
-      {/* ── Route drawing controls (visible only when drawing) ── */}
-      {mode === "route" && drawingPoints.length > 0 && (
+      {/* ── Import error ── */}
+      {importError && (
+        <div className="px-4 py-2 bg-red-50 border border-red-200 rounded-[8px] text-[12px] text-red-600">
+          {importError}
+        </div>
+      )}
+
+      {/* ── Drawing controls (visible only when drawing a route or area) ── */}
+      {(mode === "route" || mode === "area") && drawingPoints.length > 0 && (
         <div className="flex items-center gap-3 px-4 py-2 bg-surface rounded-[8px] border border-subtle">
           <span className="text-mono text-[11px] text-ink-mute flex-1">
             {drawingPoints.length} punto{drawingPoints.length !== 1 ? "s" : ""}
           </span>
-          <button onClick={finishRoute} disabled={drawingPoints.length < 2}
+          <button onClick={finishDrawing} disabled={drawingPoints.length < (mode === "area" ? 3 : 2)}
             className="h-6 px-3 text-mono text-[11px] rounded-[5px] bg-ink text-page hover:bg-ink/80 disabled:opacity-40 transition-colors">
             Finalizar
           </button>
@@ -415,7 +738,43 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
                 </span>
                 <span className="text-mono text-[10px] text-ink-mute shrink-0">{route.points.length} pts</span>
                 <span
+                  onClick={(e) => { e.stopPropagation(); flyToPoints(route.points); }}
+                  title="Centrar en el mapa"
+                  className="text-[13px] text-ink-mute hover:text-ink transition-colors cursor-pointer shrink-0 px-0.5"
+                >⊙</span>
+                <span
                   onClick={(e) => { e.stopPropagation(); setRoutes((prev) => { const u = prev.filter((r) => r.id !== route.id); setTimeout(() => saveRef.current?.({ routes: u }), 0); return u; }); if (isSelected) setSelectedId(null); }}
+                  className="text-[12px] text-ink-mute hover:text-red-500 transition-colors cursor-pointer shrink-0 px-1"
+                >✕</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── Areas list ── */}
+      {areas.length > 0 && (
+        <div className="space-y-1">
+          <p className="text-caption text-ink-mute px-0.5">Áreas ({areas.length})</p>
+          {areas.map((area, i) => {
+            const color = area.color ?? MAP_PALETTE[i % MAP_PALETTE.length];
+            const isSelected = selectedId?.type === "area" && selectedId.id === area.id;
+            return (
+              <button key={area.id}
+                onClick={() => setSelectedId({ type: "area", id: area.id })}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-[8px] border transition-colors text-left ${isSelected ? "bg-ink/5 border-ink/20" : "bg-surface border-subtle hover:bg-surface-alt"}`}>
+                <span className="w-3.5 h-3.5 rounded-[3px] shrink-0 border" style={{ background: `${color}40`, borderColor: color }} />
+                <span className="flex-1 text-[13px] text-ink truncate">
+                  {area.card.title || <span className="text-ink-mute italic">Sin nombre</span>}
+                </span>
+                <span className="text-mono text-[10px] text-ink-mute shrink-0">{area.points.length} pts</span>
+                <span
+                  onClick={(e) => { e.stopPropagation(); flyToPoints(area.points); }}
+                  title="Centrar en el mapa"
+                  className="text-[13px] text-ink-mute hover:text-ink transition-colors cursor-pointer shrink-0 px-0.5"
+                >⊙</span>
+                <span
+                  onClick={(e) => { e.stopPropagation(); setAreas((prev) => { const u = prev.filter((a) => a.id !== area.id); setTimeout(() => saveRef.current?.({ areas: u }), 0); return u; }); if (isSelected) setSelectedId(null); }}
                   className="text-[12px] text-ink-mute hover:text-red-500 transition-colors cursor-pointer shrink-0 px-1"
                 >✕</span>
               </button>
