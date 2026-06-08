@@ -253,10 +253,8 @@ export function MapRenderer({ body, accent }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* Map — wrapper is relative so the button can overlay the canvas */}
-      <div className="relative w-full rounded-[12px] shadow-sm" style={{ height: 480 }}>
-        {/* Mapbox mounts inside this div; overflow-hidden clips the canvas to the rounded corners */}
-        <div ref={containerRef} className="absolute inset-0 rounded-[12px] overflow-hidden" />
+      {/* Map — containerRef goes on this div so Mapbox reads correct dimensions */}
+      <div ref={containerRef} className="relative w-full rounded-[12px] overflow-hidden shadow-sm" style={{ height: 480 }}>
         {allPtsForFit.length > 0 && (
           <button
             onClick={handleRecenter}
