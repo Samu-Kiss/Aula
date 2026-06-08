@@ -1,13 +1,21 @@
+import { accentHex } from "@/lib/accentColors";
+
 interface Props {
   body: Record<string, unknown>;
+  accent?: string | null;
 }
 
-export function RichTextRenderer({ body }: Props) {
+export function RichTextRenderer({ body, accent }: Props) {
   const doc = body?.doc as { content?: TiptapNode[] } | undefined;
   if (!doc?.content) return null;
 
+  const hex = accentHex(accent);
+
   return (
-    <div className="prose-aula">
+    <div
+      className="prose-aula"
+      style={hex ? ({ "--link-color": hex } as React.CSSProperties) : undefined}
+    >
       {doc.content.map((node, i) => (
         <TiptapNode key={i} node={node} />
       ))}
@@ -69,6 +77,16 @@ function TiptapNode({ node, inList }: { node: TiptapNode; inList?: boolean }) {
 
     case "horizontalRule":
       return <hr />;
+
+    case "image":
+      return (
+        <img
+          src={node.attrs?.src as string}
+          alt={(node.attrs?.alt as string) ?? ""}
+          title={(node.attrs?.title as string) ?? undefined}
+          className="max-w-full rounded-[8px] my-2"
+        />
+      );
 
     case "text": {
       let el: React.ReactNode = node.text ?? "";

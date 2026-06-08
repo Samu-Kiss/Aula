@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { quizRepo } from "@/server/repositories/quizRepo";
 import { TiptapEditor } from "./TiptapEditor";
 import { QuizEditor } from "./QuizEditor";
+import { VideoEditor } from "./VideoEditor";
+import { MapEditorClient } from "./MapEditorClient";
 
 interface Props {
   params: Promise<{ id: string; moduleId: string; contentId: string }>;
@@ -20,11 +22,10 @@ export default async function ContentEditorPage({ params }: Props) {
   const { id: classId, contentId } = await params;
   const supabase = await createClient();
 
-  const { data: content } = await supabase
-    .from("contents")
-    .select("*")
-    .eq("id", contentId)
-    .single();
+  const [{ data: content }, { data: cls }] = await Promise.all([
+    supabase.from("contents").select("*").eq("id", contentId).single(),
+    supabase.from("classes").select("accent").eq("id", classId).single(),
+  ]);
 
   if (!content) notFound();
 
@@ -40,20 +41,24 @@ export default async function ContentEditorPage({ params }: Props) {
   }
 
   return (
-    <div className="max-w-3xl">
-      <div className="mb-6">
+    <div>
+      {/* Title — always narrow */}
+      <div className="max-w-3xl mb-6">
         <p className="text-eyebrow text-ink-mute mb-1">
           {TYPE_LABELS[content.type] ?? content.type}
         </p>
         <h1 className="text-h1 text-ink">{content.title}</h1>
       </div>
 
+      {/* Editor — map gets full width; everything else stays at max-w-3xl */}
+      <div className={content.type === "map" ? "" : "max-w-3xl"}>
       {content.type === "rich_text" ? (
         <TiptapEditor
           contentId={contentId}
           classId={classId}
           initialDraft={content.body_draft ?? {}}
           isPublished={content.is_published}
+          accent={cls?.accent}
         />
       ) : content.type === "quiz" ? (
         <QuizEditor
@@ -63,6 +68,21 @@ export default async function ContentEditorPage({ params }: Props) {
           initialQuestions={initialQuestions as import("@/lib/types/db").QuizQuestion[]}
           isPublished={content.is_published}
         />
+      ) : content.type === "video" ? (
+        <VideoEditor
+          contentId={contentId}
+          classId={classId}
+          initialDraft={content.body_draft ?? {}}
+          isPublished={content.is_published}
+        />
+      ) : content.type === "map" ? (
+        <MapEditorClient
+          contentId={contentId}
+          classId={classId}
+          initialDraft={content.body_draft ?? {}}
+          isPublished={content.is_published}
+          accent={cls?.accent}
+        />
       ) : (
         <div className="bg-surface rounded-[12px] border border-subtle p-8 text-center">
           <p className="text-body text-ink-soft">
@@ -70,6 +90,7 @@ export default async function ContentEditorPage({ params }: Props) {
           </p>
         </div>
       )}
+      </div>
     </div>
   );
 }

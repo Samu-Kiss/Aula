@@ -65,6 +65,19 @@ export async function createContentAction(moduleId: string, classId: string, for
   }
 }
 
+export async function reorderContentsAction(
+  moduleId: string,
+  classId: string,
+  updates: { id: string; order_index: number }[]
+) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "No autenticado." };
+  await contentRepo(supabase).reorder(updates);
+  revalidatePath(`/dashboard/clases/${classId}`);
+  return { ok: true };
+}
+
 export async function reorderModulesAction(
   classId: string,
   updates: { id: string; order_index: number }[]

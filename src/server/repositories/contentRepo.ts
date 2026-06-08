@@ -104,5 +104,13 @@ export function contentRepo(db: SupabaseClient) {
         .eq("id", id);
       if (error) throw error;
     },
+
+    async reorder(updates: { id: string; order_index: number }[]): Promise<void> {
+      await Promise.all(
+        updates.map(({ id, order_index }) =>
+          db.from("contents").update({ order_index }).eq("id", id)
+        )
+      );
+    },
   };
 }

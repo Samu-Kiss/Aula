@@ -50,6 +50,8 @@ jobs:
           # Sentry — disabled in CI builds
           NEXT_PUBLIC_SENTRY_ENABLED: 'false'
           SENTRY_DSN: ''
+          # Mapbox
+          NEXT_PUBLIC_MAPBOX_TOKEN: ${{ secrets.NEXT_PUBLIC_MAPBOX_TOKEN || 'pk.placeholder' }}
           # App
           NEXT_PUBLIC_APP_URL: https://aula.example.com
           NEXT_PUBLIC_DEFAULT_TIMEZONE: America/Bogota

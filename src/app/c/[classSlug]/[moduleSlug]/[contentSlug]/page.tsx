@@ -9,6 +9,8 @@ import { attemptRepo } from "@/server/repositories/attemptRepo";
 import { getStudentFromCookie } from "@/lib/auth/studentJwt";
 import { ClassNav } from "@/components/public/ClassNav";
 import { RichTextRenderer } from "@/components/content/RichTextRenderer";
+import { VideoRenderer } from "@/components/content/VideoRenderer";
+import { MapRendererClient } from "@/components/content/MapRendererClient";
 import { QuizAccess } from "@/components/quiz/QuizAccess";
 import { QuizResult } from "@/components/quiz/QuizResult";
 
@@ -124,13 +126,13 @@ export default async function ContentPage({ params, searchParams }: Props) {
 
       <article className="px-5 py-10 md:px-10 max-w-3xl mx-auto">
         {content.type === "rich_text" && (
-          <RichTextRenderer body={content.body_published} />
+          <RichTextRenderer body={content.body_published} accent={cls.accent} />
         )}
         {content.type === "video" && (
-          <p className="text-body text-ink-soft">Video — próximamente.</p>
+          <VideoRenderer body={content.body_published} />
         )}
         {content.type === "map" && (
-          <p className="text-body text-ink-soft">Mapa — próximamente.</p>
+          <MapRendererClient body={content.body_published} accent={cls.accent} />
         )}
         {content.type === "file" && (
           <p className="text-body text-ink-soft">Archivo — próximamente.</p>

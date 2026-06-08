@@ -7,6 +7,7 @@ import { createContentAction } from "@/app/dashboard/clases/[id]/actions";
 const TYPES = [
   { value: "rich_text", label: "Lectura" },
   { value: "video",     label: "Video" },
+  { value: "map",       label: "Mapa" },
   { value: "file",      label: "Archivo" },
   { value: "quiz",      label: "Evaluación" },
 ];

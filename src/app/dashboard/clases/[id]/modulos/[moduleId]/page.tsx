@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { moduleRepo } from "@/server/repositories/moduleRepo";
 import { contentRepo } from "@/server/repositories/contentRepo";
 import { CreateContentForm } from "./CreateContentForm";
+import { ContentList } from "./ContentList";
 import { PublishModuleToggle } from "./PublishModuleToggle";
 import { ModuleAvailabilityForm } from "./ModuleAvailabilityForm";
 
@@ -51,35 +52,11 @@ export default async function ModuleEditorPage({ params }: Props) {
         />
       </div>
 
-      {contents.length === 0 ? (
-        <p className="text-body text-ink-soft mb-6">No hay contenidos todavía.</p>
-      ) : (
-        <ol className="space-y-2 mb-6">
-          {contents.map((content, i) => (
-            <li key={content.id}>
-              <Link
-                href={`/dashboard/clases/${classId}/modulos/${moduleId}/contenidos/${content.id}`}
-                className="flex items-center gap-4 px-4 py-3 rounded-[12px] bg-surface border-subtle hover:border-ink/20 transition-colors group"
-              >
-                <span className="text-mono text-ink-mute w-6 shrink-0">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <span className="flex-1 text-body text-ink">{content.title}</span>
-                <span className="text-mono text-ink-mute text-xs">
-                  {CONTENT_LABELS[content.type] ?? content.type}
-                </span>
-                <span className={`text-mono text-xs px-1.5 py-0.5 rounded-[4px] ${
-                  content.is_published
-                    ? "bg-bosque/10 text-bosque"
-                    : "bg-surface-alt text-ink-mute"
-                }`}>
-                  {content.is_published ? "✓" : "Borrador"}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ol>
-      )}
+      <ContentList
+        classId={classId}
+        moduleId={moduleId}
+        initialContents={contents}
+      />
 
       <CreateContentForm moduleId={moduleId} classId={classId} />
 
