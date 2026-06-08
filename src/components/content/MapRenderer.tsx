@@ -74,10 +74,27 @@ export function MapRenderer({ body, accent }: Props) {
   useEffect(() => {
     if (!containerRef.current || !TOKEN) return;
     mapboxgl.accessToken = TOKEN;
+
+    // Build initial bounds from all content so the first frame already shows everything.
+    const allPts: [number, number][] = [
+      ...markers.map((m): [number, number] => [m.lng, m.lat]),
+      ...routes.flatMap((r) => r.points as [number, number][]),
+      ...areas.flatMap((a) => a.points as [number, number][]),
+    ];
+    const initBounds = allPts.length > 0
+      ? allPts.reduce(
+          (b, pt) => b.extend(pt),
+          new mapboxgl.LngLatBounds(allPts[0], allPts[0])
+        )
+      : null;
+
     const map = new mapboxgl.Map({
       container: containerRef.current,
       style: "mapbox://styles/mapbox/light-v11",
-      center, zoom, interactive: true,
+      interactive: true,
+      ...(initBounds
+        ? { bounds: initBounds, fitBoundsOptions: { padding: 60, maxZoom: 16 } }
+        : { center, zoom }),
     });
     mapRef.current = map;
     map.addControl(new mapboxgl.NavigationControl(), "top-right");
@@ -195,19 +212,6 @@ export function MapRenderer({ body, accent }: Props) {
         cleanup.push(() => mk.remove());
       });
 
-      // ── Fit map to all content ───────────────────────────────────────────
-      const allPts: [number, number][] = [
-        ...markers.map((m): [number, number] => [m.lng, m.lat]),
-        ...routes.flatMap((r) => r.points),
-        ...areas.flatMap((a) => a.points),
-      ];
-      if (allPts.length > 0) {
-        const bounds = allPts.reduce(
-          (b, pt) => b.extend(pt),
-          new mapboxgl.LngLatBounds(allPts[0], allPts[0])
-        );
-        map.fitBounds(bounds, { padding: 60, maxZoom: 16, duration: 0 });
-      }
     });
 
     return () => {
