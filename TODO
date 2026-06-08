@@ -69,7 +69,7 @@
 - [x] `F5-02` Contenido tipo `map` con Mapbox GL JS + markers en color de acento — MapEditorInner (click para añadir/quitar markers) + MapRenderer (público, read-only con acento del aula)
 - [ ] `F5-03` Contenido tipo `file` con upload a Cloudflare R2 + URL firmada
 - [ ] `F5-04` Pregunta tipo `map_pin` en quizzes
-- [ ] `F5-05` Revisión manual de intentos con preguntas `short_answer` no auto-calificables
+- [X] `F5-05` Revisión manual de intentos con preguntas `short_answer` no auto-calificables
 - [ ] `F5-06` Emails transaccionales con Resend (intento recibido, nota lista, código de verificación)
 - [ ] `F5-07` Notificaciones in-app para el profesor (tabla `notifications`, §14.1)
 - [ ] `F5-08` Dashboard admin `/dashboard/admin` con métricas y anti-cheating insights
@@ -81,10 +81,10 @@
 - [ ] `F5-14` Responsive completo (mobile, tablet, desktop)
 - [ ] `F5-15` Landing en `/` — página de presentación de la plataforma con lockup, propuesta de valor y CTA al login del profesor; actualmente la ruta raíz redirige directo al dashboard
 - [ ] `F5-16` QR de acceso por clase — generar QR con la URL pública `/c/[classSlug]` en el dashboard del profesor; vista de pantalla completa para proyectar en clase y opción de descargar como PNG para compartir
-- [ ] `F5-17` Links en lecturas — extensión Tiptap Link en el editor de contenido `rich_text`; soporte de href en el renderer público (actualmente se pierde al serializar a HTML)
+- [X] `F5-17` Links en lecturas — extensión Tiptap Link en el editor de contenido `rich_text`; soporte de href en el renderer público (actualmente se pierde al serializar a HTML)
 - [x] `F5-18` Vista de módulo expandida — en `/c/[classSlug]/[moduleSlug]`, `rich_text` y `video`/`map` se renderizan inline en un feed continuo; `quiz` y `file` siguen siendo cards con link
 - [ ] `F5-19` Imágenes y embeds en lecturas — extensión Tiptap Image + upload a storage (R2 o Supabase Storage); soporte de embeds de video/iframe dentro del cuerpo de un `rich_text`; depende de F5-03
-- [ ] `F5-20` Reordenar contenidos en el dashboard del profesor
+- [X] `F5-20` Reordenar contenidos en el dashboard del profesor
 - [ ] `F5-21` Icon set
 - [ ] `F5-22` Sidebar navigation dentro de cada módulo
-- [ ] `F5-23` Permitir al profesor hacer rutas entre puntos del mapa (puede hacer varias rutas) y permitirle nombrar los puntos que pone en el mapa
+- [X] `F5-23` Permitir al profesor hacer rutas entre puntos del mapa (puede hacer varias rutas) y permitirle nombrar los puntos que pone en el mapa
