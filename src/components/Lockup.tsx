@@ -16,17 +16,18 @@ interface Props {
   accent: Accent;
   splitAt?: number | null;
   className?: string;
+  plain?: boolean;
 }
 
-export function Lockup({ title, accent, splitAt, className = "" }: Props) {
+export function Lockup({ title, accent, splitAt, className = "", plain = false }: Props) {
   const words = title.trim().split(/\s+/);
-  const accentColor = ACCENT_COLORS[accent];
+  const accentColor = plain ? undefined : ACCENT_COLORS[accent];
 
   // Single word with no explicit split → all accent serif, no sans portion
   if (words.length === 1 && splitAt == null) {
     return (
       <span className={`inline-flex items-baseline leading-none ${className}`}>
-        <span className="font-serif italic" style={{ color: accentColor }}>
+        <span className="font-serif italic text-ink" style={accentColor ? { color: accentColor } : undefined}>
           {words[0]}
         </span>
       </span>
@@ -50,8 +51,8 @@ export function Lockup({ title, accent, splitAt, className = "" }: Props) {
   return (
     <span className={`inline-flex flex-wrap items-baseline leading-none ${className}`}>
       <span
-        className="font-serif italic"
-        style={{ color: accentColor }}
+        className="font-serif italic text-ink"
+        style={accentColor ? { color: accentColor } : undefined}
       >
         {italic}
       </span>

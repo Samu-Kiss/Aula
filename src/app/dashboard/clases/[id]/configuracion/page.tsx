@@ -4,6 +4,8 @@ import { classService } from "@/server/services/classService";
 import { PublishClassToggle } from "./PublishClassToggle";
 import { ClassMetaForm } from "./ClassMetaForm";
 import { DeleteClassButton } from "./DeleteClassButton";
+import { ClassQrCode } from "@/components/dashboard/ClassQrCode";
+import { ACCENT_HEX } from "@/lib/accentColors";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -16,6 +18,9 @@ export default async function ConfiguracionPage({ params }: Props) {
   const supabase = await createClient();
   const cls = await classService(supabase).getById(id);
   if (!cls) notFound();
+
+  const classUrl = `${APP_URL}/c/${cls.slug}`;
+  const hex = ACCENT_HEX[cls.accent] ?? "#4C51BF";
 
   return (
     <div className="max-w-xl space-y-8">
@@ -37,6 +42,15 @@ export default async function ConfiguracionPage({ params }: Props) {
           initialDescription={cls.description}
           appUrl={APP_URL}
         />
+      </section>
+
+      {/* QR de acceso */}
+      <section className="bg-surface border-subtle rounded-[12px] p-6">
+        <h2 className="text-h2 text-ink mb-1">QR de acceso</h2>
+        <p className="text-body text-ink-soft mb-5">
+          Código QR con el color de acento de la clase. Proyéctalo o descárgalo para compartir.
+        </p>
+        <ClassQrCode url={classUrl} accentHex={hex} classId={id} classTitle={cls.title} accent={cls.accent} splitAt={cls.lockup_split_at} />
       </section>
 
       {/* Visibilidad */}
