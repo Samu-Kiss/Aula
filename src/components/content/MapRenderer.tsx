@@ -12,7 +12,7 @@ interface MapMarker { id?: string; lng: number; lat: number; color?: string; car
 interface MapRoute  { id?: string; points: [number, number][]; color?: string; card?: MapCard; name?: string | null; categoryId?: string; }
 interface MapArea   { id?: string; points: [number, number][]; color?: string; card?: MapCard; name?: string | null; }
 
-interface SelectedCard { type: "marker" | "route" | "area"; index: number; card: MapCard; color?: string; }
+interface SelectedCard { type: "marker" | "route" | "area"; index: number; card: MapCard; color?: string; points: [number, number][]; }
 
 interface Props {
   body: Record<string, unknown> | null;
@@ -30,6 +30,7 @@ const DASH_SEQ = [
 export function MapRenderer({ body, accent }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cardPanelRef = useRef<HTMLDivElement>(null);
+  const mapRef       = useRef<mapboxgl.Map | null>(null);
   const [selectedCard, setSelectedCard] = useState<SelectedCard | null>(null);
 
   useEffect(() => {
@@ -78,6 +79,7 @@ export function MapRenderer({ body, accent }: Props) {
       style: "mapbox://styles/mapbox/light-v11",
       center, zoom, interactive: true,
     });
+    mapRef.current = map;
     map.addControl(new mapboxgl.NavigationControl(), "top-right");
     const cleanup: (() => void)[] = [];
 
@@ -103,7 +105,7 @@ export function MapRenderer({ body, accent }: Props) {
 
         const hasContent = card.title || (card.body && Object.keys(card.body).length > 0);
         if (hasContent) {
-          map.on("click", fill, () => setSelectedRef.current({ type: "area", index: i, card, color }));
+          map.on("click", fill, () => setSelectedRef.current({ type: "area", index: i, card, color, points: area.points }));
           map.on("mouseenter", fill, () => { map.getCanvas().style.cursor = "pointer"; });
           map.on("mouseleave", fill, () => { map.getCanvas().style.cursor = ""; });
         }
@@ -136,7 +138,7 @@ export function MapRenderer({ body, accent }: Props) {
 
         const hasContent = card.title || (card.body && Object.keys(card.body).length > 0);
         if (hasContent) {
-          map.on("click", hit, () => setSelectedRef.current({ type: "route", index: i, card, color }));
+          map.on("click", hit, () => setSelectedRef.current({ type: "route", index: i, card, color, points: route.points }));
           map.on("mouseenter", hit, () => { map.getCanvas().style.cursor = "pointer"; });
           map.on("mouseleave", hit, () => { map.getCanvas().style.cursor = ""; });
         }
@@ -186,17 +188,32 @@ export function MapRenderer({ body, accent }: Props) {
         if (hasContent) {
           el.querySelector("[data-pin]")?.addEventListener("click", (e) => {
             e.stopPropagation();
-            setSelectedRef.current({ type: "marker", index: i, card, color });
+            setSelectedRef.current({ type: "marker", index: i, card, color, points: [[m.lng, m.lat]] });
           });
         }
         const mk = new mapboxgl.Marker({ element: el, anchor: "bottom-left" }).setLngLat([m.lng, m.lat]).addTo(map);
         cleanup.push(() => mk.remove());
       });
+
+      // ── Fit map to all content ───────────────────────────────────────────
+      const allPts: [number, number][] = [
+        ...markers.map((m): [number, number] => [m.lng, m.lat]),
+        ...routes.flatMap((r) => r.points),
+        ...areas.flatMap((a) => a.points),
+      ];
+      if (allPts.length > 0) {
+        const bounds = allPts.reduce(
+          (b, pt) => b.extend(pt),
+          new mapboxgl.LngLatBounds(allPts[0], allPts[0])
+        );
+        map.fitBounds(bounds, { padding: 60, maxZoom: 16, duration: 0 });
+      }
     });
 
     return () => {
       cleanup.forEach((fn) => fn());
       map.remove();
+      mapRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -224,9 +241,30 @@ export function MapRenderer({ body, accent }: Props) {
       {/* Card panel — shows on marker or route click */}
       {selectedCard && (
         <div ref={cardPanelRef} className="bg-surface rounded-[12px] border border-subtle p-5 relative">
-          <button onClick={() => setSelectedCard(null)}
-            className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full text-ink-mute hover:bg-surface-alt hover:text-ink transition-colors text-[13px]"
-            aria-label="Cerrar">✕</button>
+          <div className="absolute top-3 right-3 flex items-center gap-1">
+            <button
+              onClick={() => {
+                const map = mapRef.current;
+                if (!map || !selectedCard.points.length) return;
+                const pts = selectedCard.points;
+                if (pts.length === 1) {
+                  map.flyTo({ center: pts[0], zoom: Math.max(map.getZoom(), 14), speed: 1.4 });
+                } else {
+                  const bounds = pts.reduce(
+                    (b, pt) => b.extend(pt),
+                    new mapboxgl.LngLatBounds(pts[0], pts[0])
+                  );
+                  map.fitBounds(bounds, { padding: 80, maxZoom: 16, duration: 700 });
+                }
+              }}
+              title="Centrar en el mapa"
+              className="w-7 h-7 flex items-center justify-center rounded-full text-ink-mute hover:bg-surface-alt hover:text-ink transition-colors text-[15px]"
+              aria-label="Centrar en el mapa"
+            >⊙</button>
+            <button onClick={() => setSelectedCard(null)}
+              className="w-7 h-7 flex items-center justify-center rounded-full text-ink-mute hover:bg-surface-alt hover:text-ink transition-colors text-[13px]"
+              aria-label="Cerrar">✕</button>
+          </div>
           <div className="flex items-center gap-2 mb-3">
             {selectedCard.color && (
               selectedCard.type === "marker"
