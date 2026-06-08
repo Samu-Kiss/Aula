@@ -237,10 +237,45 @@ export function MapRenderer({ body, accent }: Props) {
       isArea: usedAreaColors.has(c) && !usedMarkerColors.has(c) && !usedRouteColors.has(c),
     }));
 
+  // All coordinate points, used by the re-center button
+  const allPtsForFit: [number, number][] = [
+    ...markers.map((m): [number, number] => [m.lng, m.lat]),
+    ...routes.flatMap((r) => r.points as [number, number][]),
+    ...areas.flatMap((a) => a.points as [number, number][]),
+  ];
+
+  function handleRecenter() {
+    const map = mapRef.current;
+    if (!map || !allPtsForFit.length) return;
+    const bounds = allPtsForFit.reduce(
+      (b, pt) => b.extend(pt),
+      new mapboxgl.LngLatBounds(allPtsForFit[0], allPtsForFit[0])
+    );
+    map.fitBounds(bounds, { padding: 60, maxZoom: 16, duration: 600 });
+  }
+
   return (
     <div className="space-y-4">
       {/* Map */}
-      <div ref={containerRef} className="w-full rounded-[12px] overflow-hidden shadow-sm" style={{ height: 480 }} />
+      <div className="relative w-full rounded-[12px] overflow-hidden shadow-sm" style={{ height: 480 }}>
+        <div ref={containerRef} className="absolute inset-0" />
+        {allPtsForFit.length > 0 && (
+          <button
+            onClick={handleRecenter}
+            title="Centrar en el contenido"
+            className="absolute bottom-[10px] left-[10px] z-10 flex items-center gap-1.5 h-8 px-3 rounded-[8px] bg-white/90 backdrop-blur-sm border border-black/10 shadow text-[12px] font-medium text-[#1A1814] hover:bg-white transition-colors"
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0">
+              <circle cx="7" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.5"/>
+              <line x1="7" y1="0" x2="7" y2="3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <line x1="7" y1="10.5" x2="7" y2="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <line x1="0" y1="7" x2="3.5" y2="7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              <line x1="10.5" y1="7" x2="14" y2="7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            Centrar
+          </button>
+        )}
+      </div>
 
       {/* Card panel — shows on marker or route click */}
       {selectedCard && (
