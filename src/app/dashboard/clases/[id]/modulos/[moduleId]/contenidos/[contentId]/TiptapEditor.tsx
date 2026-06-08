@@ -215,6 +215,9 @@ export function TiptapEditor({ contentId, classId, initialDraft, isPublished, ac
       <div className="flex flex-col gap-2 pb-3 border-b border-[rgba(0,0,0,0.08)]">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1 flex-wrap">
+            <ToolbarButton onClick={() => editor?.chain().focus().undo().run()} active={false} label="↩" title="Deshacer (Ctrl+Z)" />
+            <ToolbarButton onClick={() => editor?.chain().focus().redo().run()} active={false} label="↪" title="Rehacer (Ctrl+Y)" />
+            <div className="w-px h-5 bg-[rgba(0,0,0,0.1)] mx-0.5" />
             <ToolbarButton onClick={() => editor?.chain().focus().toggleBold().run()} active={editor?.isActive("bold")} label="N" title="Negrita" />
             <ToolbarButton onClick={() => editor?.chain().focus().toggleItalic().run()} active={editor?.isActive("italic")} label="I" title="Cursiva" className="italic" />
             <ToolbarButton onClick={() => editor?.chain().focus().toggleUnderline().run()} active={editor?.isActive("underline")} label="S" title="Subrayado" className="underline" />

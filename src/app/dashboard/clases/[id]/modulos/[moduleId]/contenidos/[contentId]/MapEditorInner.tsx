@@ -216,6 +216,18 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
 
   const accentColor = accentHex(accent) ?? "#1A1814";
 
+  // ── History (undo / redo) ─────────────────────────────────────────────────
+  type HistoryEntry = { markers: MapMarker[]; routes: MapRoute[]; areas: MapArea[] };
+  const historyRef    = useRef<HistoryEntry[]>([{ markers: initial.markers, routes: initial.routes, areas: initial.areas }]);
+  const historyIdxRef = useRef(0);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+  const MAX_HISTORY = 60;
+  // Stable refs so event listeners never hold stale closures
+  const pushHistoryRef = useRef<(m: MapMarker[], r: MapRoute[], a: MapArea[]) => void>(() => {});
+  const undoRef        = useRef<() => void>(() => {});
+  const redoRef        = useRef<() => void>(() => {});
+
   // State ref for stale-closure–safe map handlers
   const stateRef = useRef({ mode, markers, routes, areas, colorLabels });
   useEffect(() => { stateRef.current = { mode, markers, routes, areas, colorLabels }; });
@@ -245,6 +257,62 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
   }, [contentId, initial.center, initial.zoom]);
   saveRef.current = save;
 
+  // ── History functions (assigned to refs so closures are always fresh) ─────
+  function pushHistory(m: MapMarker[], r: MapRoute[], a: MapArea[]) {
+    const idx  = historyIdxRef.current;
+    const next = [...historyRef.current.slice(0, idx + 1), { markers: m, routes: r, areas: a }]
+      .slice(-MAX_HISTORY);
+    historyRef.current    = next;
+    historyIdxRef.current = next.length - 1;
+    setCanUndo(next.length > 1);
+    setCanRedo(false);
+  }
+  pushHistoryRef.current = pushHistory;
+
+  function undo() {
+    const idx = historyIdxRef.current;
+    if (idx <= 0) return;
+    const newIdx = idx - 1;
+    historyIdxRef.current = newIdx;
+    const entry = historyRef.current[newIdx];
+    setMarkers(entry.markers);
+    setRoutes(entry.routes);
+    setAreas(entry.areas);
+    setCanUndo(newIdx > 0);
+    setCanRedo(true);
+    setTimeout(() => saveRef.current?.({ markers: entry.markers, routes: entry.routes, areas: entry.areas }), 0);
+  }
+  undoRef.current = undo;
+
+  function redo() {
+    const hist   = historyRef.current;
+    const idx    = historyIdxRef.current;
+    if (idx >= hist.length - 1) return;
+    const newIdx = idx + 1;
+    historyIdxRef.current = newIdx;
+    const entry  = hist[newIdx];
+    setMarkers(entry.markers);
+    setRoutes(entry.routes);
+    setAreas(entry.areas);
+    setCanUndo(true);
+    setCanRedo(newIdx < hist.length - 1);
+    setTimeout(() => saveRef.current?.({ markers: entry.markers, routes: entry.routes, areas: entry.areas }), 0);
+  }
+  redoRef.current = redo;
+
+  // ── Keyboard shortcut (Ctrl/Cmd+Z, Ctrl/Cmd+Y, Ctrl/Cmd+Shift+Z) ─────────
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement).isContentEditable) return;
+      if (e.key === "z" && !e.shiftKey) { e.preventDefault(); undoRef.current(); }
+      else if (e.key === "y" || (e.key === "z" && e.shiftKey)) { e.preventDefault(); redoRef.current(); }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   // ── Mount map ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!containerRef.current || !TOKEN) return;
@@ -265,7 +333,11 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
         const newId = uid();
         setMarkers((prev) => {
           const updated = [...prev, { id: newId, lng, lat, card: emptyCard() }];
-          setTimeout(() => saveRef.current?.({ markers: updated }), 0);
+          const s = stateRef.current;
+          setTimeout(() => {
+            saveRef.current?.({ markers: updated });
+            pushHistoryRef.current(updated, s.routes, s.areas);
+          }, 0);
           return updated;
         });
         setSelectedId({ type: "marker", id: newId });
@@ -391,35 +463,43 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
   // ── Actions ───────────────────────────────────────────────────────────────
   function handleCardUpdate(card: MapCard, color: string | undefined) {
     if (!selectedId) return;
+    const s = stateRef.current;
     if (selectedId.type === "marker") {
-      setMarkers((prev) => {
-        const updated = prev.map((m) => m.id === selectedId.id ? { ...m, card, color } : m);
-        setTimeout(() => saveRef.current?.({ markers: updated }), 0);
-        return updated;
-      });
+      const updated = s.markers.map((m) => m.id === selectedId.id ? { ...m, card, color } : m);
+      setMarkers(updated);
+      pushHistory(updated, s.routes, s.areas);
+      setTimeout(() => saveRef.current?.({ markers: updated }), 0);
     } else if (selectedId.type === "route") {
-      setRoutes((prev) => {
-        const updated = prev.map((r) => r.id === selectedId.id ? { ...r, card, color } : r);
-        setTimeout(() => saveRef.current?.({ routes: updated }), 0);
-        return updated;
-      });
+      const updated = s.routes.map((r) => r.id === selectedId.id ? { ...r, card, color } : r);
+      setRoutes(updated);
+      pushHistory(s.markers, updated, s.areas);
+      setTimeout(() => saveRef.current?.({ routes: updated }), 0);
     } else {
-      setAreas((prev) => {
-        const updated = prev.map((a) => a.id === selectedId.id ? { ...a, card, color } : a);
-        setTimeout(() => saveRef.current?.({ areas: updated }), 0);
-        return updated;
-      });
+      const updated = s.areas.map((a) => a.id === selectedId.id ? { ...a, card, color } : a);
+      setAreas(updated);
+      pushHistory(s.markers, s.routes, updated);
+      setTimeout(() => saveRef.current?.({ areas: updated }), 0);
     }
   }
 
   function handleDelete() {
     if (!selectedId) return;
+    const s = stateRef.current;
     if (selectedId.type === "marker") {
-      setMarkers((prev) => { const u = prev.filter((m) => m.id !== selectedId.id); setTimeout(() => saveRef.current?.({ markers: u }), 0); return u; });
+      const u = s.markers.filter((m) => m.id !== selectedId.id);
+      setMarkers(u);
+      pushHistory(u, s.routes, s.areas);
+      setTimeout(() => saveRef.current?.({ markers: u }), 0);
     } else if (selectedId.type === "route") {
-      setRoutes((prev) => { const u = prev.filter((r) => r.id !== selectedId.id); setTimeout(() => saveRef.current?.({ routes: u }), 0); return u; });
+      const u = s.routes.filter((r) => r.id !== selectedId.id);
+      setRoutes(u);
+      pushHistory(s.markers, u, s.areas);
+      setTimeout(() => saveRef.current?.({ routes: u }), 0);
     } else {
-      setAreas((prev) => { const u = prev.filter((a) => a.id !== selectedId.id); setTimeout(() => saveRef.current?.({ areas: u }), 0); return u; });
+      const u = s.areas.filter((a) => a.id !== selectedId.id);
+      setAreas(u);
+      pushHistory(s.markers, s.routes, u);
+      setTimeout(() => saveRef.current?.({ areas: u }), 0);
     }
     setSelectedId(null);
   }
@@ -428,11 +508,18 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
     const min = mode === "area" ? 3 : 2;
     if (drawingPoints.length < min) { setDrawingPoints([]); return; }
     const newId = uid();
+    const s = stateRef.current;
     if (mode === "area") {
-      setAreas((prev) => { const u = [...prev, { id: newId, points: drawingPoints, card: emptyCard() }]; setTimeout(() => saveRef.current?.({ areas: u }), 0); return u; });
+      const u = [...s.areas, { id: newId, points: drawingPoints, card: emptyCard() }];
+      setAreas(u);
+      pushHistory(s.markers, s.routes, u);
+      setTimeout(() => saveRef.current?.({ areas: u }), 0);
       setSelectedId({ type: "area", id: newId });
     } else {
-      setRoutes((prev) => { const u = [...prev, { id: newId, points: drawingPoints, card: emptyCard() }]; setTimeout(() => saveRef.current?.({ routes: u }), 0); return u; });
+      const u = [...s.routes, { id: newId, points: drawingPoints, card: emptyCard() }];
+      setRoutes(u);
+      pushHistory(s.markers, u, s.areas);
+      setTimeout(() => saveRef.current?.({ routes: u }), 0);
       setSelectedId({ type: "route", id: newId });
     }
     setDrawingPoints([]);
@@ -458,6 +545,7 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
       setRoutes(nextRoutes);
       setAreas(nextAreas);
       setSelectedId(null);
+      pushHistory(nextMarkers, nextRoutes, nextAreas);
       setTimeout(() => saveRef.current?.({ markers: nextMarkers, routes: nextRoutes, areas: nextAreas }), 0);
 
       // Fit the map to all imported geometry
@@ -644,6 +732,22 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
             Plantilla
           </button>
         </div>
+        {/* Undo / Redo */}
+        <div className="inline-flex items-center border border-subtle rounded-[6px] divide-x divide-subtle">
+          <button
+            onClick={undo}
+            disabled={!canUndo}
+            title="Deshacer (Ctrl+Z)"
+            className="text-mono text-[12px] px-2.5 h-6 text-ink-soft hover:text-ink hover:bg-surface-alt transition-colors rounded-l-[5px] disabled:opacity-30 disabled:cursor-not-allowed"
+          >↩</button>
+          <button
+            onClick={redo}
+            disabled={!canRedo}
+            title="Rehacer (Ctrl+Y)"
+            className="text-mono text-[12px] px-2.5 h-6 text-ink-soft hover:text-ink hover:bg-surface-alt transition-colors rounded-r-[5px] disabled:opacity-30 disabled:cursor-not-allowed"
+          >↪</button>
+        </div>
+
         <span className="text-mono text-ink-mute text-[11px]">
           {saveStatus === "saved" ? "Guardado" : saveStatus === "saving" ? "Guardando…" : "Sin guardar"}
         </span>
@@ -743,7 +847,15 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
                   className="text-[13px] text-ink-mute hover:text-ink transition-colors cursor-pointer shrink-0 px-0.5"
                 >⊙</span>
                 <span
-                  onClick={(e) => { e.stopPropagation(); setRoutes((prev) => { const u = prev.filter((r) => r.id !== route.id); setTimeout(() => saveRef.current?.({ routes: u }), 0); return u; }); if (isSelected) setSelectedId(null); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const s = stateRef.current;
+                    const u = s.routes.filter((r) => r.id !== route.id);
+                    setRoutes(u);
+                    pushHistory(s.markers, u, s.areas);
+                    setTimeout(() => saveRef.current?.({ routes: u }), 0);
+                    if (isSelected) setSelectedId(null);
+                  }}
                   className="text-[12px] text-ink-mute hover:text-red-500 transition-colors cursor-pointer shrink-0 px-1"
                 >✕</span>
               </button>
@@ -774,7 +886,15 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
                   className="text-[13px] text-ink-mute hover:text-ink transition-colors cursor-pointer shrink-0 px-0.5"
                 >⊙</span>
                 <span
-                  onClick={(e) => { e.stopPropagation(); setAreas((prev) => { const u = prev.filter((a) => a.id !== area.id); setTimeout(() => saveRef.current?.({ areas: u }), 0); return u; }); if (isSelected) setSelectedId(null); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const s = stateRef.current;
+                    const u = s.areas.filter((a) => a.id !== area.id);
+                    setAreas(u);
+                    pushHistory(s.markers, s.routes, u);
+                    setTimeout(() => saveRef.current?.({ areas: u }), 0);
+                    if (isSelected) setSelectedId(null);
+                  }}
                   className="text-[12px] text-ink-mute hover:text-red-500 transition-colors cursor-pointer shrink-0 px-1"
                 >✕</span>
               </button>

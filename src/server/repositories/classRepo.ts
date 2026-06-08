@@ -75,5 +75,24 @@ export function classRepo(db: SupabaseClient) {
         .eq("id", id);
       if (error) throw error;
     },
+
+    async listDeleted(professorId: string): Promise<Class[]> {
+      const { data, error } = await db
+        .from("classes")
+        .select("*")
+        .eq("professor_id", professorId)
+        .not("deleted_at", "is", null)
+        .order("deleted_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+
+    async restore(id: string): Promise<void> {
+      const { error } = await db
+        .from("classes")
+        .update({ deleted_at: null })
+        .eq("id", id);
+      if (error) throw error;
+    },
   };
 }

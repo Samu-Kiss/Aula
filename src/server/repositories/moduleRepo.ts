@@ -81,5 +81,25 @@ export function moduleRepo(db: SupabaseClient) {
         .eq("id", id);
       if (error) throw error;
     },
+
+    async listDeletedByClassIds(classIds: string[]): Promise<Module[]> {
+      if (classIds.length === 0) return [];
+      const { data, error } = await db
+        .from("modules")
+        .select("*")
+        .in("class_id", classIds)
+        .not("deleted_at", "is", null)
+        .order("deleted_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+
+    async restore(id: string): Promise<void> {
+      const { error } = await db
+        .from("modules")
+        .update({ deleted_at: null })
+        .eq("id", id);
+      if (error) throw error;
+    },
   };
 }

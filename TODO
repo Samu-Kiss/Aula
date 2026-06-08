@@ -73,7 +73,7 @@
 - [ ] `F5-06` Emails transaccionales con Resend (intento recibido, nota lista, código de verificación)
 - [ ] `F5-07` Notificaciones in-app para el profesor (tabla `notifications`, §14.1)
 - [ ] `F5-08` Dashboard admin `/dashboard/admin` con métricas y anti-cheating insights
-- [ ] `F5-09` Soft delete + archivo recuperable `/dashboard/archivo`
+- [x] `F5-09` Soft delete + archivo recuperable `/dashboard/archivo`
 - [ ] `F5-10` Anonimización del estudiante (`/api/student/anonymize`)
 - [x] `F5-11` Duplicar clase, módulo y quiz
 - [ ] `F5-12` OG image dinámica (`/api/og`) con lockup y acento

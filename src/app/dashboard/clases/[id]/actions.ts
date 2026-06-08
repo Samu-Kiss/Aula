@@ -212,6 +212,25 @@ export async function saveModuleAvailabilityAction(
   }
 }
 
+export async function deleteModuleAction(moduleId: string, classId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false as const, error: "No autenticado." };
+
+  // Verify professor owns this module via its class
+  const { data: cls } = await supabase
+    .from("classes")
+    .select("professor_id")
+    .eq("id", classId)
+    .maybeSingle();
+  if (!cls || cls.professor_id !== user.id) return { ok: false as const, error: "No autorizado." };
+
+  await moduleRepo(supabase).softDelete(moduleId);
+  revalidatePath(`/dashboard/clases/${classId}`);
+  revalidatePath("/dashboard/archivo");
+  return { ok: true as const };
+}
+
 export async function deleteClassAction(classId: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

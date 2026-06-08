@@ -19,7 +19,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Module } from "@/lib/types/db";
-import { createModuleAction, reorderModulesAction, duplicateModuleAction } from "@/app/dashboard/clases/[id]/actions";
+import { createModuleAction, reorderModulesAction, duplicateModuleAction, deleteModuleAction } from "@/app/dashboard/clases/[id]/actions";
 
 function SortableModule({
   mod,
@@ -33,6 +33,8 @@ function SortableModule({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: mod.id });
   const [isPendingDup, startDuplicate] = useTransition();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [isDeleting, startDelete] = useTransition();
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -45,6 +47,14 @@ function SortableModule({
     e.stopPropagation();
     startDuplicate(async () => {
       await duplicateModuleAction(mod.id, classId);
+    });
+  }
+
+  function handleDelete(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    startDelete(async () => {
+      await deleteModuleAction(mod.id, classId);
     });
   }
 
@@ -75,7 +85,7 @@ function SortableModule({
       {/* Duplicate button — appears on hover */}
       <button
         onClick={handleDuplicate}
-        disabled={isPendingDup}
+        disabled={isPendingDup || isDeleting}
         title="Duplicar módulo"
         className="p-1 text-ink-mute opacity-0 group-hover:opacity-100 hover:text-ink transition-colors disabled:opacity-30 shrink-0"
         aria-label="Duplicar módulo"
@@ -91,6 +101,49 @@ function SortableModule({
           </svg>
         )}
       </button>
+
+      {/* Delete button — appears on hover, requires confirm */}
+      {confirmingDelete ? (
+        <div className="flex items-center gap-0.5 opacity-100 shrink-0">
+          <button
+            onClick={handleDelete}
+            disabled={isDeleting}
+            title="Confirmar eliminación"
+            className="p-1 text-borgona hover:text-borgona/70 transition-colors disabled:opacity-40 shrink-0"
+          >
+            {isDeleting ? (
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="animate-spin">
+                <circle cx="6" cy="6" r="4" strokeDasharray="16" strokeDashoffset="8" />
+              </svg>
+            ) : (
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <path d="M2 3h8M4.5 3V2h3v1M4 3l.5 7M8 3l-.5 7" />
+              </svg>
+            )}
+          </button>
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmingDelete(false); }}
+            className="p-1 text-ink-mute hover:text-ink transition-colors shrink-0"
+            title="Cancelar"
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <path d="M2 2l8 8M10 2l-8 8" />
+            </svg>
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmingDelete(true); }}
+          disabled={isPendingDup || isDeleting}
+          title="Eliminar módulo"
+          className="p-1 text-ink-mute opacity-0 group-hover:opacity-100 hover:text-borgona transition-colors disabled:opacity-30 shrink-0"
+          aria-label="Eliminar módulo"
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+            <path d="M2 3h8M4.5 3V2h3v1M4 3l.5 7M8 3l-.5 7" />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }
