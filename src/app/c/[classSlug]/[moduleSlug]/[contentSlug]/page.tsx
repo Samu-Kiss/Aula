@@ -11,6 +11,7 @@ import { ClassNav } from "@/components/public/ClassNav";
 import { RichTextRenderer } from "@/components/content/RichTextRenderer";
 import { VideoRenderer } from "@/components/content/VideoRenderer";
 import { MapRendererClient } from "@/components/content/MapRendererClient";
+import { FileRenderer } from "@/components/content/FileRenderer";
 import { QuizAccess } from "@/components/quiz/QuizAccess";
 import { QuizResult } from "@/components/quiz/QuizResult";
 
@@ -135,7 +136,7 @@ export default async function ContentPage({ params, searchParams }: Props) {
           <MapRendererClient body={content.body_published} accent={cls.accent} />
         )}
         {content.type === "file" && (
-          <p className="text-body text-ink-soft">Archivo — próximamente.</p>
+          <FileRenderer contentId={content.id} body={content.body_published} />
         )}
         {content.type === "quiz" && resultData && quiz && (
           <QuizResult

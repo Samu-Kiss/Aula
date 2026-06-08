@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, Suspense, lazy } from "react";
 import {
   DndContext,
   closestCenter,
@@ -28,9 +28,13 @@ import {
 } from "./quizActions";
 import { publishContentAction } from "@/app/dashboard/clases/[id]/actions";
 
+const MapPinQuestionEditor = lazy(() =>
+  import("./MapPinQuestionEditor").then((m) => ({ default: m.MapPinQuestionEditor }))
+);
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type QuestionType = "single_choice" | "multi_choice" | "true_false" | "short_answer";
+type QuestionType = "single_choice" | "multi_choice" | "true_false" | "short_answer" | "map_pin";
 
 interface ChoiceOption {
   id: string;
@@ -51,6 +55,12 @@ function defaultBody(type: QuestionType): Record<string, unknown> {
     };
   }
   if (type === "true_false") return { correct: true, explanation: "" };
+  if (type === "map_pin") return {
+    center: [-74.0721, 4.711],
+    zoom: 11,
+    markers: [],
+    correct_marker_id: "",
+  };
   return { accepted_answers: [""], case_sensitive: false, auto_grade: true };
 }
 
@@ -63,6 +73,7 @@ const TYPE_LABELS: Record<QuestionType, string> = {
   multi_choice: "Selección múltiple",
   true_false: "Verdadero / Falso",
   short_answer: "Respuesta corta",
+  map_pin: "Pin en mapa",
 };
 
 const SHOW_ANSWERS_OPTIONS: { value: Quiz["show_correct_answers"]; label: string }[] = [
@@ -132,6 +143,11 @@ function QuestionForm({ quizId, classId, question, orderIndex, onSaved, onCancel
       const opts = body.options as ChoiceOption[];
       if (opts.some((o) => !o.text.trim())) { setError("Todas las opciones deben tener texto."); return; }
       if (!opts.some((o) => o.is_correct)) { setError("Debes marcar al menos una opción correcta."); return; }
+    }
+    if (type === "map_pin") {
+      const markers = body.markers as { id: string }[] ?? [];
+      if (markers.length < 2) { setError("Añade al menos 2 marcadores en el mapa."); return; }
+      if (!body.correct_marker_id) { setError("Selecciona el marcador correcto."); return; }
     }
     setError("");
     startSave(async () => {
@@ -340,6 +356,15 @@ function QuestionForm({ quizId, classId, question, orderIndex, onSaved, onCancel
         </div>
       )}
 
+      {type === "map_pin" && (
+        <Suspense fallback={<div className="h-48 bg-surface-alt rounded-[10px] animate-pulse" />}>
+          <MapPinQuestionEditor
+            body={body as unknown as import("./MapPinQuestionEditor").MapPinBody}
+            onChange={(b) => setBody(b as unknown as Record<string, unknown>)}
+          />
+        </Suspense>
+      )}
+
       {error && <p className="text-caption text-borgona">{error}</p>}
 
       <div className="flex gap-3 pt-1">
@@ -419,7 +444,7 @@ function SortableQuestion({ question, index, quizId, classId, onUpdated, onDelet
           </button>
           <div className="flex-1 min-w-0">
             <p className="text-caption text-ink-mute mb-0.5">
-              {index + 1}. {TYPE_LABELS[question.type as QuestionType]} · {question.points} pt{question.points !== 1 ? "s" : ""}
+              {index + 1}. {TYPE_LABELS[question.type as QuestionType] ?? question.type} · {question.points} pt{question.points !== 1 ? "s" : ""}
             </p>
             <p className="text-body text-ink line-clamp-2">{question.prompt}</p>
           </div>

@@ -7,6 +7,7 @@ import { contentRepo } from "@/server/repositories/contentRepo";
 import { createModuleSchema } from "@/lib/schemas/module";
 import { createContentSchema } from "@/lib/schemas/content";
 import { ZodError } from "zod";
+import { deleteObjects, extractR2ImageKeys } from "@/lib/r2";
 
 function slugify(s: string) {
   return s
@@ -87,6 +88,51 @@ export async function reorderModulesAction(
   if (!user) return { error: "No autenticado." };
   await moduleRepo(supabase).reorder(updates);
   revalidatePath(`/dashboard/clases/${classId}`);
+  return { ok: true };
+}
+
+export async function deleteContentAction(contentId: string, classId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "No autenticado." };
+
+  // Fetch content before deleting to collect R2 references
+  const { data: content } = await supabase
+    .from("contents")
+    .select("type, body_draft, body_published")
+    .eq("id", contentId)
+    .single();
+
+  await contentRepo(supabase).softDelete(contentId);
+
+  // Clean up R2 objects — best-effort, never blocks the delete
+  if (content) {
+    try {
+      const toDelete: { key: string; bucket: "public" | "private" }[] = [];
+
+      if (content.type === "file") {
+        const draftKey = (content.body_draft as Record<string, unknown> | null)?.file_key as string | undefined;
+        const pubKey = (content.body_published as Record<string, unknown> | null)?.file_key as string | undefined;
+        if (draftKey) toDelete.push({ key: draftKey, bucket: "private" });
+        if (pubKey && pubKey !== draftKey) toDelete.push({ key: pubKey, bucket: "private" });
+      } else if (content.type === "rich_text") {
+        const r2Url = process.env.R2_PUBLIC_URL ?? "";
+        const draftKeys = extractR2ImageKeys(content.body_draft, r2Url);
+        const pubKeys = extractR2ImageKeys(content.body_published, r2Url);
+        for (const key of new Set([...draftKeys, ...pubKeys])) {
+          toDelete.push({ key, bucket: "public" });
+        }
+      }
+
+      if (toDelete.length > 0) await deleteObjects(toDelete);
+    } catch (err) {
+      console.error("R2 cleanup error on content delete:", err);
+    }
+  }
+
+  revalidatePath(`/dashboard/clases/${classId}`);
+  const { data: cls } = await supabase.from("classes").select("slug").eq("id", classId).maybeSingle();
+  if (cls?.slug) revalidatePath(`/c/${cls.slug}`);
   return { ok: true };
 }
 

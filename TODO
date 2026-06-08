@@ -67,8 +67,8 @@
 ### Fase 5 — Experiencia avanzada
 - [x] `F5-01` Contenido tipo `video` (embed YouTube/Vimeo) — VideoEditor (dashboard, autosave) + VideoRenderer (público, iframe responsive)
 - [x] `F5-02` Contenido tipo `map` con Mapbox GL JS + markers en color de acento — MapEditorInner (click para añadir/quitar markers) + MapRenderer (público, read-only con acento del aula)
-- [ ] `F5-03` Contenido tipo `file` con upload a Cloudflare R2 + URL firmada
-- [ ] `F5-04` Pregunta tipo `map_pin` en quizzes
+- [x] `F5-03` Contenido tipo `file` con upload a Cloudflare R2 + URL firmada
+- [x] `F5-04` Pregunta tipo `map_pin` en quizzes
 - [X] `F5-05` Revisión manual de intentos con preguntas `short_answer` no auto-calificables
 - [ ] `F5-06` Emails transaccionales con Resend (intento recibido, nota lista, código de verificación)
 - [ ] `F5-07` Notificaciones in-app para el profesor (tabla `notifications`, §14.1)
@@ -83,9 +83,9 @@
 - [ ] `F5-16` QR de acceso por clase — generar QR con la URL pública `/c/[classSlug]` en el dashboard del profesor; vista de pantalla completa para proyectar en clase y opción de descargar como PNG para compartir
 - [X] `F5-17` Links en lecturas — extensión Tiptap Link en el editor de contenido `rich_text`; soporte de href en el renderer público (actualmente se pierde al serializar a HTML)
 - [x] `F5-18` Vista de módulo expandida — en `/c/[classSlug]/[moduleSlug]`, `rich_text` y `video`/`map` se renderizan inline en un feed continuo; `quiz` y `file` siguen siendo cards con link
-- [ ] `F5-19` Imágenes y embeds en lecturas — extensión Tiptap Image + upload a storage (R2 o Supabase Storage); soporte de embeds de video/iframe dentro del cuerpo de un `rich_text`; depende de F5-03
+- [x] `F5-19` Imágenes y embeds en lecturas — extensión Tiptap Image + upload a storage (R2); imágenes subidas directamente desde archivo (bucket público) o por URL; pegado desde portapapeles con upload automático; depende de F5-03
 - [X] `F5-20` Reordenar contenidos en el dashboard del profesor
 - [ ] `F5-21` Icon set
-- [ ] `F5-22` Sidebar navigation dentro de cada módulo
+- [X] `F5-22` Sidebar navigation dentro de cada módulo
 - [X] `F5-23` Permitir al profesor hacer rutas entre puntos del mapa (puede hacer varias rutas) y permitirle nombrar los puntos que pone en el mapa
 - [X] `F5-24` Funciones avanzadas de mapa, que a partir de un archivo (puede ser un json), se coloquen los puntos, las rutas y las tarjetas, también permitir áreas

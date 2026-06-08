@@ -56,6 +56,24 @@ export const quizQuestionSchema = z.discriminatedUnion("type", [
       auto_grade: z.boolean().default(true),
     }),
   }),
+  z.object({
+    type: z.literal("map_pin"),
+    prompt: z.string().min(5).max(1000),
+    points: z.number().min(0.25).max(100),
+    body: z.object({
+      center: z.tuple([z.number(), z.number()]),
+      zoom: z.number().min(0).max(22).default(11),
+      markers: z.array(
+        z.object({
+          id: z.string(),
+          lng: z.number(),
+          lat: z.number(),
+          label: z.string().max(50).optional(),
+        })
+      ).min(2).max(20),
+      correct_marker_id: z.string().min(1),
+    }),
+  }),
 ]);
 
 export const updateQuizSettingsSchema = z.object({

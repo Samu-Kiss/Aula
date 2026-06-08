@@ -19,6 +19,22 @@ interface Props {
   accent?: string | null;
 }
 
+async function uploadImageToR2(file: File, contentId: string): Promise<string> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("prefix", `images/${contentId}/`);
+  formData.append("bucket", "public");
+
+  const res = await fetch("/api/upload", { method: "POST", body: formData });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error ?? `Error al subir la imagen (${res.status}).`);
+  }
+  const data = await res.json();
+  if (!data.url) throw new Error("No se recibió URL pública de la imagen. Configura NEXT_PUBLIC_R2_PUBLIC_URL.");
+  return data.url as string;
+}
+
 export function TiptapEditor({ contentId, classId, initialDraft, isPublished, accent }: Props) {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("saved");
   const [published, setPublished] = useState(isPublished);
@@ -30,8 +46,11 @@ export function TiptapEditor({ contentId, classId, initialDraft, isPublished, ac
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
   const [imageChecking, setImageChecking] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
   const linkInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const editorRef = useRef<ReturnType<typeof useEditor>>(null);
 
   const editor = useEditor({
     extensions: [
@@ -44,7 +63,7 @@ export function TiptapEditor({ contentId, classId, initialDraft, isPublished, ac
           style: `color: ${accentHex(accent) ?? "inherit"}; text-decoration: underline; text-underline-offset: 2px;`,
         },
       }),
-      Image.configure({ allowBase64: true }),
+      Image.configure({ allowBase64: false }),
     ],
     content: (initialDraft?.doc as object) ? { type: "doc", ...(initialDraft.doc as object) } : initialDraft,
     editorProps: {
@@ -59,14 +78,17 @@ export function TiptapEditor({ contentId, classId, initialDraft, isPublished, ac
           const file = item.getAsFile();
           if (!file) continue;
           event.preventDefault();
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            const src = e.target?.result as string;
-            if (src) view.dispatch(view.state.tr.replaceSelectionWith(
-              view.state.schema.nodes.image.create({ src })
-            ));
-          };
-          reader.readAsDataURL(file);
+          setImageUploading(true);
+          uploadImageToR2(file, contentId)
+            .then((src) => {
+              view.dispatch(view.state.tr.replaceSelectionWith(
+                view.state.schema.nodes.image.create({ src })
+              ));
+            })
+            .catch(() => {
+              // silent fail for paste — could show a toast in the future
+            })
+            .finally(() => setImageUploading(false));
           return true;
         }
         return false;
@@ -154,6 +176,20 @@ export function TiptapEditor({ contentId, classId, initialDraft, isPublished, ac
     img.src = src;
   }
 
+  async function handleImageFileUpload(file: File) {
+    setImageUrl(null);
+    setImageError(null);
+    setImageUploading(true);
+    try {
+      const src = await uploadImageToR2(file, contentId);
+      editor?.chain().focus().setImage({ src }).run();
+    } catch (err: unknown) {
+      setImageError(err instanceof Error ? err.message : "Error al subir la imagen.");
+    } finally {
+      setImageUploading(false);
+    }
+  }
+
   const STATUS_LABEL: Record<SaveStatus, string> = {
     saved: "Guardado",
     saving: "Guardando…",
@@ -162,6 +198,19 @@ export function TiptapEditor({ contentId, classId, initialDraft, isPublished, ac
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Hidden file input for image upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleImageFileUpload(file);
+          e.target.value = "";
+        }}
+      />
+
       {/* Toolbar */}
       <div className="flex flex-col gap-2 pb-3 border-b border-[rgba(0,0,0,0.08)]">
         <div className="flex items-center gap-3">
@@ -176,12 +225,18 @@ export function TiptapEditor({ contentId, classId, initialDraft, isPublished, ac
             <ToolbarButton onClick={() => editor?.chain().focus().toggleCodeBlock().run()} active={editor?.isActive("codeBlock")} label="{}" title="Código" />
             <div className="w-px h-5 bg-[rgba(0,0,0,0.1)] mx-0.5" />
             <ToolbarButton onClick={openLinkInput} active={editor?.isActive("link") || linkUrl !== null} label="🔗" title="Enlace" />
-            <ToolbarButton onClick={openImageInput} active={imageUrl !== null} label="🖼" title="Imagen" />
+            <ToolbarButton
+              onClick={() => fileInputRef.current?.click()}
+              active={imageUploading}
+              label={imageUploading ? "⏳" : "🖼"}
+              title="Subir imagen desde archivo"
+            />
+            <ToolbarButton onClick={openImageInput} active={imageUrl !== null} label="🔗🖼" title="Imagen por URL" />
           </div>
 
           <div className="ml-auto flex items-center gap-4">
-            <span aria-live="polite" className={`text-mono transition-colors ${saveStatus === "unsaved" ? "text-warning" : "text-ink-mute"}`}>
-              {STATUS_LABEL[saveStatus]}
+            <span aria-live="polite" className={`text-mono transition-colors ${imageUploading ? "text-indigo" : saveStatus === "unsaved" ? "text-warning" : "text-ink-mute"}`}>
+              {imageUploading ? "Subiendo imagen…" : STATUS_LABEL[saveStatus]}
             </span>
             <button
               onClick={handlePublish}
@@ -234,7 +289,7 @@ export function TiptapEditor({ contentId, classId, initialDraft, isPublished, ac
                 disabled={!imageUrl?.trim() || imageChecking}
                 className="h-7 px-3 text-mono text-[12px] rounded-[6px] bg-ink text-page hover:bg-ink/80 disabled:opacity-40 transition-colors"
               >
-                {imageChecking ? "…" : "Insertar"}
+                {imageChecking ? "…" : "Insertar URL"}
               </button>
               <button onClick={() => { setImageUrl(null); setImageError(null); }} className="h-7 px-2 text-mono text-[12px] text-ink-mute hover:text-ink transition-colors">
                 ✕
@@ -244,6 +299,11 @@ export function TiptapEditor({ contentId, classId, initialDraft, isPublished, ac
               <p className="text-[11px] text-red-500 pl-0.5">{imageError}</p>
             )}
           </div>
+        )}
+
+        {/* File upload image error (when imageUrl is null but error exists) */}
+        {imageError && imageUrl === null && (
+          <p className="text-[11px] text-red-500">{imageError}</p>
         )}
       </div>
 

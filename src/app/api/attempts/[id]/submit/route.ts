@@ -72,6 +72,10 @@ export async function POST(
         pointsAwarded = isCorrect ? q.points : 0;
       }
       // else: manual grading, leave null
+    } else if (q.type === "map_pin") {
+      const correctId = snap.correct_marker_id as string;
+      isCorrect = !!correctId && answer.response.marker_id === correctId;
+      pointsAwarded = isCorrect ? q.points : 0;
     }
 
     totalScore += pointsAwarded;

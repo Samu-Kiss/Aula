@@ -5,6 +5,7 @@ import { TiptapEditor } from "./TiptapEditor";
 import { QuizEditor } from "./QuizEditor";
 import { VideoEditor } from "./VideoEditor";
 import { MapEditorClient } from "./MapEditorClient";
+import { FileEditor } from "./FileEditor";
 
 interface Props {
   params: Promise<{ id: string; moduleId: string; contentId: string }>;
@@ -82,6 +83,13 @@ export default async function ContentEditorPage({ params }: Props) {
           initialDraft={content.body_draft ?? {}}
           isPublished={content.is_published}
           accent={cls?.accent}
+        />
+      ) : content.type === "file" ? (
+        <FileEditor
+          contentId={contentId}
+          classId={classId}
+          initialDraft={content.body_draft ?? {}}
+          isPublished={content.is_published}
         />
       ) : (
         <div className="bg-surface rounded-[12px] border border-subtle p-8 text-center">

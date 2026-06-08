@@ -1,9 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useTransition } from "react";
+import { useState, useEffect, useRef, useCallback, useTransition, lazy, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import type { Attempt, AttemptQuestion, Answer, Quiz } from "@/lib/types/db";
 import type { StudentPayload } from "@/lib/auth/studentJwt";
+
+const MapPinQuestion = lazy(() =>
+  import("./MapPinQuestion").then((m) => ({ default: m.MapPinQuestion }))
+);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -322,12 +326,33 @@ function ShortAnswerQuestion({ question: _q, response, onChange, submitted }: QP
   );
 }
 
+function MapPinQuestionWrapper({ question, response, onChange, submitted }: QProps) {
+  const body = question.body_snapshot as {
+    center: [number, number];
+    zoom: number;
+    markers: { id: string; lng: number; lat: number; label: string }[];
+    correct_marker_id: string;
+  };
+
+  return (
+    <Suspense fallback={<div className="h-48 bg-surface-alt rounded-[10px] animate-pulse" />}>
+      <MapPinQuestion
+        bodySnapshot={body}
+        selectedMarkerId={response.marker_id as string | undefined}
+        onChange={(markerId) => onChange({ marker_id: markerId })}
+        submitted={submitted}
+      />
+    </Suspense>
+  );
+}
+
 function QuestionRenderer(props: QProps) {
   switch (props.question.type) {
     case "single_choice": return <SingleChoiceQuestion {...props} />;
     case "multi_choice": return <MultiChoiceQuestion {...props} />;
     case "true_false": return <TrueFalseQuestion {...props} />;
     case "short_answer": return <ShortAnswerQuestion {...props} />;
+    case "map_pin": return <MapPinQuestionWrapper {...props} />;
     default: return <p className="text-body text-ink-soft">Tipo de pregunta no soportado.</p>;
   }
 }

@@ -10,6 +10,7 @@ import { ModuleContentsSidebar } from "@/components/public/ModuleContentsSidebar
 import { RichTextRenderer } from "@/components/content/RichTextRenderer";
 import { VideoRenderer } from "@/components/content/VideoRenderer";
 import { MapRendererClient } from "@/components/content/MapRendererClient";
+import { FileRenderer } from "@/components/content/FileRenderer";
 import type { Content } from "@/lib/types/db";
 
 interface Props {
@@ -116,9 +117,9 @@ export default async function ModulePage({ params }: Props) {
           <section className="pb-20 space-y-12">
             {contents.map((content, i) => {
                 const isInline = content.type === "rich_text" ||
-                  ((content.type === "video" || content.type === "map") && content.body_published);
+                  ((content.type === "video" || content.type === "map" || content.type === "file") && content.body_published);
 
-                if (content.type === "quiz" || content.type === "file") {
+                if (content.type === "quiz") {
                   return (
                     <div key={content.id} id={content.slug}>
                       <ContentCard content={content} index={i} classSlug={classSlug} moduleSlug={moduleSlug} />
@@ -165,6 +166,11 @@ export default async function ModulePage({ params }: Props) {
                     {content.type === "map" && (
                       content.body_published
                         ? <MapRendererClient body={content.body_published as Record<string, unknown>} accent={cls.accent} />
+                        : <ContentCard content={content} index={i} classSlug={classSlug} moduleSlug={moduleSlug} />
+                    )}
+                    {content.type === "file" && (
+                      content.body_published
+                        ? <FileRenderer contentId={content.id} body={content.body_published as Record<string, unknown>} />
                         : <ContentCard content={content} index={i} classSlug={classSlug} moduleSlug={moduleSlug} />
                     )}
 
