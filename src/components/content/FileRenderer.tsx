@@ -1,6 +1,8 @@
 "use client";
 
+import type React from "react";
 import { useState } from "react";
+import { FileText, FileVideo, FileAudio, Image, FileSpreadsheet, Presentation, FileType2, Archive, Paperclip } from "lucide-react";
 
 interface Props {
   contentId: string;
@@ -13,16 +15,16 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function fileIcon(type: string): string {
-  if (type.startsWith("image/")) return "🖼";
-  if (type.startsWith("video/")) return "🎬";
-  if (type.startsWith("audio/")) return "🎵";
-  if (type === "application/pdf") return "📄";
-  if (type.includes("spreadsheet") || type.includes("excel")) return "📊";
-  if (type.includes("presentation") || type.includes("powerpoint")) return "📊";
-  if (type.includes("word") || type.includes("document")) return "📝";
-  if (type === "application/zip") return "🗜";
-  return "📎";
+function fileIcon(type: string): React.ReactElement {
+  if (type.startsWith("image/")) return <Image size={36} />;
+  if (type.startsWith("video/")) return <FileVideo size={36} />;
+  if (type.startsWith("audio/")) return <FileAudio size={36} />;
+  if (type === "application/pdf") return <FileText size={36} />;
+  if (type.includes("spreadsheet") || type.includes("excel")) return <FileSpreadsheet size={36} />;
+  if (type.includes("presentation") || type.includes("powerpoint")) return <Presentation size={36} />;
+  if (type.includes("word") || type.includes("document")) return <FileType2 size={36} />;
+  if (type === "application/zip") return <Archive size={36} />;
+  return <Paperclip size={36} />;
 }
 
 export function FileRenderer({ contentId, body }: Props) {
@@ -65,7 +67,7 @@ export function FileRenderer({ contentId, body }: Props) {
 
   return (
     <div className="bg-surface border border-subtle rounded-[12px] p-6 flex items-center gap-5">
-      <div className="text-4xl flex-none">{fileIcon(fileType)}</div>
+      <div className="text-ink-soft flex-none">{fileIcon(fileType)}</div>
       <div className="flex-1 min-w-0">
         <p className="text-body text-ink font-medium truncate">{fileName}</p>
         <p className="text-caption text-ink-mute mt-0.5">

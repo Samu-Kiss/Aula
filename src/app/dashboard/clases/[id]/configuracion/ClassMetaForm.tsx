@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
+import { AlertTriangle } from "lucide-react";
 import { updateClassMetaAction } from "@/app/dashboard/clases/[id]/actions";
 
 function slugify(s: string) {
@@ -98,8 +99,8 @@ export function ClassMetaForm({ classId, initialTitle, initialSlug, initialDescr
           URL completa: <span className="text-ink">{appUrl}/c/{slug || "…"}</span>
         </p>
         {slug !== initialSlug && (
-          <p className="text-caption text-ambar mt-1">
-            ⚠ Cambiar el slug rompe los links existentes hacia esta clase.
+          <p className="text-caption text-ambar mt-1 inline-flex items-center gap-1">
+            <AlertTriangle size={13} /> Cambiar el slug rompe los links existentes hacia esta clase.
           </p>
         )}
       </div>

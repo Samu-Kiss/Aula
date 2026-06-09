@@ -18,6 +18,7 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { Copy, Loader2, Trash2 } from "lucide-react";
 import type { Content } from "@/lib/types/db";
 import { reorderContentsAction, deleteContentAction, duplicateContentAction } from "@/app/dashboard/clases/[id]/actions";
 
@@ -110,14 +111,9 @@ function SortableContent({
           className="p-1.5 text-ink-mute hover:text-ink transition-colors disabled:opacity-40"
         >
           {duplicating ? (
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="animate-spin">
-              <circle cx="7" cy="7" r="5" strokeDasharray="20" strokeDashoffset="10" />
-            </svg>
+            <Loader2 size={14} className="animate-spin" />
           ) : (
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="4" y="4" width="8" height="8" rx="1.5" />
-              <path d="M2 10V2h8" />
-            </svg>
+            <Copy size={14} />
           )}
         </button>
 
@@ -144,9 +140,7 @@ function SortableContent({
             className="p-1.5 text-ink-mute hover:text-borgona transition-colors"
             title="Eliminar contenido"
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-              <path d="M2 3.5h10M5.5 3.5V2.5h3v1M5 3.5l.5 8M9 3.5l-.5 8"/>
-            </svg>
+            <Trash2 size={14} />
           </button>
         )}
       </div>

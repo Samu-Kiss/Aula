@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Check } from "lucide-react";
 import { gradeAnswerAction } from "../actions";
 
 interface Props {
@@ -73,7 +74,7 @@ export function GradeAnswerForm({ answerId, attemptId, currentPoints, maxPoints,
         disabled={pending || saved}
         className="px-4 py-1.5 bg-ink text-surface rounded-[8px] text-caption font-medium hover:bg-ink/90 disabled:opacity-50 transition-colors"
       >
-        {pending ? "Guardando…" : saved ? "✓ Guardado" : "Guardar calificación"}
+        {pending ? "Guardando…" : saved ? <span className="inline-flex items-center gap-1"><Check size={13} /> Guardado</span> : "Guardar calificación"}
       </button>
     </form>
   );

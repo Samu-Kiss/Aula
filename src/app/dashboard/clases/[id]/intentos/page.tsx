@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { AlertTriangle, ArrowLeft, ChevronRight, Flag } from "lucide-react";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { classService } from "@/server/services/classService";
 import { moduleRepo } from "@/server/repositories/moduleRepo";
@@ -122,8 +123,8 @@ export default async function IntentosPage({ params, searchParams }: Props) {
                       <p className="text-[22px] font-black text-ink leading-none">{stats?.total ?? 0}</p>
                       <p className="text-caption text-ink-mute mt-0.5">intento{stats?.total !== 1 ? "s" : ""}</p>
                     </div>
-                    <span className="ml-auto text-caption text-indigo group-hover:translate-x-0.5 transition-transform">
-                      Ver →
+                    <span className="ml-auto text-caption text-indigo flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
+                      Ver <ChevronRight size={13} />
                     </span>
                   </div>
                 </Link>
@@ -212,9 +213,9 @@ export default async function IntentosPage({ params, searchParams }: Props) {
       <div>
         <Link
           href={`/dashboard/clases/${classId}/intentos`}
-          className="text-caption text-ink-mute hover:text-ink transition-colors"
+          className="text-caption text-ink-mute hover:text-ink transition-colors inline-flex items-center gap-1"
         >
-          ← Todas las evaluaciones
+          <ArrowLeft size={13} /> Todas las evaluaciones
         </Link>
         <div className="flex items-start justify-between gap-4 mt-2">
           <div>
@@ -257,7 +258,7 @@ export default async function IntentosPage({ params, searchParams }: Props) {
       {/* Pending banner */}
       {pendingCount > 0 && (
         <div className="flex items-center gap-3 px-4 py-3 rounded-[10px] bg-ambar/8 border border-ambar/25">
-          <span className="text-ambar">⚠</span>
+          <AlertTriangle size={16} className="text-ambar shrink-0" />
           <p className="text-body text-ink">
             <span className="font-medium">{pendingCount}</span> intento{pendingCount !== 1 ? "s" : ""} con respuestas manuales pendientes
           </p>
@@ -309,7 +310,7 @@ export default async function IntentosPage({ params, searchParams }: Props) {
                       <span className="flex items-center gap-1 text-caption font-medium text-ambar bg-ambar/8 px-2 py-0.5 rounded-[6px]"
                         title={`${totalFlags} evento${totalFlags !== 1 ? "s" : ""} de actividad sospechosa`}
                       >
-                        🚩 {totalFlags}
+                        <Flag size={12} /> {totalFlags}
                       </span>
                     )}
                     {hasPending && (
@@ -367,8 +368,8 @@ export default async function IntentosPage({ params, searchParams }: Props) {
 
                       {/* Flags */}
                       {flags > 0 && (
-                        <span className="text-caption text-ambar shrink-0" title={`${flags} evento${flags !== 1 ? "s" : ""} de actividad sospechosa`}>
-                          🚩 {flags}
+                        <span className="text-caption text-ambar shrink-0 flex items-center gap-1" title={`${flags} evento${flags !== 1 ? "s" : ""} de actividad sospechosa`}>
+                          <Flag size={12} /> {flags}
                         </span>
                       )}
 
@@ -379,7 +380,7 @@ export default async function IntentosPage({ params, searchParams }: Props) {
                           isPending ? "text-ambar hover:text-ambar/70" : "text-indigo hover:text-indigo/70"
                         }`}
                       >
-                        {isPending ? "Calificar →" : "Ver →"}
+                        <span className="inline-flex items-center gap-0.5">{isPending ? "Calificar" : "Ver"} <ChevronRight size={13} /></span>
                       </Link>
                     </div>
                   );
@@ -392,8 +393,8 @@ export default async function IntentosPage({ params, searchParams }: Props) {
 
       {/* Legend for flags */}
       {allEvents.length > 0 && (
-        <p className="text-mono text-ink-mute pt-2">
-          🚩 = Eventos de actividad sospechosa: cambio de pestaña, copiar/pegar, o intento desde otra pestaña.
+        <p className="text-mono text-ink-mute pt-2 inline-flex items-center gap-1">
+          <Flag size={12} /> = Eventos de actividad sospechosa: cambio de pestaña, copiar/pegar, o intento desde otra pestaña.
         </p>
       )}
     </div>

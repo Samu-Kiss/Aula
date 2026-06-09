@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { ArrowRight, ChevronRight } from "lucide-react";
 import type { Quiz, Attempt } from "@/lib/types/db";
 import type { StudentPayload } from "@/lib/auth/studentJwt";
 
@@ -188,7 +189,7 @@ function IdentStep1({ onSent }: Step1Props) {
         disabled={pending}
         className="w-full py-2.5 bg-ink text-surface rounded-[8px] text-caption font-bold hover:bg-ink/90 disabled:opacity-50 transition-colors"
       >
-        {pending ? "Enviando…" : "Continuar →"}
+        {pending ? "Enviando…" : <span className="inline-flex items-center gap-1">Continuar <ArrowRight size={14} /></span>}
       </button>
     </form>
   );
@@ -260,7 +261,7 @@ function IdentStep2({ email, firstName, lastName, rememberMe, onVerified, onBack
           disabled={pending}
           className="flex-1 py-2.5 bg-ink text-surface rounded-[8px] text-caption font-bold hover:bg-ink/90 disabled:opacity-50 transition-colors"
         >
-          {pending ? "Verificando…" : "Verificar →"}
+          {pending ? "Verificando…" : <span className="inline-flex items-center gap-1">Verificar <ArrowRight size={14} /></span>}
         </button>
         <button
           type="button"
@@ -431,7 +432,7 @@ function QuizLanding({ quiz, content, student, availability, onSignOut, classSlu
                     href={`/c/${classSlug}/${moduleSlug}/${content.slug}?resultado=${a.id}`}
                     className="text-caption text-indigo hover:text-indigo/70 transition-colors shrink-0"
                   >
-                    Ver →
+                    <span className="inline-flex items-center gap-0.5">Ver <ChevronRight size={13} /></span>
                   </a>
                 </div>
               );
@@ -475,7 +476,7 @@ function QuizLanding({ quiz, content, student, availability, onSignOut, classSlu
             ? "Iniciando…"
             : finishedCount > 0
             ? `Nuevo intento (${attemptsLeft} restante${attemptsLeft !== 1 ? "s" : ""})`
-            : "Iniciar evaluación →"}
+            : <span className="inline-flex items-center gap-1">Iniciar evaluación <ArrowRight size={14} /></span>}
         </button>
       )}
 

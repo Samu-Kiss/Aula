@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { ArrowLeft, Flag } from "lucide-react";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { classService } from "@/server/services/classService";
 import { attemptRepo } from "@/server/repositories/attemptRepo";
@@ -69,9 +70,9 @@ export default async function AttemptDetailPage({ params }: Props) {
       <div>
         <Link
           href={`/dashboard/clases/${classId}/intentos`}
-          className="text-caption text-ink-mute hover:text-ink transition-colors"
+          className="text-caption text-ink-mute hover:text-ink transition-colors inline-flex items-center gap-1"
         >
-          ← Intentos
+          <ArrowLeft size={13} /> Intentos
         </Link>
         <h1 className="text-h2 text-ink mt-2 mb-1">
           {student ? studentName(student) : "Estudiante"}
@@ -137,7 +138,7 @@ export default async function AttemptDetailPage({ params }: Props) {
                         : "bg-surface-alt text-ink-soft"
                     }`}
                   >
-                    {isFlag && "🚩 "}
+                    {isFlag && <Flag size={12} className="shrink-0" />}
                     {({
                       tab_blur: "Cambio de pestaña",
                       paste: "Pegar",
@@ -170,16 +171,19 @@ export default async function AttemptDetailPage({ params }: Props) {
                         {new Date(ev.occurred_at).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                       </td>
                       <td className={`px-3 py-1.5 ${isFlag ? "text-ambar font-medium" : "text-ink-soft"}`}>
-                        {({
-                          tab_blur: "🚩 Cambió de pestaña",
-                          tab_focus: "Regresó a la pestaña",
-                          paste: "🚩 Pegó texto",
-                          copy: "🚩 Copió texto",
-                          duplicate_instance_attempt: "🚩 Abrió otra pestaña con el quiz",
-                          time_expired: "Tiempo agotado",
-                          reconnect: "Se reconectó",
-                          submit_blocked: "Envío bloqueado",
-                        } as Record<string, string>)[ev.type] ?? ev.type}
+                        <span className="inline-flex items-center gap-1">
+                          {isFlag && <Flag size={11} />}
+                          {({
+                            tab_blur: "Cambió de pestaña",
+                            tab_focus: "Regresó a la pestaña",
+                            paste: "Pegó texto",
+                            copy: "Copió texto",
+                            duplicate_instance_attempt: "Abrió otra pestaña con el quiz",
+                            time_expired: "Tiempo agotado",
+                            reconnect: "Se reconectó",
+                            submit_blocked: "Envío bloqueado",
+                          } as Record<string, string>)[ev.type] ?? ev.type}
+                        </span>
                       </td>
                     </tr>
                   );

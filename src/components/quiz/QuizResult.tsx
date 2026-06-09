@@ -2,6 +2,7 @@
 
 import { lazy, Suspense } from "react";
 import Link from "next/link";
+import { ArrowLeft, Check, X } from "lucide-react";
 import type { Attempt, AttemptQuestion, Answer, Quiz } from "@/lib/types/db";
 
 const MapPinQuestion = lazy(() =>
@@ -53,10 +54,10 @@ function ChoiceResult({
           graded === false ? "Tu respuesta · incorrecta" :
           isSelected ? "Tu respuesta" :
           "Respuesta correcta";
-        const icon = graded === true ? "✓" : graded === false ? "✗" : isSelected ? "·" : "✓";
+        const icon = graded === true ? <Check size={12} /> : graded === false ? <X size={12} /> : isSelected ? <span>·</span> : <Check size={12} />;
         return (
           <div key={opt.id} className={`flex items-center gap-2.5 px-3 py-2 rounded-[8px] border text-body ${style}`}>
-            <span className="w-4 text-center text-[12px] font-bold shrink-0">{icon}</span>
+            <span className="w-4 flex items-center justify-center shrink-0">{icon}</span>
             <span className="flex-1">{opt.text}</span>
             <span className="text-[11px] opacity-70 shrink-0">{tag}</span>
           </div>
@@ -89,10 +90,10 @@ function TrueFalseResult({
           isSelected ? "bg-indigo/8 border-indigo/30 text-ink" :
           isCorrect ? "bg-bosque/4 border-bosque/20 text-ink" :
           "bg-surface-alt border-transparent text-ink-soft";
-        const icon = graded === true ? "✓" : graded === false ? "✗" : isCorrect ? "✓" : "";
+        const icon = graded === true ? <Check size={14} /> : graded === false ? <X size={14} /> : isCorrect ? <Check size={14} /> : null;
         return (
           <div key={String(v)} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-[8px] border text-body font-medium ${style}`}>
-            <span>{icon}</span>
+            {icon && <span className="flex items-center">{icon}</span>}
             <span>{v ? "Verdadero" : "Falso"}</span>
           </div>
         );
@@ -299,13 +300,13 @@ export function QuizResult({ attempt, quiz, questions, answers, contentUrl, stud
                   {q.prompt}
                 </p>
                 {answer?.is_correct === true && (
-                  <span className="shrink-0 text-mono px-2 py-0.5 rounded-[4px] text-[11px] bg-bosque/10 text-bosque">
-                    ✓ +{answer.points_awarded ?? q.points}
+                  <span className="shrink-0 text-mono px-2 py-0.5 rounded-[4px] text-[11px] bg-bosque/10 text-bosque inline-flex items-center gap-0.5">
+                    <Check size={11} /> +{answer.points_awarded ?? q.points}
                   </span>
                 )}
                 {answer?.is_correct === false && (
-                  <span className="shrink-0 text-mono px-2 py-0.5 rounded-[4px] text-[11px] bg-borgona/10 text-borgona">
-                    ✗ 0
+                  <span className="shrink-0 text-mono px-2 py-0.5 rounded-[4px] text-[11px] bg-borgona/10 text-borgona inline-flex items-center gap-0.5">
+                    <X size={11} /> 0
                   </span>
                 )}
                 {answer && answer.is_correct == null && (
@@ -382,7 +383,7 @@ export function QuizResult({ attempt, quiz, questions, answers, contentUrl, stud
         href={contentUrl}
         className="inline-block px-5 py-2.5 bg-surface-alt rounded-[10px] text-caption text-ink-soft font-medium hover:text-ink transition-colors"
       >
-        ← Volver a la evaluación
+        <span className="inline-flex items-center gap-1"><ArrowLeft size={14} /> Volver a la evaluación</span>
       </Link>
     </div>
   );

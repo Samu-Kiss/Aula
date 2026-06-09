@@ -12,9 +12,19 @@ export default async function DashboardLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
+  let unreadNotifications = 0;
+  if (user) {
+    const { count } = await supabase
+      .from("professor_notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("professor_id", user.id)
+      .is("read_at", null);
+    unreadNotifications = count ?? 0;
+  }
+
   return (
     <div className="flex min-h-screen bg-page">
-      <Sidebar />
+      <Sidebar unreadNotifications={unreadNotifications} />
       <div className="flex-1 flex flex-col min-w-0">
         <Header email={user?.email ?? ""} />
         <main className="flex-1 px-8 py-8">{children}</main>

@@ -4,6 +4,7 @@ import { classService } from "@/server/services/classService";
 import { moduleRepo } from "@/server/repositories/moduleRepo";
 import { ModuleSidebar } from "@/components/dashboard/ModuleSidebar";
 import { Lockup } from "@/components/Lockup";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 interface Props {
@@ -31,9 +32,9 @@ export default async function ClassEditorLayout({ children, params }: Props) {
         <div className="px-8 py-4 border-b border-[rgba(0,0,0,0.08)] flex items-center gap-4">
           <Link
             href="/dashboard"
-            className="text-mono text-ink-mute hover:text-ink transition-colors shrink-0"
+            className="text-ink-mute hover:text-ink transition-colors shrink-0"
           >
-            ←
+            <ArrowLeft size={18} />
           </Link>
           <Lockup
             title={cls.title}

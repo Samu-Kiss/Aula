@@ -76,14 +76,14 @@
 - [x] `F5-09` Soft delete + archivo recuperable `/dashboard/archivo`
 - [ ] `F5-10` Anonimización del estudiante (`/api/student/anonymize`)
 - [x] `F5-11` Duplicar clase, módulo y quiz
-- [ ] `F5-12` OG image dinámica (`/api/og`) con lockup y acento
-- [ ] `F5-15` Landing en `/` — página de presentación de la plataforma con lockup, propuesta de valor y CTA al login del profesor; actualmente la ruta raíz redirige directo al dashboard
-- [ ] `F5-16` QR de acceso por clase — generar QR con la URL pública `/c/[classSlug]` en el dashboard del profesor; vista de pantalla completa para proyectar en clase y opción de descargar como PNG para compartir
+- [X] `F5-12` OG image dinámica (`/api/og`) con lockup y acento
+- [X] `F5-15` Landing en `/` — página de presentación de la plataforma con lockup, propuesta de valor y CTA al login del profesor; actualmente la ruta raíz redirige directo al dashboard
+- [X] `F5-16` QR de acceso por clase — generar QR con la URL pública `/c/[classSlug]` en el dashboard del profesor; vista de pantalla completa para proyectar en clase y opción de descargar como PNG para compartir
 - [X] `F5-17` Links en lecturas — extensión Tiptap Link en el editor de contenido `rich_text`; soporte de href en el renderer público (actualmente se pierde al serializar a HTML)
 - [x] `F5-18` Vista de módulo expandida — en `/c/[classSlug]/[moduleSlug]`, `rich_text` y `video`/`map` se renderizan inline en un feed continuo; `quiz` y `file` siguen siendo cards con link
 - [x] `F5-19` Imágenes y embeds en lecturas — extensión Tiptap Image + upload a storage (R2); imágenes subidas directamente desde archivo (bucket público) o por URL; pegado desde portapapeles con upload automático; depende de F5-03
 - [X] `F5-20` Reordenar contenidos en el dashboard del profesor
-- [ ] `F5-21` Icon set
+- [X] `F5-21` Icon set
 - [X] `F5-22` Sidebar navigation dentro de cada módulo
 - [X] `F5-23` Permitir al profesor hacer rutas entre puntos del mapa (puede hacer varias rutas) y permitirle nombrar los puntos que pone en el mapa
 - [X] `F5-24` Funciones avanzadas de mapa, que a partir de un archivo (puede ser un json), se coloquen los puntos, las rutas y las tarjetas, también permitir áreas

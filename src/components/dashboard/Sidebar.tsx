@@ -4,12 +4,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const NAV = [
-  { label: "Clases", href: "/dashboard" },
-  { label: "Notificaciones", href: "/dashboard/notificaciones" },
-  { label: "Archivo", href: "/dashboard/archivo" },
+  { label: "Clases", href: "/dashboard", badge: false },
+  { label: "Notificaciones", href: "/dashboard/notificaciones", badge: true },
+  { label: "Archivo", href: "/dashboard/archivo", badge: false },
 ];
 
-export function Sidebar() {
+interface Props {
+  unreadNotifications?: number;
+}
+
+export function Sidebar({ unreadNotifications = 0 }: Props) {
   const pathname = usePathname();
 
   return (
@@ -21,7 +25,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-0.5">
-        {NAV.map(({ label, href }) => {
+        {NAV.map(({ label, href, badge }) => {
           const active =
             href === "/dashboard"
               ? pathname === "/dashboard"
@@ -37,7 +41,12 @@ export function Sidebar() {
                   : "text-ink-soft hover:bg-surface-alt hover:text-ink"
               }`}
             >
-              {label}
+              <span className="flex-1">{label}</span>
+              {badge && unreadNotifications > 0 && (
+                <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-indigo text-white text-[10px] font-bold leading-none flex items-center justify-center tabular-nums">
+                  {unreadNotifications > 99 ? "99+" : unreadNotifications}
+                </span>
+              )}
             </Link>
           );
         })}

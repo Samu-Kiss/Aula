@@ -1,5 +1,7 @@
 "use client";
 
+import { Download } from "lucide-react";
+
 interface QuizCol {
   quizId: string;
   title: string;
@@ -80,7 +82,7 @@ export function CsvExport({ rows, quizCols, className }: Props) {
       onClick={handleExport}
       className="shrink-0 px-4 py-2 bg-surface border-subtle rounded-[8px] text-caption text-ink-soft hover:text-ink hover:border-ink/20 transition-colors"
     >
-      Exportar CSV ↓
+      <span className="inline-flex items-center gap-1.5">Exportar CSV <Download size={13} /></span>
     </button>
   );
 }

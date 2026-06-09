@@ -4,6 +4,7 @@ import { getStudentFromCookie } from "@/lib/auth/studentJwt";
 import { attemptRepo } from "@/server/repositories/attemptRepo";
 import { gradeRepo } from "@/server/repositories/gradeRepo";
 import { sendAttemptReceived } from "@/lib/email/sendAttemptReceived";
+import { createAttemptNotification } from "@/lib/notifications/createAttemptNotification";
 
 // POST /api/attempts/[id]/submit — entregar intento y auto-calificar
 export async function POST(
@@ -107,7 +108,7 @@ export async function POST(
   // Auto-populate grade_items + send confirmation email (best-effort)
   try {
     const [{ data: studentRow }, { data: quizRow }] = await Promise.all([
-      supabase.from("students").select("email, first_name").eq("id", attempt.student_id).maybeSingle(),
+      supabase.from("students").select("email, first_name, last_name").eq("id", attempt.student_id).maybeSingle(),
       supabase.from("quizzes").select("content_id").eq("id", attempt.quiz_id!).maybeSingle(),
     ]);
     if (quizRow?.content_id) {
@@ -120,7 +121,7 @@ export async function POST(
         const { data: moduleRow } = await supabase.from("modules").select("class_id").eq("id", contentRow.module_id).maybeSingle();
         if (moduleRow?.class_id) {
           const [{ data: classRow }, repo] = [
-            await supabase.from("classes").select("name").eq("id", moduleRow.class_id).maybeSingle(),
+            await supabase.from("classes").select("title, professor_id").eq("id", moduleRow.class_id).maybeSingle(),
             gradeRepo(supabase),
           ];
 
@@ -133,7 +134,7 @@ export async function POST(
             await repo.upsertGrade(gradeItem.id, attempt.student_id, normalizedScore);
           }
 
-          // Email: intento recibido
+          // Email + in-app notification (best-effort)
           if (studentRow?.email) {
             const hasPendingManual = questions.some(
               (q) => q.type === "short_answer" && (q.body_snapshot as { auto_grade?: boolean }).auto_grade === false
@@ -142,11 +143,26 @@ export async function POST(
               studentRow.email,
               studentRow.first_name ?? "Estudiante",
               contentRow.title,
-              classRow?.name ?? "Clase",
+              classRow?.title ?? "Clase",
               totalScore,
               maxScore,
               hasPendingManual
             );
+            if (classRow?.professor_id) {
+              const studentName = [studentRow.first_name, (studentRow as { last_name?: string | null }).last_name]
+                .filter(Boolean).join(" ") || studentRow.email;
+              void createAttemptNotification(classRow.professor_id, {
+                student_name: studentName,
+                student_email: studentRow.email,
+                content_title: contentRow.title,
+                class_title: classRow.title ?? "Clase",
+                class_id: moduleRow.class_id,
+                attempt_id: attemptId,
+                score: totalScore,
+                max_score: maxScore,
+                has_pending_manual: hasPendingManual,
+              });
+            }
           }
         }
       }

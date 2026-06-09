@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ChevronRight } from "lucide-react";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { classService } from "@/server/services/classService";
 import { moduleRepo } from "@/server/repositories/moduleRepo";
@@ -72,7 +73,7 @@ async function NotasTab({ classId, className }: { classId: string; className: st
       <div className="py-12 text-center border border-dashed border-subtle rounded-[12px]">
         <p className="text-body text-ink-soft mb-3">No hay categorías configuradas.</p>
         <Link href={`/dashboard/clases/${classId}/calificaciones/categorias`} className="px-4 py-2 bg-ink text-surface text-caption rounded-[8px] hover:bg-ink/90 transition-colors">
-          Configurar categorías →
+          <span className="inline-flex items-center gap-1">Configurar categorías <ChevronRight size={13} /></span>
         </Link>
       </div>
     );
@@ -83,7 +84,7 @@ async function NotasTab({ classId, className }: { classId: string; className: st
       <div className="py-12 text-center border border-dashed border-subtle rounded-[12px]">
         <p className="text-body text-ink-soft mb-3">Las categorías no tienen ítems todavía.</p>
         <Link href={`/dashboard/clases/${classId}/calificaciones/categorias`} className="px-4 py-2 bg-ink text-surface text-caption rounded-[8px] hover:bg-ink/90 transition-colors">
-          Agregar ítems →
+          <span className="inline-flex items-center gap-1">Agregar ítems <ChevronRight size={13} /></span>
         </Link>
       </div>
     );

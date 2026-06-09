@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Link2 } from "lucide-react";
 import { GradeCell } from "./GradeCell";
 import { GradePanel, type SelectedCell } from "./GradePanel";
 import { CalificacionesCsv } from "./CalificacionesCsv";
@@ -187,7 +188,7 @@ export function GradeSheetClient({
                     <th key={item.id} className="text-center text-caption text-ink-mute font-medium px-3 py-3 whitespace-nowrap min-w-[100px]">
                       <p className="text-ink truncate max-w-[110px] mx-auto">{item.title}</p>
                       <p className="text-ink-mute font-normal mt-0.5">
-                        {cat.name} · {cat.weight}%{item.quiz_id ? " · 🔗" : ""}
+                        {cat.name} · {cat.weight}%{item.quiz_id ? <><span className="mx-0.5">·</span><Link2 size={11} className="inline-block align-middle" /></> : ""}
                       </p>
                     </th>
                   ))

@@ -18,6 +18,7 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { Copy, Loader2, Trash2, X } from "lucide-react";
 import type { Module } from "@/lib/types/db";
 import { createModuleAction, reorderModulesAction, duplicateModuleAction, deleteModuleAction } from "@/app/dashboard/clases/[id]/actions";
 
@@ -91,14 +92,9 @@ function SortableModule({
         aria-label="Duplicar módulo"
       >
         {isPendingDup ? (
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="animate-spin">
-            <circle cx="6" cy="6" r="4" strokeDasharray="16" strokeDashoffset="8" />
-          </svg>
+          <Loader2 size={12} className="animate-spin" />
         ) : (
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />
-            <path d="M1.5 8.5V1.5h7" />
-          </svg>
+          <Copy size={12} />
         )}
       </button>
 
@@ -112,13 +108,9 @@ function SortableModule({
             className="p-1 text-borgona hover:text-borgona/70 transition-colors disabled:opacity-40 shrink-0"
           >
             {isDeleting ? (
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="animate-spin">
-                <circle cx="6" cy="6" r="4" strokeDasharray="16" strokeDashoffset="8" />
-              </svg>
+              <Loader2 size={12} className="animate-spin" />
             ) : (
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                <path d="M2 3h8M4.5 3V2h3v1M4 3l.5 7M8 3l-.5 7" />
-              </svg>
+              <Trash2 size={12} />
             )}
           </button>
           <button
@@ -126,9 +118,7 @@ function SortableModule({
             className="p-1 text-ink-mute hover:text-ink transition-colors shrink-0"
             title="Cancelar"
           >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-              <path d="M2 2l8 8M10 2l-8 8" />
-            </svg>
+            <X size={12} />
           </button>
         </div>
       ) : (
@@ -139,9 +129,7 @@ function SortableModule({
           className="p-1 text-ink-mute opacity-0 group-hover:opacity-100 hover:text-borgona transition-colors disabled:opacity-30 shrink-0"
           aria-label="Eliminar módulo"
         >
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-            <path d="M2 3h8M4.5 3V2h3v1M4 3l.5 7M8 3l-.5 7" />
-          </svg>
+          <Trash2 size={12} />
         </button>
       )}
     </div>

@@ -27,6 +27,7 @@
     "@tiptap/starter-kit": "^3.26.0",
     "@types/mapbox-gl": "^3.4.1",
     "jose": "^6.2.3",
+    "lucide-react": "^1.17.0",
     "mapbox-gl": "^3.24.0",
     "next": "16.2.7",
     "next-safe-action": "^8.5.3",

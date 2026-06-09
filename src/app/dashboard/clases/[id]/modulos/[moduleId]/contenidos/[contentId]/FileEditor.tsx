@@ -1,6 +1,8 @@
 "use client";
 
+import type React from "react";
 import { useRef, useState, useTransition } from "react";
+import { FileText, FileVideo, FileAudio, Image, FileSpreadsheet, Presentation, FileType2, Archive, Paperclip } from "lucide-react";
 import { publishContentAction } from "@/app/dashboard/clases/[id]/actions";
 
 interface Props {
@@ -22,16 +24,16 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function fileIcon(type: string): string {
-  if (type.startsWith("image/")) return "🖼";
-  if (type.startsWith("video/")) return "🎬";
-  if (type.startsWith("audio/")) return "🎵";
-  if (type === "application/pdf") return "📄";
-  if (type.includes("spreadsheet") || type.includes("excel")) return "📊";
-  if (type.includes("presentation") || type.includes("powerpoint")) return "📊";
-  if (type.includes("word") || type.includes("document")) return "📝";
-  if (type === "application/zip") return "🗜";
-  return "📎";
+function fileIcon(type: string): React.ReactElement {
+  if (type.startsWith("image/")) return <Image size={36} />;
+  if (type.startsWith("video/")) return <FileVideo size={36} />;
+  if (type.startsWith("audio/")) return <FileAudio size={36} />;
+  if (type === "application/pdf") return <FileText size={36} />;
+  if (type.includes("spreadsheet") || type.includes("excel")) return <FileSpreadsheet size={36} />;
+  if (type.includes("presentation") || type.includes("powerpoint")) return <Presentation size={36} />;
+  if (type.includes("word") || type.includes("document")) return <FileType2 size={36} />;
+  if (type === "application/zip") return <Archive size={36} />;
+  return <Paperclip size={36} />;
 }
 
 type UploadStatus = "idle" | "uploading" | "done" | "error";
@@ -182,7 +184,7 @@ export function FileEditor({ contentId, classId, initialDraft, isPublished }: Pr
             className="hidden"
             onChange={handleFileSelect}
           />
-          <div className="text-4xl mb-3">{fileInfo ? fileIcon(fileInfo.file_type) : "📎"}</div>
+          <div className="text-ink-soft mb-3">{fileInfo ? fileIcon(fileInfo.file_type) : <Paperclip size={36} />}</div>
           <p className="text-body text-ink font-medium">
             {fileInfo ? "Reemplazar archivo" : "Arrastra un archivo o haz clic para seleccionar"}
           </p>

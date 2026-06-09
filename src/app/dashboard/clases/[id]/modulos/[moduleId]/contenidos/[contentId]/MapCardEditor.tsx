@@ -1,11 +1,13 @@
 "use client";
 
+import type React from "react";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
+import { Link2, ImageIcon } from "lucide-react";
 import { ACCENT_HEX } from "@/lib/accentColors";
 
 export interface MapCard { title: string; body: Record<string, unknown>; }
@@ -195,8 +197,8 @@ export function MapCardEditor({
           <TB onClick={() => editor?.chain().focus().toggleOrderedList().run()} active={editor?.isActive("orderedList")}           label="1." title="Numerada" />
           <TB onClick={() => editor?.chain().focus().toggleBlockquote().run()}  active={editor?.isActive("blockquote")}            label="❝"  title="Cita" />
           <div className="w-px h-3.5 bg-[rgba(0,0,0,0.1)] mx-0.5" />
-          <TB onClick={openLinkInput}  active={editor?.isActive("link") || linkUrl  !== null} label="🔗" title="Enlace" />
-          <TB onClick={openImageInput} active={imageUrl !== null}                             label="🖼" title="Imagen" />
+          <TB onClick={openLinkInput}  active={editor?.isActive("link") || linkUrl  !== null} label={<Link2 size={11} />} title="Enlace" />
+          <TB onClick={openImageInput} active={imageUrl !== null}                             label={<ImageIcon size={11} />} title="Imagen" />
         </div>
 
         {linkUrl !== null && (
@@ -242,7 +244,7 @@ export function MapCardEditor({
 }
 
 function TB({ onClick, active, label, title, className = "" }: {
-  onClick: () => void; active?: boolean; label: string; title: string; className?: string;
+  onClick: () => void; active?: boolean; label: React.ReactNode; title: string; className?: string;
 }) {
   return (
     <button onClick={onClick} title={title}

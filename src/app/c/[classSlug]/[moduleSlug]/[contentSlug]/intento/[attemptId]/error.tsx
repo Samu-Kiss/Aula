@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { AlertTriangle } from "lucide-react";
 
 interface Props {
   error: Error & { digest?: string };
@@ -15,7 +16,7 @@ export default function AttemptError({ error, reset }: Props) {
   return (
     <div className="min-h-screen bg-page flex items-center justify-center px-5">
       <div className="max-w-sm w-full text-center space-y-4">
-        <p className="text-[48px] leading-none">⚠️</p>
+        <AlertTriangle size={48} className="mx-auto text-ambar" />
         <h1 className="text-h2 text-ink">Error al cargar el intento</h1>
         <p className="text-body text-ink-soft">
           Ocurrió un problema al cargar tu evaluación. Tus respuestas guardadas están seguras — intenta recargar la página.

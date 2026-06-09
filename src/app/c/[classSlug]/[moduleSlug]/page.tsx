@@ -1,6 +1,8 @@
+import type React from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { BookOpen, Video, Map, Paperclip, ClipboardList } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { classService } from "@/server/services/classService";
 import { moduleRepo } from "@/server/repositories/moduleRepo";
@@ -27,12 +29,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: `${mod.title} — ${cls.title}` };
 }
 
-const CONTENT_ICONS: Record<string, string> = {
-  rich_text: "Lectura",
-  video: "Video",
-  map: "Mapa",
-  file: "Archivo",
-  quiz: "Evaluación",
+const CONTENT_ICONS: Record<string, React.ReactNode> = {
+  rich_text: <BookOpen size={14} />,
+  video: <Video size={14} />,
+  map: <Map size={14} />,
+  file: <Paperclip size={14} />,
+  quiz: <ClipboardList size={14} />,
 };
 
 function ContentCard({
@@ -55,7 +57,7 @@ function ContentCard({
         {String(index + 1).padStart(2, "0")}
       </span>
       <span className="flex-1 text-body text-ink">{content.title}</span>
-      <span className="text-mono text-ink-mute text-xs">
+      <span className="text-ink-mute flex items-center">
         {CONTENT_ICONS[content.type] ?? content.type}
       </span>
     </Link>

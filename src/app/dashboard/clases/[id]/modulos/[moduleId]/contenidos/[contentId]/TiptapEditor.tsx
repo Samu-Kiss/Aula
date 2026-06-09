@@ -1,11 +1,13 @@
 "use client";
 
+import type React from "react";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
+import { Undo2, Redo2, Link2, ImagePlus, Loader2, ImageIcon } from "lucide-react";
 import { publishContentAction } from "@/app/dashboard/clases/[id]/actions";
 import { accentHex } from "@/lib/accentColors";
 
@@ -215,8 +217,8 @@ export function TiptapEditor({ contentId, classId, initialDraft, isPublished, ac
       <div className="flex flex-col gap-2 pb-3 border-b border-[rgba(0,0,0,0.08)]">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1 flex-wrap">
-            <ToolbarButton onClick={() => editor?.chain().focus().undo().run()} active={false} label="↩" title="Deshacer (Ctrl+Z)" />
-            <ToolbarButton onClick={() => editor?.chain().focus().redo().run()} active={false} label="↪" title="Rehacer (Ctrl+Y)" />
+            <ToolbarButton onClick={() => editor?.chain().focus().undo().run()} active={false} label={<Undo2 size={14} />} title="Deshacer (Ctrl+Z)" />
+            <ToolbarButton onClick={() => editor?.chain().focus().redo().run()} active={false} label={<Redo2 size={14} />} title="Rehacer (Ctrl+Y)" />
             <div className="w-px h-5 bg-[rgba(0,0,0,0.1)] mx-0.5" />
             <ToolbarButton onClick={() => editor?.chain().focus().toggleBold().run()} active={editor?.isActive("bold")} label="N" title="Negrita" />
             <ToolbarButton onClick={() => editor?.chain().focus().toggleItalic().run()} active={editor?.isActive("italic")} label="I" title="Cursiva" className="italic" />
@@ -227,14 +229,14 @@ export function TiptapEditor({ contentId, classId, initialDraft, isPublished, ac
             <ToolbarButton onClick={() => editor?.chain().focus().toggleBlockquote().run()} active={editor?.isActive("blockquote")} label="❝" title="Cita" />
             <ToolbarButton onClick={() => editor?.chain().focus().toggleCodeBlock().run()} active={editor?.isActive("codeBlock")} label="{}" title="Código" />
             <div className="w-px h-5 bg-[rgba(0,0,0,0.1)] mx-0.5" />
-            <ToolbarButton onClick={openLinkInput} active={editor?.isActive("link") || linkUrl !== null} label="🔗" title="Enlace" />
+            <ToolbarButton onClick={openLinkInput} active={editor?.isActive("link") || linkUrl !== null} label={<Link2 size={14} />} title="Enlace" />
             <ToolbarButton
               onClick={() => fileInputRef.current?.click()}
               active={imageUploading}
-              label={imageUploading ? "⏳" : "🖼"}
+              label={imageUploading ? <Loader2 size={14} className="animate-spin" /> : <ImageIcon size={14} />}
               title="Subir imagen desde archivo"
             />
-            <ToolbarButton onClick={openImageInput} active={imageUrl !== null} label="🔗🖼" title="Imagen por URL" />
+            <ToolbarButton onClick={openImageInput} active={imageUrl !== null} label={<ImagePlus size={14} />} title="Imagen por URL" />
           </div>
 
           <div className="ml-auto flex items-center gap-4">
@@ -325,7 +327,7 @@ function ToolbarButton({
 }: {
   onClick: () => void;
   active?: boolean;
-  label: string;
+  label: React.ReactNode;
   title: string;
   className?: string;
 }) {

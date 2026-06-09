@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useTransition, lazy, Suspense } from "react";
 import { useRouter } from "next/navigation";
+import { ArrowLeft, ArrowRight, Clock, AlertTriangle } from "lucide-react";
 import type { Attempt, AttemptQuestion, Answer, Quiz } from "@/lib/types/db";
 import type { StudentPayload } from "@/lib/auth/studentJwt";
 
@@ -360,9 +361,9 @@ function QuestionRenderer(props: QProps) {
 // ─── Milestone alert labels (F4-07) ──────────────────────────────────────────
 
 const MILESTONE_LABELS: Record<string, string> = {
-  "5min": "⏱ Quedan 5 minutos",
-  "1min": "⚠️ Queda 1 minuto",
-  "30s": "🚨 Quedan 30 segundos",
+  "5min": "Quedan 5 minutos",
+  "1min": "Queda 1 minuto",
+  "30s": "Quedan 30 segundos",
 };
 
 // ─── AttemptView ─────────────────────────────────────────────────────────────
@@ -544,7 +545,8 @@ export function AttemptView({ attempt, questions, initialAnswers, quiz, student:
             ? "bg-borgona/10 border border-borgona/20"
             : "bg-ambar/10 border border-ambar/20"
         }`}>
-          <p className={`text-caption font-bold ${milestone === "30s" ? "text-borgona" : "text-ambar"}`}>
+          <p className={`text-caption font-bold inline-flex items-center gap-1.5 ${milestone === "30s" ? "text-borgona" : "text-ambar"}`}>
+            {milestone === "30s" ? <AlertTriangle size={14} /> : <Clock size={14} />}
             {MILESTONE_LABELS[milestone]}
           </p>
         </div>
@@ -606,7 +608,7 @@ export function AttemptView({ attempt, questions, initialAnswers, quiz, student:
           disabled={currentIndex === 0}
           className="px-4 py-2 bg-surface-alt text-ink-soft rounded-[8px] text-caption font-medium hover:text-ink disabled:opacity-30 transition-colors"
         >
-          ← Anterior
+          <span className="inline-flex items-center gap-1"><ArrowLeft size={14} /> Anterior</span>
         </button>
 
         {/* Mapa de preguntas */}
@@ -635,7 +637,7 @@ export function AttemptView({ attempt, questions, initialAnswers, quiz, student:
             onClick={() => setCurrentIndex((i) => Math.min(questions.length - 1, i + 1))}
             className="px-4 py-2 bg-surface-alt text-ink-soft rounded-[8px] text-caption font-medium hover:text-ink transition-colors"
           >
-            Siguiente →
+            <span className="inline-flex items-center gap-1">Siguiente <ArrowRight size={14} /></span>
           </button>
         ) : (
           <div className="w-24" />
