@@ -15,21 +15,46 @@ export async function selfEnrollAction(
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return { ok: false, error: "invalid_email" };
   }
+  if (!firstName || !lastName) {
+    return { ok: false, error: "missing_name" };
+  }
 
   const svc = createServiceClient();
 
-  // Upsert student — only overwrite name fields if provided, don't clobber existing
-  const upsertPayload: Record<string, unknown> = { email };
-  if (firstName) upsertPayload.first_name = firstName;
-  if (lastName) upsertPayload.last_name = lastName;
-
-  const { data: student, error: sErr } = await svc
+  // Find or create student by email
+  const { data: existing } = await svc
     .from("students")
-    .upsert(upsertPayload, { onConflict: "email" })
     .select("id, email, first_name, last_name, display_name")
-    .single();
+    .eq("email", email)
+    .eq("is_anonymized", false)
+    .maybeSingle();
 
-  if (sErr || !student) return { ok: false, error: "student_error" };
+  let student: { id: string; email: string; first_name: string | null; last_name: string | null; display_name: string | null } | null = null;
+
+  if (existing) {
+    const { data: updated, error: uErr } = await svc
+      .from("students")
+      .update({ first_name: firstName, last_name: lastName })
+      .eq("id", existing.id)
+      .select("id, email, first_name, last_name, display_name")
+      .single();
+    if (uErr || !updated) {
+      console.error("[selfEnrollAction] update error:", uErr?.code, uErr?.message);
+      return { ok: false, error: "student_error", ...(process.env.NODE_ENV !== "production" && { _debug: uErr?.message }) };
+    }
+    student = updated;
+  } else {
+    const { data: created, error: cErr } = await svc
+      .from("students")
+      .insert({ email, first_name: firstName, last_name: lastName })
+      .select("id, email, first_name, last_name, display_name")
+      .single();
+    if (cErr || !created) {
+      console.error("[selfEnrollAction] insert error:", cErr?.code, cErr?.message);
+      return { ok: false, error: "student_error", ...(process.env.NODE_ENV !== "production" && { _debug: cErr?.message }) };
+    }
+    student = created;
+  }
 
   // Enroll in class (no-op if already enrolled)
   await svc

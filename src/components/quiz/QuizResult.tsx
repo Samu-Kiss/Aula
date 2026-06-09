@@ -25,12 +25,14 @@ function ChoiceResult({
   selectedIds,
   isMulti,
   showAnswer,
+  answerIsCorrect,
 }: {
   options: { id: string; text: string; is_correct?: boolean }[];
   selectedId?: string;
   selectedIds?: string[];
   isMulti: boolean;
   showAnswer: boolean;
+  answerIsCorrect?: boolean | null;
 }) {
   return (
     <div className="space-y-1.5">
@@ -40,15 +42,18 @@ function ChoiceResult({
           : selectedId === opt.id;
         const isCorrect = showAnswer && opt.is_correct === true;
         if (!isSelected && !isCorrect) return null;
+        const graded = showAnswer ? (isSelected && isCorrect) : (isSelected ? answerIsCorrect : null);
         const style =
-          isSelected && isCorrect ? "bg-bosque/8 border-bosque/30 text-bosque" :
-          isSelected ? "bg-borgona/8 border-borgona/30 text-borgona" :
+          graded === true ? "bg-bosque/8 border-bosque/30 text-bosque" :
+          graded === false ? "bg-borgona/8 border-borgona/30 text-borgona" :
+          isSelected ? "bg-indigo/8 border-indigo/30 text-ink" :
           "bg-bosque/4 border-bosque/20 text-ink";
         const tag =
-          isSelected && isCorrect ? "Tu respuesta · correcta" :
-          isSelected ? "Tu respuesta · incorrecta" :
+          graded === true ? "Tu respuesta · correcta" :
+          graded === false ? "Tu respuesta · incorrecta" :
+          isSelected ? "Tu respuesta" :
           "Respuesta correcta";
-        const icon = isSelected && isCorrect ? "✓" : isSelected ? "✗" : "✓";
+        const icon = graded === true ? "✓" : graded === false ? "✗" : isSelected ? "·" : "✓";
         return (
           <div key={opt.id} className={`flex items-center gap-2.5 px-3 py-2 rounded-[8px] border text-body ${style}`}>
             <span className="w-4 text-center text-[12px] font-bold shrink-0">{icon}</span>
@@ -65,22 +70,26 @@ function TrueFalseResult({
   correct,
   given,
   showAnswer,
+  answerIsCorrect,
 }: {
   correct: boolean;
   given: boolean | undefined;
   showAnswer: boolean;
+  answerIsCorrect?: boolean | null;
 }) {
   return (
     <div className="flex gap-2">
       {([true, false] as const).map((v) => {
         const isSelected = given === v;
         const isCorrect = showAnswer && correct === v;
+        const graded = showAnswer ? (isSelected && isCorrect) : (isSelected ? answerIsCorrect : null);
         const style =
-          isSelected && isCorrect ? "bg-bosque/8 border-bosque/30 text-bosque" :
-          isSelected ? "bg-borgona/8 border-borgona/30 text-borgona" :
+          graded === true ? "bg-bosque/8 border-bosque/30 text-bosque" :
+          graded === false ? "bg-borgona/8 border-borgona/30 text-borgona" :
+          isSelected ? "bg-indigo/8 border-indigo/30 text-ink" :
           isCorrect ? "bg-bosque/4 border-bosque/20 text-ink" :
           "bg-surface-alt border-transparent text-ink-soft";
-        const icon = isSelected && isCorrect ? "✓" : isSelected ? "✗" : isCorrect ? "✓" : "";
+        const icon = graded === true ? "✓" : graded === false ? "✗" : isCorrect ? "✓" : "";
         return (
           <div key={String(v)} className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-[8px] border text-body font-medium ${style}`}>
             <span>{icon}</span>
@@ -319,6 +328,7 @@ export function QuizResult({ attempt, quiz, questions, answers, contentUrl, stud
                   selectedIds={answer?.response.selected_ids as string[] | undefined}
                   isMulti={q.type === "multi_choice"}
                   showAnswer={showAnswers}
+                  answerIsCorrect={answer?.is_correct}
                 />
               )}
 
@@ -327,6 +337,7 @@ export function QuizResult({ attempt, quiz, questions, answers, contentUrl, stud
                   correct={snap.correct as boolean}
                   given={answer?.response.answer as boolean | undefined}
                   showAnswer={showAnswers}
+                  answerIsCorrect={answer?.is_correct}
                 />
               )}
 

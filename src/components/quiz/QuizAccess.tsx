@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { Quiz, Attempt } from "@/lib/types/db";
 import type { StudentPayload } from "@/lib/auth/studentJwt";
@@ -46,13 +46,44 @@ interface Step1Props {
   onSent: (data: { email: string; firstName: string; lastName: string; rememberMe: boolean }) => void;
 }
 
+function isValidEmail(s: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+}
+
 function IdentStep1({ onSent }: Step1Props) {
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [namesLocked, setNamesLocked] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [pending, startPending] = useTransition();
+  const lookupTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (lookupTimer.current) clearTimeout(lookupTimer.current);
+    if (!isValidEmail(email)) { setNamesLocked(false); return; }
+    lookupTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/student/lookup?email=${encodeURIComponent(email)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.first_name || data.last_name) {
+          setFirstName(data.first_name ?? "");
+          setLastName(data.last_name ?? "");
+          setNamesLocked(true);
+        } else {
+          setNamesLocked(false);
+        }
+      } catch {}
+    }, 500);
+    return () => { if (lookupTimer.current) clearTimeout(lookupTimer.current); };
+  }, [email]);
+
+  function handleEmailChange(value: string) {
+    setEmail(value);
+    if (!isValidEmail(value)) setNamesLocked(false);
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -78,6 +109,9 @@ function IdentStep1({ onSent }: Step1Props) {
     });
   }
 
+  const inputBase = "w-full border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30";
+  const inputLocked = "w-full border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface-alt cursor-not-allowed opacity-75";
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
@@ -86,42 +120,53 @@ function IdentStep1({ onSent }: Step1Props) {
         </p>
       </div>
 
+      <div>
+        <label className="text-caption text-ink block mb-1">Correo electrónico <span className="text-borgona">*</span></label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => handleEmailChange(e.target.value)}
+          autoComplete="email"
+          required
+          className={inputBase}
+          placeholder="ana@ejemplo.com"
+        />
+      </div>
+
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-caption text-ink block mb-1">Nombre</label>
+          <label className="text-caption text-ink block mb-1">Nombre <span className="text-borgona">*</span></label>
           <input
             type="text"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             autoComplete="given-name"
-            className="w-full border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30"
+            required
+            disabled={namesLocked}
+            readOnly={namesLocked}
+            className={namesLocked ? inputLocked : inputBase}
             placeholder="Ana"
           />
         </div>
         <div>
-          <label className="text-caption text-ink block mb-1">Apellido</label>
+          <label className="text-caption text-ink block mb-1">Apellido <span className="text-borgona">*</span></label>
           <input
             type="text"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             autoComplete="family-name"
-            className="w-full border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30"
+            required
+            disabled={namesLocked}
+            readOnly={namesLocked}
+            className={namesLocked ? inputLocked : inputBase}
             placeholder="García"
           />
         </div>
       </div>
 
-      <div>
-        <label className="text-caption text-ink block mb-1">Correo electrónico</label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          autoComplete="email"
-          className="w-full border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30"
-          placeholder="ana@ejemplo.com"
-        />
-      </div>
+      {namesLocked && (
+        <p className="text-caption text-ink-mute">Bienvenido de nuevo — tus datos están guardados.</p>
+      )}
 
       <div className="flex items-center gap-2">
         <input

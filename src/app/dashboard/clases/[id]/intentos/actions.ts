@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { gradeRepo } from "@/server/repositories/gradeRepo";
+import { sendGradeReady } from "@/lib/email/sendGradeReady";
 
 // Calificar manualmente una respuesta de tipo short_answer
 export async function gradeAnswerAction(
@@ -45,27 +46,31 @@ export async function gradeAnswerAction(
     .select("quiz_id, student_id, max_score")
     .single();
 
-  // Auto-populate grade_items linked to this quiz (F3-04)
+  // Auto-populate grade_items + send "nota lista" email (best-effort)
   if (updatedAttempt.data) {
     try {
       const { quiz_id, student_id, max_score } = updatedAttempt.data;
       if (quiz_id) {
-        const quizRow = await svc
-          .from("quizzes")
-          .select("content_id")
-          .eq("id", quiz_id)
-          .maybeSingle();
+        const [quizRow, studentRow] = await Promise.all([
+          svc.from("quizzes").select("content_id").eq("id", quiz_id).maybeSingle(),
+          svc.from("students").select("email, first_name").eq("id", student_id).maybeSingle(),
+        ]);
         if (quizRow.data?.content_id) {
           const contentRow = await svc
             .from("contents")
-            .select("module_id")
+            .select("title, module_id")
             .eq("id", quizRow.data.content_id)
             .maybeSingle();
           const moduleRow = contentRow.data?.module_id
             ? await svc.from("modules").select("class_id").eq("id", contentRow.data.module_id).maybeSingle()
             : null;
           if (moduleRow?.data?.class_id) {
-            const repo = gradeRepo(svc);
+            const [classRow, repo] = [
+              await svc.from("classes").select("name").eq("id", moduleRow.data.class_id).maybeSingle(),
+              gradeRepo(svc),
+            ];
+
+            // Grade population (F3-04)
             const gradeItem = await repo.findItemByQuiz(quiz_id, moduleRow.data.class_id);
             if (gradeItem) {
               const normalizedScore =
@@ -73,6 +78,18 @@ export async function gradeAnswerAction(
                   ? (newScore / (max_score ?? newScore)) * gradeItem.max_score
                   : newScore;
               await repo.upsertGrade(gradeItem.id, student_id, normalizedScore);
+
+              // Email: nota lista
+              if (studentRow.data?.email) {
+                void sendGradeReady(
+                  studentRow.data.email,
+                  studentRow.data.first_name ?? "Estudiante",
+                  contentRow.data?.title ?? gradeItem.id,
+                  classRow.data?.name ?? "Clase",
+                  newScore,
+                  max_score ?? newScore
+                );
+              }
             }
           }
         }

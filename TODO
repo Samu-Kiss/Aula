@@ -70,7 +70,7 @@
 - [x] `F5-03` Contenido tipo `file` con upload a Cloudflare R2 + URL firmada
 - [x] `F5-04` Pregunta tipo `map_pin` en quizzes
 - [X] `F5-05` Revisión manual de intentos con preguntas `short_answer` no auto-calificables
-- [ ] `F5-06` Emails transaccionales con Resend (intento recibido, nota lista, código de verificación)
+- [x] `F5-06` Emails transaccionales con Resend (intento recibido, nota lista, código de verificación)
 - [ ] `F5-07` Notificaciones in-app para el profesor (tabla `notifications`, §14.1)
 - [ ] `F5-08` Dashboard admin `/dashboard/admin` con métricas y anti-cheating insights
 - [x] `F5-09` Soft delete + archivo recuperable `/dashboard/archivo`

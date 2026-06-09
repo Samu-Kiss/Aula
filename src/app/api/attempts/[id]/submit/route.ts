@@ -3,6 +3,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { getStudentFromCookie } from "@/lib/auth/studentJwt";
 import { attemptRepo } from "@/server/repositories/attemptRepo";
 import { gradeRepo } from "@/server/repositories/gradeRepo";
+import { sendAttemptReceived } from "@/lib/email/sendAttemptReceived";
 
 // POST /api/attempts/[id]/submit — entregar intento y auto-calificar
 export async function POST(
@@ -103,16 +104,27 @@ export async function POST(
     .select()
     .single();
 
-  // Auto-populate grade_items linked to this quiz (F3-04)
-  // contents.class_id doesn't exist — go through modules
+  // Auto-populate grade_items + send confirmation email (best-effort)
   try {
-    const { data: quizRow } = await supabase.from("quizzes").select("content_id").eq("id", attempt.quiz_id!).maybeSingle();
+    const [{ data: studentRow }, { data: quizRow }] = await Promise.all([
+      supabase.from("students").select("email, first_name").eq("id", attempt.student_id).maybeSingle(),
+      supabase.from("quizzes").select("content_id").eq("id", attempt.quiz_id!).maybeSingle(),
+    ]);
     if (quizRow?.content_id) {
-      const { data: contentRow } = await supabase.from("contents").select("module_id").eq("id", quizRow.content_id).maybeSingle();
+      const { data: contentRow } = await supabase
+        .from("contents")
+        .select("title, module_id")
+        .eq("id", quizRow.content_id)
+        .maybeSingle();
       if (contentRow?.module_id) {
         const { data: moduleRow } = await supabase.from("modules").select("class_id").eq("id", contentRow.module_id).maybeSingle();
         if (moduleRow?.class_id) {
-          const repo = gradeRepo(supabase);
+          const [{ data: classRow }, repo] = [
+            await supabase.from("classes").select("name").eq("id", moduleRow.class_id).maybeSingle(),
+            gradeRepo(supabase),
+          ];
+
+          // Grade population (F3-04)
           const gradeItem = await repo.findItemByQuiz(attempt.quiz_id!, moduleRow.class_id);
           if (gradeItem) {
             const normalizedScore = gradeItem.max_score > 0 && maxScore > 0
@@ -120,11 +132,27 @@ export async function POST(
               : totalScore;
             await repo.upsertGrade(gradeItem.id, attempt.student_id, normalizedScore);
           }
+
+          // Email: intento recibido
+          if (studentRow?.email) {
+            const hasPendingManual = questions.some(
+              (q) => q.type === "short_answer" && (q.body_snapshot as { auto_grade?: boolean }).auto_grade === false
+            );
+            void sendAttemptReceived(
+              studentRow.email,
+              studentRow.first_name ?? "Estudiante",
+              contentRow.title,
+              classRow?.name ?? "Clase",
+              totalScore,
+              maxScore,
+              hasPendingManual
+            );
+          }
         }
       }
     }
   } catch {
-    // Grade population is best-effort; don't fail the submit
+    // Grade population and email are best-effort; don't fail the submit
   }
 
   return NextResponse.json({ ok: true, attempt: updated.data, score: totalScore, max_score: maxScore });

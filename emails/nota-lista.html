@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tu nota ya está lista — Aula</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@1,400&family=Inter:wght@400;500;600;700;900&display=swap');
+  </style>
+</head>
+<body style="margin:0;padding:0;background-color:#FAF8F3;font-family:'Inter',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;color:#1A1814;">
+
+  <!-- Preheader oculto -->
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">Tu calificación en {{item_title}} ya está disponible.&nbsp;&#847;&nbsp;&#847;&nbsp;&#847;&nbsp;&#847;</div>
+
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background-color:#FAF8F3;padding:48px 16px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:560px;">
+
+          <!-- Wordmark -->
+          <tr>
+            <td style="padding:0 0 32px 0;">
+              <span style="font-family:'Fraunces',Georgia,serif;font-style:italic;font-weight:400;font-size:22px;color:#4C51BF;letter-spacing:-0.3px;">Aula</span>
+            </td>
+          </tr>
+
+          <!-- Card principal -->
+          <tr>
+            <td style="background-color:#FFFFFF;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08);padding:40px;">
+
+              <!-- Eyebrow -->
+              <p style="margin:0 0 12px 0;font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#A8A398;">Calificación</p>
+
+              <!-- Título -->
+              <h1 style="margin:0 0 16px 0;font-size:24px;font-weight:700;color:#1A1814;letter-spacing:-0.4px;line-height:1.2;">
+                Tu nota ya está lista
+              </h1>
+
+              <p style="margin:0 0 32px 0;font-size:14px;color:#6B665C;line-height:1.65;">
+                Hola <strong style="color:#1A1814;font-weight:600;">{{first_name}}</strong>, tu calificación para <strong style="color:#1A1814;font-weight:600;">{{item_title}}</strong> en la clase <strong style="color:#1A1814;font-weight:600;">{{class_name}}</strong> ya está disponible.
+              </p>
+
+              <!-- Nota grande -->
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:24px;">
+                <tr>
+                  <td style="background-color:#FAF8F3;border-radius:8px;padding:28px 24px;text-align:center;">
+                    <p style="margin:0 0 8px 0;font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#A8A398;">Tu nota</p>
+                    <p style="margin:0;line-height:1;">
+                      <span style="font-size:56px;font-weight:700;color:#1A1814;letter-spacing:-2px;">{{score}}</span><span style="font-size:20px;font-weight:400;color:#A8A398;letter-spacing:-0.5px;"> / {{max_score}}</span>
+                    </p>
+                    <p style="margin:6px 0 0 0;font-size:12px;color:#A8A398;letter-spacing:0.04em;">puntos</p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Detalles -->
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-radius:8px;overflow:hidden;border:0.5px solid rgba(0,0,0,0.08);">
+                <tr>
+                  <td style="padding:12px 18px;border-bottom:0.5px solid rgba(0,0,0,0.06);">
+                    <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                      <tr>
+                        <td style="font-size:13px;color:#A8A398;">Clase</td>
+                        <td align="right" style="font-size:13px;font-weight:600;color:#1A1814;">{{class_name}}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 18px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                      <tr>
+                        <td style="font-size:13px;color:#A8A398;">Ítem</td>
+                        <td align="right" style="font-size:13px;font-weight:600;color:#1A1814;">{{item_title}}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:24px 0 0 0;font-size:13px;color:#A8A398;line-height:1.6;">
+                Ingresa a la clase para ver el detalle de tus respuestas.
+              </p>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:24px 0 0 0;">
+              <p style="margin:0;font-size:11px;color:#A8A398;line-height:1.5;">
+                Aula · plataforma educativa &nbsp;·&nbsp; No respondas a este correo
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
