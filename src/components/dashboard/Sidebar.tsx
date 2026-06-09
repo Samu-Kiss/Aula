@@ -43,9 +43,7 @@ export function Sidebar({ unreadNotifications = 0 }: Props) {
             >
               <span className="flex-1">{label}</span>
               {badge && unreadNotifications > 0 && (
-                <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-indigo text-white text-[10px] font-bold leading-none flex items-center justify-center tabular-nums">
-                  {unreadNotifications > 99 ? "99+" : unreadNotifications}
-                </span>
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo shrink-0" />
               )}
             </Link>
           );

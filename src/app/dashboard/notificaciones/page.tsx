@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { ClipboardCheck } from "lucide-react";
 
 type NotifPayload = {
   student_name?: string;
@@ -72,7 +73,7 @@ export default async function NotificationsPage() {
           </p>
         </div>
       ) : (
-        <div className="space-y-1.5">
+        <div className="flex flex-col gap-3">
           {notifications.map((n) => (
             <NotifRow key={n.id} n={n} />
           ))}
@@ -103,11 +104,11 @@ function NotifRow({ n }: { n: Notif }) {
           : "bg-surface border-subtle"
       } ${href ? "hover:border-ink/20" : ""}`}
     >
-      <span
-        className={`mt-[7px] shrink-0 w-2 h-2 rounded-full ${
-          isUnread ? "bg-indigo" : "bg-transparent"
-        }`}
-      />
+      <div className={`mt-0.5 shrink-0 w-7 h-7 rounded-[8px] flex items-center justify-center ${
+        isUnread ? "bg-indigo/10 text-indigo" : "bg-surface-alt text-ink-mute"
+      }`}>
+        <ClipboardCheck size={15} />
+      </div>
       <div className="flex-1 min-w-0">
         <p className="text-body text-ink leading-snug">
           <span className="font-medium">
@@ -119,9 +120,7 @@ function NotifRow({ n }: { n: Notif }) {
         </p>
         <p className="text-mono text-ink-mute mt-0.5 flex items-center gap-2 flex-wrap">
           {pct !== null && (
-            <span>
-              {pct}% &middot; {p.score}/{p.max_score} pts
-            </span>
+            <span>{pct}% &middot; {p.score}/{p.max_score} pts</span>
           )}
           {p.has_pending_manual && (
             <span className="text-ambar">Requiere revisión manual</span>
@@ -135,5 +134,9 @@ function NotifRow({ n }: { n: Notif }) {
     </div>
   );
 
-  return href ? <Link href={href}>{inner}</Link> : <div>{inner}</div>;
+  return (
+    <div>
+      {href ? <Link href={href}>{inner}</Link> : inner}
+    </div>
+  );
 }

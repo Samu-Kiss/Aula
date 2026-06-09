@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { classService } from "@/server/services/classService";
 import { Lockup } from "@/components/Lockup";
 import { DuplicateClassButton } from "./DuplicateClassButton";
+import { Plus } from "lucide-react";
 import type { Class } from "@/lib/types/db";
 
 function ClassCard({ cls }: { cls: Class }) {
@@ -51,8 +52,9 @@ function EmptyState() {
       </p>
       <Link
         href="/dashboard/clases/nueva"
-        className="h-11 px-6 rounded-[8px] bg-ink text-surface text-caption font-bold hover:bg-ink/90 transition-colors"
+        className="inline-flex items-center gap-2 h-11 px-6 rounded-[8px] bg-ink text-surface text-[14px] font-semibold hover:bg-ink/90 transition-colors"
       >
+        <Plus size={16} strokeWidth={2.5} />
         Nueva clase
       </Link>
     </div>
@@ -76,8 +78,9 @@ export default async function DashboardPage() {
         {classes.length > 0 && (
           <Link
             href="/dashboard/clases/nueva"
-            className="h-9 px-4 rounded-[8px] bg-ink text-surface text-caption font-bold hover:bg-ink/90 transition-colors"
+            className="inline-flex items-center gap-1.5 h-9 px-4 rounded-[8px] bg-ink text-surface text-[13px] font-semibold hover:bg-ink/90 transition-colors"
           >
+            <Plus size={15} strokeWidth={2.5} />
             Nueva clase
           </Link>
         )}

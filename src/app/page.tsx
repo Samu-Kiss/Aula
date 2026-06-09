@@ -135,10 +135,6 @@ export default function Home() {
             >
               Samuel Pico
             </a>
-            <span aria-hidden className="mx-3">·</span>
-            <Link href="/privacidad" className="hover:text-ink-soft transition-colors">
-              Privacidad
-            </Link>
           </p>
           {commit && (
             <p className="text-mono text-ink-mute">{commit}</p>
