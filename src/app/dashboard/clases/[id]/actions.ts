@@ -39,7 +39,7 @@ export async function createModuleAction(classId: string, formData: FormData) {
     const existing = await moduleRepo(supabase).listByClass(classId);
     const mod = await moduleRepo(supabase).create(classId, input, existing.length);
     revalidatePath(`/dashboard/clases/${classId}`);
-    return { ok: true, id: mod.id };
+    return { ok: true, id: mod.id, module: mod };
   } catch (err) {
     if (err instanceof ZodError) return { error: err.issues[0]?.message ?? "Error de validación." };
     return { error: "No se pudo crear el módulo." };

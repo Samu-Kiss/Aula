@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AlertTriangle } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { classService } from "@/server/services/classService";
 import { moduleRepo } from "@/server/repositories/moduleRepo";
@@ -51,6 +53,23 @@ export default async function ClassOverviewPage({ params }: Props) {
         <p className="text-body text-ink-soft mb-5">
           Comparte o proyecta este código para que los estudiantes accedan a la clase.
         </p>
+
+        {!cls.is_published && (
+          <div className="flex items-start gap-3 rounded-[10px] border border-ambar/40 bg-ambar/10 p-3 mb-5">
+            <AlertTriangle size={16} className="text-ambar shrink-0 mt-0.5" />
+            <p className="text-caption text-ink-soft leading-snug">
+              La clase está en <span className="font-medium text-ink">borrador</span>: este enlace
+              mostrará un error a los estudiantes hasta que la publiques.{" "}
+              <Link
+                href={`/dashboard/clases/${id}/configuracion`}
+                className="font-medium text-ink underline underline-offset-2 hover:no-underline"
+              >
+                Publicar clase
+              </Link>
+            </p>
+          </div>
+        )}
+
         <ClassQrCode url={classUrl} accentHex={hex} classId={id} classTitle={cls.title} accent={cls.accent} splitAt={cls.lockup_split_at} />
       </section>
 

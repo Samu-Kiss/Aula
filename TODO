@@ -89,11 +89,19 @@
 ### Fase 6 — Revisión integral de UX
 
 #### 6.1 Flujos críticos
-- [ ] `F6-01` Revisar flujo completo del profesor nuevo
-- [ ] `F6-02` Revisar flujo completo del estudiante nuevo
-- [ ] `F6-03` Revisar flujo de creación, edición, publicación y preview de una clase
-- [ ] `F6-04` Revisar flujo de intento de quiz de inicio a resultado
-- [ ] `F6-05` Revisar flujo de calificación, revisión manual y gradebook
+- [x] `F6-01` Revisar flujo completo del profesor nuevo
+- [x] `F6-02` Revisar flujo completo del estudiante nuevo
+- [x] `F6-03` Revisar flujo de creación, edición, publicación y preview de una clase
+- [x] `F6-04` Revisar flujo de intento de quiz de inicio a resultado
+- [x] `F6-05` Revisar flujo de calificación, revisión manual y gradebook
+
+> **Fricciones registradas en revisión 6.1 (2026-06-10, navegador real):**
+> - **[Bloqueante UX]** El dashboard de la clase muestra el QR de acceso y la URL pública `/c/[slug]` de forma prominente *antes* de publicar la clase; esa URL da **404** hasta ir a Configuración → "Publicar clase". Un profesor puede proyectar/compartir el QR y los estudiantes verían un 404. Además la publicación es jerárquica en 3 lugares distintos (clase / módulo / contenido), fácil de olvidar uno. → considerar aviso "clase en borrador" junto al QR o deshabilitarlo hasta publicar.
+> - **[Importante]** "Intentos" no aparece en el sidebar de la clase (solo Calificaciones, Estudiantes, Quices, Configuración). Hay que llegar por URL directa, por lo que la revisión manual de respuestas es difícil de descubrir.
+> - **[Importante]** Tras crear un módulo, el formulario inline "Nuevo módulo" no se cierra ni se limpia y el sidebar no refleja el módulo nuevo hasta recargar (falta revalidación/refresh tras la server action).
+> - **[Menor / dev]** El editor de contenido recién creado dio un 404 transitorio (el contenido existía en DB y RLS lo permitía); tras forzar recompilación funcionó. Apunta a staleness de Turbopack/Fast Refresh en dev más que a un defecto de código — verificar que no ocurra en build de producción.
+> - **[Menor]** Con `RESEND_API_KEY` configurado en local, el código de verificación del estudiante se envía por email real y no se loguea, lo que complica el QA local del flujo de identificación. El código solo se persiste hasheado (correcto).
+> - **OK:** slug autogenerado sin tildes; autosave Tiptap ("Guardando"→"Guardado"); acento de aula consistente en vista pública; quiz auto-califica single_choice y deja short_answer en "Revisión pendiente"; revisión manual sube la nota (50%→100%) y propaga al gradebook ("Por quiz").
 
 #### 6.2 Navegabilidad
 - [ ] `F6-06` Revisar navegación del dashboard: sidebar, breadcrumbs, tabs y retornos

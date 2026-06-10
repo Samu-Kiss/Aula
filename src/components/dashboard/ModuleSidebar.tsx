@@ -177,7 +177,8 @@ export function ModuleSidebar({ classId, initialModules }: Props) {
     fd.set("title", title);
     startTransition(async () => {
       const result = await createModuleAction(classId, fd);
-      if (result.ok) {
+      if (result.ok && result.module) {
+        setModules((prev) => [...prev, result.module]);
         setTitle("");
         setShowForm(false);
       }
@@ -284,7 +285,7 @@ export function ModuleSidebar({ classId, initialModules }: Props) {
               : "text-ink-soft hover:bg-surface-alt hover:text-ink"
           }`}
         >
-          Quices
+          Intentos
         </Link>
         <Link
           href={`/dashboard/clases/${classId}/configuracion`}
