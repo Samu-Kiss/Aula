@@ -20,6 +20,17 @@ const CONTENT_LABELS: Record<string, string> = {
   quiz: "Evaluación",
 };
 
+export async function generateMetadata({ params }: Props) {
+  const { moduleId } = await params;
+  const supabase = await createClient();
+  const { data: mod } = await supabase
+    .from("modules")
+    .select("title")
+    .eq("id", moduleId)
+    .single();
+  return { title: mod?.title ?? "Módulo" };
+}
+
 export default async function ModuleEditorPage({ params }: Props) {
   const { id: classId, moduleId } = await params;
   const supabase = await createClient();

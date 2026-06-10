@@ -319,6 +319,8 @@ async function QuicesTab({ classId, className }: { classId: string; className: s
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+export const metadata = { title: "Calificaciones" };
+
 export default async function CalificacionesPage({ params, searchParams }: Props) {
   const { id: classId } = await params;
   const { tab = "notas" } = await searchParams;

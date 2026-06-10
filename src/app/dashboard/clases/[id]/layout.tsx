@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { classService } from "@/server/services/classService";
@@ -10,6 +11,14 @@ import Link from "next/link";
 interface Props {
   children: React.ReactNode;
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+  const cls = await classService(supabase).getById(id);
+  if (!cls) return {};
+  return { title: { default: cls.title, template: `%s · ${cls.title}` } };
 }
 
 export default async function ClassEditorLayout({ children, params }: Props) {

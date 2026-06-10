@@ -13,6 +13,8 @@ interface Props {
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
+export const metadata = { title: "Configuración" };
+
 export default async function ConfiguracionPage({ params }: Props) {
   const { id } = await params;
   const supabase = await createClient();

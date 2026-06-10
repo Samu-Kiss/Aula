@@ -22,6 +22,8 @@ function pct(score: number | null, max: number | null) {
   return Math.round((score / max) * 100);
 }
 
+export const metadata = { title: "Revisión de intento" };
+
 export default async function AttemptDetailPage({ params }: Props) {
   const { id: classId, attemptId } = await params;
   const supabase = await createClient();

@@ -8,6 +8,8 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
+export const metadata = { title: "Estudiantes" };
+
 export default async function EstudiantesPage({ params }: Props) {
   const { id: classId } = await params;
   const supabase = await createClient();

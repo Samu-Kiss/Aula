@@ -11,6 +11,8 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
+export const metadata = { title: "Categorías" };
+
 export default async function CategoriasPage({ params }: Props) {
   const { id: classId } = await params;
   const supabase = await createClient();

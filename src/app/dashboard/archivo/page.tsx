@@ -61,6 +61,8 @@ function DeletedModuleRow({ mod, classMap }: { mod: Module; classMap: Map<string
   );
 }
 
+export const metadata = { title: "Archivo" };
+
 export default async function ArchivoPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

@@ -52,6 +52,8 @@ const EVENT_LABELS: Record<string, string> = {
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 
+export const metadata = { title: "Intentos" };
+
 export default async function IntentosPage({ params, searchParams }: Props) {
   const { id: classId } = await params;
   const { quiz: selectedQuizId } = await searchParams;

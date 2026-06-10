@@ -35,6 +35,8 @@ function relativeTime(iso: string): string {
   return new Date(iso).toLocaleDateString("es", { day: "numeric", month: "short" });
 }
 
+export const metadata = { title: "Notificaciones" };
+
 export default async function NotificationsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

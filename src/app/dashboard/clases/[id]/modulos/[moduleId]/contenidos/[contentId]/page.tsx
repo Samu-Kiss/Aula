@@ -19,6 +19,17 @@ const TYPE_LABELS: Record<string, string> = {
   map: "Mapa",
 };
 
+export async function generateMetadata({ params }: Props) {
+  const { contentId } = await params;
+  const supabase = await createClient();
+  const { data: content } = await supabase
+    .from("contents")
+    .select("title")
+    .eq("id", contentId)
+    .single();
+  return { title: content?.title ?? "Contenido" };
+}
+
 export default async function ContentEditorPage({ params }: Props) {
   const { id: classId, contentId } = await params;
   const supabase = await createClient();

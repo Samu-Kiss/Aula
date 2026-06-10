@@ -104,10 +104,16 @@
 > - **OK:** slug autogenerado sin tildes; autosave Tiptap ("Guardando"→"Guardado"); acento de aula consistente en vista pública; quiz auto-califica single_choice y deja short_answer en "Revisión pendiente"; revisión manual sube la nota (50%→100%) y propaga al gradebook ("Por quiz").
 
 #### 6.2 Navegabilidad
-- [ ] `F6-06` Revisar navegación del dashboard: sidebar, breadcrumbs, tabs y retornos
-- [ ] `F6-07` Revisar navegación pública: clase, módulo, contenido, quiz y regreso al módulo
-- [ ] `F6-08` Revisar claridad de ubicación actual del usuario en cada pantalla
-- [ ] `F6-09` Revisar consistencia de rutas, títulos de página y acciones disponibles
+- [x] `F6-06` Revisar navegación del dashboard: sidebar, breadcrumbs, tabs y retornos
+- [x] `F6-07` Revisar navegación pública: clase, módulo, contenido, quiz y regreso al módulo
+- [x] `F6-08` Revisar claridad de ubicación actual del usuario en cada pantalla
+- [x] `F6-09` Revisar consistencia de rutas, títulos de página y acciones disponibles
+
+> **Hallazgos registrados en revisión 6.2 (2026-06-10, navegador + codegraph):**
+> - **[Importante → ARREGLADO]** Todas las pantallas del dashboard tenían `document.title` = "Aula" (layout raíz con `title: "Aula"` sin template y páginas sin metadata). Fix: template `%s · Aula` en layout raíz; `generateMetadata` en layout de clase (`default: cls.title`, `template: %s · cls.title`); metadata por página/sección (Tus clases, Notificaciones, Archivo, Nueva clase, Estudiantes, Calificaciones, Categorías, Intentos, Revisión de intento, Configuración) y `generateMetadata` dinámico en módulo y editor de contenido. Resultado: "Estudiantes · Historia de América Latina", "Tus clases · Aula", etc.
+> - **[Menor]** El redirect legacy `/gradebook` apunta a `/calificaciones?tab=quices` pero la pestaña se rotula "POR QUIZ" (param `quices` vs label "Por quiz"); cosmético.
+> - **OK navegación pública:** `ClassNav` sticky con breadcrumbs (clase → módulo → contenido); crumbs de clase y módulo son enlaces, "volver al módulo" funciona desde contenido y quiz; página de intento también mantiene breadcrumb.
+> - **OK navegación dashboard:** sidebar global (Clases/Notificaciones/Archivo) con estado activo; dentro de la clase, flecha ← de retorno a `/dashboard`, lockup de la clase en el header, h1 de sección y resaltado de sección activa en el sidebar dan ubicación clara; rutas REST consistentes (`/clases/[id]/{estudiantes,calificaciones,intentos,configuracion}`). El rename "Quices"→"Intentos" (arreglo 6.1) ya verificado.
 
 #### 6.3 Claridad de interfaz
 - [ ] `F6-10` Revisar microcopy, labels, ayudas y mensajes de error
