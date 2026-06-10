@@ -3,7 +3,7 @@
 import type React from "react";
 import { useRef, useState, useTransition } from "react";
 import { FileText, FileVideo, FileAudio, Image, FileSpreadsheet, Presentation, FileType2, Archive, Paperclip } from "lucide-react";
-import { publishContentAction } from "@/app/dashboard/clases/[id]/actions";
+import { publishContentAction, unpublishContentAction } from "@/app/dashboard/clases/[id]/actions";
 
 interface Props {
   contentId: string;
@@ -141,6 +141,13 @@ export function FileEditor({ contentId, classId, initialDraft, isPublished }: Pr
     });
   }
 
+  function handleUnpublish() {
+    startPublish(async () => {
+      const result = await unpublishContentAction(contentId, classId);
+      if (result?.ok) setPublished(false);
+    });
+  }
+
   return (
     <div className="space-y-4">
       {/* Toolbar */}
@@ -154,13 +161,24 @@ export function FileEditor({ contentId, classId, initialDraft, isPublished }: Pr
             ? "Listo"
             : "Sin archivo"}
         </span>
-        <button
-          onClick={handlePublish}
-          disabled={publishing || !fileInfo}
-          className="text-mono text-[12px] px-3 py-1.5 rounded-[6px] bg-ink text-page hover:bg-ink/80 disabled:opacity-40 transition-colors"
-        >
-          {publishing ? "Publicando…" : published ? "Actualizar publicación" : "Publicar"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handlePublish}
+            disabled={publishing || !fileInfo}
+            className="text-mono text-[12px] px-3 py-1.5 rounded-[6px] bg-ink text-page hover:bg-ink/80 disabled:opacity-40 transition-colors"
+          >
+            {publishing ? "Publicando…" : published ? "Actualizar publicación" : "Publicar"}
+          </button>
+          {published && (
+            <button
+              onClick={handleUnpublish}
+              disabled={publishing}
+              className="text-mono text-[12px] px-3 py-1.5 rounded-[6px] text-ink-mute hover:text-borgona transition-colors disabled:opacity-40"
+            >
+              Despublicar
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Drop zone / file picker */}

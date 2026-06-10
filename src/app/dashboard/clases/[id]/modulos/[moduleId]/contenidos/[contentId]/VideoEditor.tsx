@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { publishContentAction } from "@/app/dashboard/clases/[id]/actions";
+import { publishContentAction, unpublishContentAction } from "@/app/dashboard/clases/[id]/actions";
 
 interface Props {
   contentId: string;
@@ -54,6 +54,13 @@ export function VideoEditor({ contentId, classId, initialDraft, isPublished }: P
     });
   }
 
+  function handleUnpublish() {
+    startTransition(async () => {
+      const result = await unpublishContentAction(contentId, classId);
+      if (result?.ok) setPublished(false);
+    });
+  }
+
   return (
     <div className="space-y-4">
       {/* Toolbar */}
@@ -61,13 +68,24 @@ export function VideoEditor({ contentId, classId, initialDraft, isPublished }: P
         <span className="text-mono text-ink-mute text-[12px]">
           {saveStatus === "saved" ? "Guardado" : saveStatus === "saving" ? "Guardando…" : "Sin guardar"}
         </span>
-        <button
-          onClick={handlePublish}
-          disabled={isPending || !parsed}
-          className="text-mono text-[12px] px-3 py-1.5 rounded-[6px] bg-ink text-page hover:bg-ink/80 disabled:opacity-40 transition-colors"
-        >
-          {published ? "Actualizar publicación" : "Publicar"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handlePublish}
+            disabled={isPending || !parsed}
+            className="text-mono text-[12px] px-3 py-1.5 rounded-[6px] bg-ink text-page hover:bg-ink/80 disabled:opacity-40 transition-colors"
+          >
+            {published ? "Actualizar publicación" : "Publicar"}
+          </button>
+          {published && (
+            <button
+              onClick={handleUnpublish}
+              disabled={isPending}
+              className="text-mono text-[12px] px-3 py-1.5 rounded-[6px] text-ink-mute hover:text-borgona transition-colors disabled:opacity-40"
+            >
+              Despublicar
+            </button>
+          )}
+        </div>
       </div>
 
       {/* URL input */}

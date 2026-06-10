@@ -97,6 +97,14 @@ export function contentRepo(db: SupabaseClient) {
       return data;
     },
 
+    async unpublish(id: string): Promise<void> {
+      const { error } = await db
+        .from("contents")
+        .update({ is_published: false })
+        .eq("id", id);
+      if (error) throw error;
+    },
+
     async softDelete(id: string): Promise<void> {
       const { error } = await db
         .from("contents")

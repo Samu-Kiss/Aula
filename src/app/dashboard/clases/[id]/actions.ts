@@ -151,6 +151,17 @@ export async function publishContentAction(contentId: string, classId: string) {
   return { ok: true };
 }
 
+export async function unpublishContentAction(contentId: string, classId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "No autenticado." };
+  await contentRepo(supabase).unpublish(contentId);
+  const { data: cls } = await supabase.from("classes").select("slug").eq("id", classId).maybeSingle();
+  if (cls?.slug) revalidatePath(`/c/${cls.slug}`);
+  revalidatePath(`/dashboard/clases/${classId}`);
+  return { ok: true };
+}
+
 export async function publishModuleAction(moduleId: string, classId: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

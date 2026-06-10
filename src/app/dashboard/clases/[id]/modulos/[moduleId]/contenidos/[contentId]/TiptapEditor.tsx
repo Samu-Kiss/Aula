@@ -8,7 +8,7 @@ import Underline from "@tiptap/extension-underline";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import { Undo2, Redo2, Link2, ImagePlus, Loader2, ImageIcon } from "lucide-react";
-import { publishContentAction } from "@/app/dashboard/clases/[id]/actions";
+import { publishContentAction, unpublishContentAction } from "@/app/dashboard/clases/[id]/actions";
 import { accentHex } from "@/lib/accentColors";
 
 type SaveStatus = "saved" | "saving" | "unsaved";
@@ -138,6 +138,13 @@ export function TiptapEditor({ contentId, classId, initialDraft, isPublished, ac
     });
   }
 
+  function handleUnpublish() {
+    startTransition(async () => {
+      const result = await unpublishContentAction(contentId, classId);
+      if (result.ok) setPublished(false);
+    });
+  }
+
   function openLinkInput() {
     const existing = editor?.getAttributes("link").href ?? "";
     setLinkUrl(existing);
@@ -252,6 +259,15 @@ export function TiptapEditor({ contentId, classId, initialDraft, isPublished, ac
             >
               {isPending ? "Publicando…" : published ? "Publicar cambios" : "Publicar"}
             </button>
+            {published && (
+              <button
+                onClick={handleUnpublish}
+                disabled={isPending}
+                className="h-8 px-3 rounded-[8px] text-caption text-ink-mute hover:text-borgona transition-colors disabled:opacity-50"
+              >
+                Despublicar
+              </button>
+            )}
           </div>
         </div>
 

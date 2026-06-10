@@ -71,10 +71,8 @@
 - [x] `F5-04` Pregunta tipo `map_pin` en quizzes
 - [X] `F5-05` Revisión manual de intentos con preguntas `short_answer` no auto-calificables
 - [x] `F5-06` Emails transaccionales con Resend (intento recibido, nota lista, código de verificación)
-- [ ] `F5-07` Notificaciones in-app para el profesor (tabla `notifications`, §14.1)
-- [ ] `F5-08` Dashboard admin `/dashboard/admin` con métricas y anti-cheating insights
-- [x] `F5-09` Soft delete + archivo recuperable `/dashboard/archivo`
-- [ ] `F5-10` Anonimización del estudiante (`/api/student/anonymize`)
+- [X] `F5-07` Notificaciones in-app para el profesor (tabla `notifications`, §14.1)
+- [X] `F5-09` Soft delete + archivo recuperable `/dashboard/archivo`
 - [x] `F5-11` Duplicar clase, módulo y quiz
 - [X] `F5-12` OG image dinámica (`/api/og`) con lockup y acento
 - [X] `F5-15` Landing en `/` — página de presentación de la plataforma con lockup, propuesta de valor y CTA al login del profesor; actualmente la ruta raíz redirige directo al dashboard
