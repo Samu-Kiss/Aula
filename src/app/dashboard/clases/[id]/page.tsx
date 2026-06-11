@@ -24,26 +24,33 @@ export default async function ClassOverviewPage({ params }: Props) {
   const classUrl = `${APP_URL}/c/${cls.slug}`;
   const hex = ACCENT_HEX[cls.accent] ?? "#4C51BF";
 
+  const publishedCount = modules.filter((m) => m.is_published).length;
+
   return (
-    <div className="max-w-xl">
+    <div className="max-w-xl stagger">
       <p className="text-eyebrow text-ink-mute mb-2">Clase</p>
       {cls.description && (
-        <p className="text-body text-ink-soft mb-6">{cls.description}</p>
+        <p className="font-serif italic text-[17px] leading-relaxed text-ink-soft mb-8 max-w-md">
+          {cls.description}
+        </p>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <div className="bg-surface rounded-[12px] border-subtle p-4">
-          <p className="text-[28px] font-black text-ink leading-none">{modules.length}</p>
-          <p className="text-caption text-ink-mute mt-1">Módulos</p>
-        </div>
-        <div className="bg-surface rounded-[12px] border-subtle p-4">
-          <p className="text-[28px] font-black text-ink leading-none">
-            {modules.filter((m) => m.is_published).length}
+      {/* Ficha: stats sobre hairlines, sin cajas */}
+      <div className="grid grid-cols-3 border-y border-hairline divide-x divide-[rgba(0,0,0,0.08)] mb-10">
+        <div className="py-4 pr-4">
+          <p className="text-display text-ink">{modules.length}</p>
+          <p className="text-caption text-ink-mute mt-1">
+            {modules.length === 1 ? "Módulo" : "Módulos"}
           </p>
-          <p className="text-caption text-ink-mute mt-1">Publicados</p>
         </div>
-        <div className="bg-surface rounded-[12px] border-subtle p-4">
-          <p className="text-mono text-ink leading-none pt-1 break-all">/c/{cls.slug}</p>
+        <div className="py-4 px-4">
+          <p className="text-display text-ink">{publishedCount}</p>
+          <p className="text-caption text-ink-mute mt-1">
+            {publishedCount === 1 ? "Publicado" : "Publicados"}
+          </p>
+        </div>
+        <div className="py-4 pl-4 min-w-0">
+          <p className="text-mono text-ink leading-tight break-all pt-2">/c/{cls.slug}</p>
           <p className="text-caption text-ink-mute mt-1">URL pública</p>
         </div>
       </div>

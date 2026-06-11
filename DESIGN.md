@@ -1634,7 +1634,7 @@ Ocho colores curados, asignables como `accent` al crear la clase. Cada uno se us
 | `terracota` | `#C25733` | Cálido, histórico |
 | `bosque` | `#24755B` | Natural, contemplativo |
 | `ciruela` | `#9B478A` | Místico |
-| `ambar` | `#C18924` | Cálido, sabiduría |
+| `ambar` | `#B8821D` | Cálido, sabiduría |
 | `pizarra` | `#3F638A` | Sobrio, académico |
 | `borgona` | `#922F41` | Clásico, importante |
 | `salvia` | `#737A43` | Tranquilo, sapiencial |

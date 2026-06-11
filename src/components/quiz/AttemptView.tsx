@@ -321,7 +321,7 @@ function ShortAnswerQuestion({ question: _q, response, onChange, submitted }: QP
       onChange={(e) => onChange({ text: e.target.value })}
       disabled={submitted}
       rows={3}
-      className="w-full border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30 resize-none disabled:opacity-70"
+      className="w-full border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-accent/40 resize-none disabled:opacity-70"
       placeholder="Escribe tu respuesta…"
     />
   );
@@ -664,7 +664,7 @@ export function AttemptView({ attempt, questions, initialAnswers, quiz, student:
                   type="button"
                   onClick={handleSubmit}
                   disabled={submitting}
-                  className="flex-1 py-3 bg-ink text-surface rounded-[10px] text-caption font-bold hover:bg-ink/90 disabled:opacity-50 transition-colors"
+                  className="flex-1 py-3 bg-accent-deep text-page rounded-[10px] text-caption font-bold hover:bg-accent-deep/88 disabled:opacity-50 transition-colors"
                 >
                   {submitting ? "Enviando…" : "Confirmar entrega"}
                 </button>
@@ -682,7 +682,7 @@ export function AttemptView({ attempt, questions, initialAnswers, quiz, student:
             <button
               type="button"
               onClick={() => setConfirmingSubmit(true)}
-              className="w-full py-3 bg-ink text-surface rounded-[10px] text-caption font-bold hover:bg-ink/90 transition-colors"
+              className="w-full py-3 bg-accent-deep text-page rounded-[10px] text-caption font-bold hover:bg-accent-deep/88 transition-colors"
             >
               Entregar evaluación
             </button>

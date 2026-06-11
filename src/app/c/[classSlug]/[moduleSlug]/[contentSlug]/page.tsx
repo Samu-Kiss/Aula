@@ -120,7 +120,7 @@ export default async function ContentPage({ params, searchParams }: Props) {
         ]}
       />
 
-      <header className="px-5 py-10 md:px-10 md:py-14 max-w-3xl mx-auto border-b border-[rgba(0,0,0,0.06)]">
+      <header className="px-5 py-10 md:px-10 md:py-14 max-w-3xl mx-auto border-b border-hairline">
         <p className="text-eyebrow text-ink-mute mb-2">{TYPE_LABEL[content.type] ?? content.type}</p>
         <h1 className="text-h1 text-ink text-[clamp(22px,3.5vw,32px)]">{content.title}</h1>
       </header>

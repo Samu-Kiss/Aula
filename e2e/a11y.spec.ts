@@ -30,6 +30,9 @@ async function login(page: Page) {
 }
 
 async function runAxe(page: Page, label: string) {
+  // Sin esto, axe puede escanear a mitad de las animaciones de entrada
+  // (fade-up/stagger) y leer colores mezclados por la opacidad transitoria.
+  await page.emulateMedia({ reducedMotion: "reduce" });
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .analyze();

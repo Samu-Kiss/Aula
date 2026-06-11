@@ -9,7 +9,7 @@ const ACCENTS: { value: Accent; label: string; hex: string }[] = [
   { value: "terracota", label: "Terracota", hex: "#C25733" },
   { value: "bosque",    label: "Bosque",    hex: "#24755B" },
   { value: "ciruela",   label: "Ciruela",   hex: "#9B478A" },
-  { value: "ambar",     label: "Ámbar",     hex: "#C18924" },
+  { value: "ambar",     label: "Ámbar",     hex: "#B8821D" },
   { value: "pizarra",   label: "Pizarra",   hex: "#3F638A" },
   { value: "borgona",   label: "Borgoña",   hex: "#922F41" },
   { value: "salvia",    label: "Salvia",    hex: "#737A43" },
@@ -62,7 +62,7 @@ export default function NuevaClasePage() {
             onChange={(e) => setTitle(e.target.value)}
             aria-invalid={!!fields.title}
             aria-describedby={fields.title ? "title-error" : undefined}
-            className="w-full h-11 px-3 rounded-[8px] border-subtle bg-surface text-body text-ink placeholder:text-ink-mute focus:outline-none focus:ring-2 focus:ring-accent-indigo"
+            className="w-full h-11 px-3 rounded-[8px] border-subtle bg-surface text-body text-ink placeholder:text-ink-mute focus:outline-none focus:ring-2 focus:ring-accent"
             placeholder="Historia bíblica"
           />
           {fields.title && (
@@ -86,7 +86,7 @@ export default function NuevaClasePage() {
               onChange={(e) => { setSlug(e.target.value); setSlugEdited(true); }}
               aria-invalid={!!fields.slug}
               aria-describedby={fields.slug ? "slug-error" : undefined}
-              className="flex-1 h-11 px-3 rounded-[8px] border-subtle bg-surface text-body text-ink font-mono placeholder:text-ink-mute focus:outline-none focus:ring-2 focus:ring-accent-indigo"
+              className="flex-1 h-11 px-3 rounded-[8px] border-subtle bg-surface text-body text-ink font-mono placeholder:text-ink-mute focus:outline-none focus:ring-2 focus:ring-accent"
               placeholder="historia-biblica"
             />
           </div>
@@ -105,7 +105,7 @@ export default function NuevaClasePage() {
             name="description"
             rows={3}
             maxLength={500}
-            className="w-full px-3 py-2 rounded-[8px] border-subtle bg-surface text-body text-ink placeholder:text-ink-mute focus:outline-none focus:ring-2 focus:ring-accent-indigo resize-none"
+            className="w-full px-3 py-2 rounded-[8px] border-subtle bg-surface text-body text-ink placeholder:text-ink-mute focus:outline-none focus:ring-2 focus:ring-accent resize-none"
             placeholder="Del Génesis a los jueces…"
           />
         </div>

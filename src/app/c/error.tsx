@@ -23,7 +23,7 @@ export default function PublicError({ error, reset }: Props) {
         <button
           type="button"
           onClick={reset}
-          className="px-4 py-2 bg-ink text-surface rounded-[8px] text-caption font-bold hover:bg-ink/90 transition-colors"
+          className="px-4 py-2 bg-accent-deep text-page rounded-[8px] text-caption font-bold hover:bg-accent-deep/88 transition-colors"
         >
           Reintentar
         </button>

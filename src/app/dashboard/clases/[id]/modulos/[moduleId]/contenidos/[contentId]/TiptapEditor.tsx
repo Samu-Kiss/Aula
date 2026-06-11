@@ -221,7 +221,7 @@ export function TiptapEditor({ contentId, classId, initialDraft, isPublished, ac
       />
 
       {/* Toolbar */}
-      <div className="flex flex-col gap-2 pb-3 border-b border-[rgba(0,0,0,0.08)]">
+      <div className="flex flex-col gap-2 pb-3 border-b border-hairline">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <div className="flex items-center gap-1 flex-wrap">
             <ToolbarButton onClick={() => editor?.chain().focus().undo().run()} active={false} label={<Undo2 size={14} />} title="Deshacer (Ctrl+Z)" />
@@ -253,7 +253,7 @@ export function TiptapEditor({ contentId, classId, initialDraft, isPublished, ac
             <button
               onClick={handlePublish}
               disabled={isPending}
-              className="h-8 px-4 rounded-[8px] text-caption font-bold transition-colors disabled:opacity-50 bg-ink text-surface hover:bg-ink/90 whitespace-nowrap"
+              className="h-8 px-4 rounded-[8px] text-caption font-bold transition-colors disabled:opacity-50 bg-accent-deep text-page hover:bg-accent-deep/88 whitespace-nowrap"
             >
               {isPending ? "Publicando…" : published ? "Publicar cambios" : "Publicar"}
             </button>
@@ -278,7 +278,7 @@ export function TiptapEditor({ contentId, classId, initialDraft, isPublished, ac
               onChange={(e) => setLinkUrl(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") applyLink(); if (e.key === "Escape") setLinkUrl(null); }}
               placeholder="https://..."
-              className="flex-1 h-7 px-2 text-mono text-[12px] rounded-[6px] border border-[rgba(0,0,0,0.12)] bg-page focus:outline-none focus:ring-1 focus:ring-ink/20"
+              className="flex-1 h-7 px-2 text-mono text-[12px] rounded-[6px] border border-[rgba(0,0,0,0.12)] bg-page focus:outline-none focus:ring-1 focus:ring-accent/40"
             />
             <button onClick={applyLink} className="h-7 px-3 text-mono text-[12px] rounded-[6px] bg-ink text-page hover:bg-ink/80 transition-colors">
               {linkUrl.trim() ? "Aplicar" : "Quitar"}
@@ -300,7 +300,7 @@ export function TiptapEditor({ contentId, classId, initialDraft, isPublished, ac
                 onKeyDown={(e) => { if (e.key === "Enter") applyImage(); if (e.key === "Escape") { setImageUrl(null); setImageError(null); } }}
                 placeholder="https://... (URL de la imagen)"
                 className={`flex-1 h-7 px-2 text-mono text-[12px] rounded-[6px] border bg-page focus:outline-none focus:ring-1 transition-colors ${
-                  imageError ? "border-red-400 focus:ring-red-300" : "border-[rgba(0,0,0,0.12)] focus:ring-ink/20"
+                  imageError ? "border-red-400 focus:ring-red-300" : "border-[rgba(0,0,0,0.12)] focus:ring-accent/40"
                 }`}
               />
               <button

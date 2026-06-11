@@ -25,7 +25,7 @@ export function DuplicateClassButton({ classId }: { classId: string }) {
       onClick={handleDuplicate}
       disabled={isPending}
       title="Duplicar clase"
-      className="p-1.5 rounded-[6px] bg-surface/90 text-ink-mute hover:text-ink hover:bg-surface transition-colors disabled:opacity-50 shadow-sm border border-[rgba(0,0,0,0.08)]"
+      className="p-1.5 rounded-[6px] bg-surface/90 text-ink-mute hover:text-ink hover:bg-surface transition-colors disabled:opacity-50 shadow-sm border border-hairline"
     >
       {isPending ? (
         <Loader2 size={14} className="animate-spin" />

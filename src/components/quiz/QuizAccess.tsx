@@ -3,6 +3,7 @@
 import { useState, useEffect, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ChevronRight } from "lucide-react";
+import { formatDateTime } from "@/lib/dates";
 import type { Quiz, Attempt } from "@/lib/types/db";
 import type { StudentPayload } from "@/lib/auth/studentJwt";
 
@@ -34,12 +35,7 @@ function quizAvailability(quiz: Quiz): "available" | "not_open" | "closed" | "di
   return "available";
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString("es", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-}
+const formatDate = formatDateTime;
 
 // ─── Identification form — step 1 ────────────────────────────────────────────
 
@@ -110,7 +106,7 @@ function IdentStep1({ onSent }: Step1Props) {
     });
   }
 
-  const inputBase = "w-full border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30";
+  const inputBase = "w-full border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-accent/40";
   const inputLocked = "w-full border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface-alt cursor-not-allowed opacity-75";
 
   return (
@@ -175,7 +171,7 @@ function IdentStep1({ onSent }: Step1Props) {
           type="checkbox"
           checked={rememberMe}
           onChange={(e) => setRememberMe(e.target.checked)}
-          className="w-4 h-4 rounded accent-indigo"
+          className="w-3.5 h-3.5 rounded accent-[var(--class-accent-deep)]"
         />
         <label htmlFor="remember_me" className="text-caption text-ink-soft">
           Recordarme en este dispositivo (30 días)
@@ -187,7 +183,7 @@ function IdentStep1({ onSent }: Step1Props) {
       <button
         type="submit"
         disabled={pending}
-        className="w-full py-2.5 bg-ink text-surface rounded-[8px] text-caption font-bold hover:bg-ink/90 disabled:opacity-50 transition-colors"
+        className="w-full py-2.5 bg-accent-deep text-page rounded-[8px] text-caption font-bold hover:bg-accent-deep/88 disabled:opacity-50 transition-colors"
       >
         {pending ? "Enviando…" : <span className="inline-flex items-center gap-1">Continuar <ArrowRight size={14} /></span>}
       </button>
@@ -248,7 +244,7 @@ function IdentStep2({ email, firstName, lastName, rememberMe, onVerified, onBack
           value={code}
           onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
           autoFocus
-          className="w-40 border border-subtle rounded-[8px] px-3 py-2 text-mono text-ink text-center tracking-widest bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30 text-base"
+          className="w-40 border border-subtle rounded-[8px] px-3 py-2 text-mono text-ink text-center tracking-widest bg-surface focus:outline-none focus:ring-2 focus:ring-accent/40 text-base"
           placeholder="000000"
         />
       </div>
@@ -259,7 +255,7 @@ function IdentStep2({ email, firstName, lastName, rememberMe, onVerified, onBack
         <button
           type="submit"
           disabled={pending}
-          className="flex-1 py-2.5 bg-ink text-surface rounded-[8px] text-caption font-bold hover:bg-ink/90 disabled:opacity-50 transition-colors"
+          className="flex-1 py-2.5 bg-accent-deep text-page rounded-[8px] text-caption font-bold hover:bg-accent-deep/88 disabled:opacity-50 transition-colors"
         >
           {pending ? "Verificando…" : <span className="inline-flex items-center gap-1">Verificar <ArrowRight size={14} /></span>}
         </button>
@@ -424,13 +420,13 @@ function QuizLanding({ quiz, content, student, availability, onSignOut, classSlu
                     </p>
                     <p className="text-mono text-ink-mute">
                       {a.submitted_at
-                        ? new Date(a.submitted_at).toLocaleString("es", { dateStyle: "medium", timeStyle: "short" })
+                        ? formatDateTime(a.submitted_at)
                         : "—"}
                     </p>
                   </div>
                   <a
                     href={`/c/${classSlug}/${moduleSlug}/${content.slug}?resultado=${a.id}`}
-                    className="text-caption text-indigo hover:text-indigo/70 transition-colors shrink-0"
+                    className="text-caption text-accent-deep hover:text-accent-deep/70 transition-colors shrink-0"
                   >
                     <span className="inline-flex items-center gap-0.5">Ver <ChevronRight size={13} /></span>
                   </a>
@@ -472,7 +468,7 @@ function QuizLanding({ quiz, content, student, availability, onSignOut, classSlu
           type="button"
           disabled={starting}
           onClick={handleStart}
-          className="w-full py-3 bg-ink text-surface rounded-[10px] text-caption font-bold hover:bg-ink/90 disabled:opacity-50 transition-colors"
+          className="w-full py-3 bg-accent-deep text-page rounded-[10px] text-caption font-bold hover:bg-accent-deep/88 disabled:opacity-50 transition-colors"
         >
           {starting
             ? "Iniciando…"

@@ -39,7 +39,7 @@ export function PublishClassToggle({ classId, isPublished }: Props) {
         className={`px-4 py-2 rounded-[8px] text-caption font-bold transition-colors disabled:opacity-50 ${
           published
             ? "bg-surface-alt text-ink-soft hover:bg-borgona/10 hover:text-borgona"
-            : "bg-ink text-surface hover:bg-ink/90"
+            : "bg-accent-deep text-page hover:bg-accent-deep/88"
         }`}
       >
         {pending ? "…" : published ? "Despublicar" : "Publicar clase"}

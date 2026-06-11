@@ -78,7 +78,7 @@ export function FileRenderer({ contentId, body }: Props) {
       <button
         onClick={handleDownload}
         disabled={loading}
-        className="flex-none px-4 py-2 bg-ink text-page rounded-[8px] text-caption font-medium hover:bg-ink/90 disabled:opacity-50 transition-colors"
+        className="flex-none px-4 py-2 bg-accent-deep text-page rounded-[8px] text-caption font-medium hover:bg-accent-deep/88 disabled:opacity-50 transition-colors"
       >
         {loading ? "Cargando…" : "Descargar"}
       </button>

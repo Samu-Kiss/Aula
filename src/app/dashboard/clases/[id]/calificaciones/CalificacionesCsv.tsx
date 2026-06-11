@@ -69,7 +69,7 @@ export function CalificacionesCsv({ rows, items, className }: Props) {
   return (
     <button
       onClick={download}
-      className="px-3 py-1.5 text-caption bg-ink text-surface rounded-[8px] hover:bg-ink/90 transition-colors"
+      className="px-3 py-1.5 text-caption bg-accent-deep text-page rounded-[8px] hover:bg-accent-deep/88 transition-colors"
     >
       Exportar CSV
     </button>

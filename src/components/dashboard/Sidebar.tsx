@@ -23,7 +23,7 @@ export function Sidebar({ unreadNotifications = 0 }: Props) {
       defaultWidth={224}
       minWidth={176}
       maxWidth={400}
-      className="border-[rgba(0,0,0,0.08)] bg-surface md:border-r max-md:border-b"
+      className="border-hairline bg-surface md:border-r max-md:border-b"
     >
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto max-md:flex max-md:items-center max-md:gap-1 max-md:space-y-0 max-md:py-2 max-md:overflow-x-auto">
         {NAV.map(({ label, href, badge }) => {
@@ -38,7 +38,7 @@ export function Sidebar({ unreadNotifications = 0 }: Props) {
               href={href}
               className={`flex items-center h-9 px-3 rounded-[8px] text-body transition-colors max-md:shrink-0 ${
                 active
-                  ? "bg-surface-alt text-ink font-medium"
+                  ? "bg-surface-alt text-ink font-medium shadow-[inset_2px_0_0_var(--class-accent)]"
                   : "text-ink-soft hover:bg-surface-alt hover:text-ink"
               }`}
             >

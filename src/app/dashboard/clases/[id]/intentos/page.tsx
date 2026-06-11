@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { formatDateTime } from "@/lib/dates";
 import { AlertTriangle, ArrowLeft, ChevronRight, Flag } from "lucide-react";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { classService } from "@/server/services/classService";
@@ -22,7 +23,7 @@ function pct(score: number | null, max: number | null) {
 
 function formatDate(iso: string | null) {
   if (!iso) return "—";
-  return new Date(iso).toLocaleString("es", { dateStyle: "short", timeStyle: "short" });
+  return formatDateTime(iso);
 }
 
 function studentName(s: { first_name: string | null; last_name: string | null; display_name: string | null; email: string }) {

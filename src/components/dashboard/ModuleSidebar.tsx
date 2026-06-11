@@ -66,7 +66,7 @@ function SortableModule({
       <button
         {...attributes}
         {...listeners}
-        className="p-1 text-ink-mute opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing touch-none"
+        className="p-1 text-ink-mute opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 max-md:opacity-100 cursor-grab active:cursor-grabbing touch-none"
         aria-label="Reordenar"
       >
         ⠿
@@ -75,7 +75,7 @@ function SortableModule({
         href={`/dashboard/clases/${classId}/modulos/${mod.id}`}
         className={`flex-1 flex items-center h-8 px-2 rounded-[8px] text-body truncate transition-colors ${
           active
-            ? "bg-surface-alt text-ink font-medium"
+            ? "bg-surface-alt text-ink font-medium shadow-[inset_2px_0_0_var(--class-accent)]"
             : "text-ink-soft hover:bg-surface-alt hover:text-ink"
         }`}
       >
@@ -89,7 +89,7 @@ function SortableModule({
         onClick={handleDuplicate}
         disabled={isPendingDup || isDeleting}
         title="Duplicar módulo"
-        className="p-1 text-ink-mute opacity-0 group-hover:opacity-100 hover:text-ink transition-colors disabled:opacity-30 shrink-0"
+        className="p-1 text-ink-mute opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 max-md:opacity-100 hover:text-ink transition-colors disabled:opacity-30 shrink-0"
         aria-label="Duplicar módulo"
       >
         {isPendingDup ? (
@@ -127,7 +127,7 @@ function SortableModule({
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmingDelete(true); }}
           disabled={isPendingDup || isDeleting}
           title="Eliminar módulo"
-          className="p-1 text-ink-mute opacity-0 group-hover:opacity-100 hover:text-borgona transition-colors disabled:opacity-30 shrink-0"
+          className="p-1 text-ink-mute opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 max-md:opacity-100 hover:text-borgona transition-colors disabled:opacity-30 shrink-0"
           aria-label="Eliminar módulo"
         >
           <Trash2 size={12} />
@@ -192,9 +192,9 @@ export function ModuleSidebar({ classId, initialModules }: Props) {
       defaultWidth={224}
       minWidth={176}
       maxWidth={420}
-      className="border-[rgba(0,0,0,0.08)] bg-surface md:border-r max-md:border-b max-md:max-h-64 max-md:overflow-y-auto"
+      className="border-hairline bg-surface md:border-r max-md:border-b max-md:max-h-64 max-md:overflow-y-auto"
     >
-      <div className="px-3 py-3 border-b border-[rgba(0,0,0,0.08)] flex items-center justify-between">
+      <div className="px-3 py-3 border-b border-hairline flex items-center justify-between">
         <span className="text-caption text-ink-mute">Módulos</span>
         <button
           onClick={() => setShowForm((v) => !v)}
@@ -206,13 +206,13 @@ export function ModuleSidebar({ classId, initialModules }: Props) {
       </div>
 
       {showForm && (
-        <form onSubmit={handleCreate} className="px-3 py-2 border-b border-[rgba(0,0,0,0.08)]">
+        <form onSubmit={handleCreate} className="px-3 py-2 border-b border-hairline">
           <input
             autoFocus
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Nombre del módulo"
-            className="w-full h-8 px-2 rounded-[8px] border-subtle bg-page text-body text-ink placeholder:text-ink-mute focus:outline-none focus:ring-1 focus:ring-ink/20"
+            className="w-full h-8 px-2 rounded-[8px] border-subtle bg-page text-body text-ink placeholder:text-ink-mute focus:outline-none focus:ring-1 focus:ring-accent/40"
           />
           <div className="flex gap-2 mt-2">
             <button
@@ -233,12 +233,12 @@ export function ModuleSidebar({ classId, initialModules }: Props) {
         </form>
       )}
 
-      <nav className="flex-1 px-2 py-2 overflow-y-auto space-y-0.5">
+      <nav className="flex-1 px-2 py-2 overflow-y-auto space-y-0.5 max-md:min-h-24">
         <Link
           href={`/dashboard/clases/${classId}`}
           className={`flex items-center h-8 px-3 rounded-[8px] text-body transition-colors ${
             pathname === `/dashboard/clases/${classId}`
-              ? "bg-surface-alt text-ink font-medium"
+              ? "bg-surface-alt text-ink font-medium shadow-[inset_2px_0_0_var(--class-accent)]"
               : "text-ink-soft hover:bg-surface-alt hover:text-ink"
           }`}
         >
@@ -263,12 +263,12 @@ export function ModuleSidebar({ classId, initialModules }: Props) {
         )}
       </nav>
 
-      <div className="px-3 py-3 border-t border-[rgba(0,0,0,0.08)] space-y-0.5">
+      <div className="px-3 py-3 border-t border-hairline space-y-0.5 max-md:flex max-md:flex-wrap max-md:gap-x-1 max-md:space-y-0">
         <Link
           href={`/dashboard/clases/${classId}/calificaciones`}
           className={`flex items-center h-8 px-3 rounded-[8px] text-body transition-colors ${
             pathname.includes("calificaciones")
-              ? "bg-surface-alt text-ink font-medium"
+              ? "bg-surface-alt text-ink font-medium shadow-[inset_2px_0_0_var(--class-accent)]"
               : "text-ink-soft hover:bg-surface-alt hover:text-ink"
           }`}
         >
@@ -278,7 +278,7 @@ export function ModuleSidebar({ classId, initialModules }: Props) {
           href={`/dashboard/clases/${classId}/estudiantes`}
           className={`flex items-center h-8 px-3 rounded-[8px] text-body transition-colors ${
             pathname.includes("estudiantes")
-              ? "bg-surface-alt text-ink font-medium"
+              ? "bg-surface-alt text-ink font-medium shadow-[inset_2px_0_0_var(--class-accent)]"
               : "text-ink-soft hover:bg-surface-alt hover:text-ink"
           }`}
         >
@@ -288,7 +288,7 @@ export function ModuleSidebar({ classId, initialModules }: Props) {
           href={`/dashboard/clases/${classId}/intentos`}
           className={`flex items-center h-8 px-3 rounded-[8px] text-body transition-colors ${
             pathname.includes("intentos")
-              ? "bg-surface-alt text-ink font-medium"
+              ? "bg-surface-alt text-ink font-medium shadow-[inset_2px_0_0_var(--class-accent)]"
               : "text-ink-soft hover:bg-surface-alt hover:text-ink"
           }`}
         >
@@ -298,7 +298,7 @@ export function ModuleSidebar({ classId, initialModules }: Props) {
           href={`/dashboard/clases/${classId}/configuracion`}
           className={`flex items-center h-8 px-3 rounded-[8px] text-body transition-colors ${
             pathname.includes("configuracion")
-              ? "bg-surface-alt text-ink font-medium"
+              ? "bg-surface-alt text-ink font-medium shadow-[inset_2px_0_0_var(--class-accent)]"
               : "text-ink-soft hover:bg-surface-alt hover:text-ink"
           }`}
         >

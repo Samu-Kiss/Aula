@@ -1,5 +1,8 @@
+import type React from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { Lock } from "lucide-react";
+import { formatDate } from "@/lib/dates";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { classService } from "@/server/services/classService";
@@ -54,19 +57,50 @@ export default async function ClassLandingPage({ params }: Props) {
     }
   }
 
+  const openModules = modules.filter((m) => {
+    const now = new Date();
+    return (
+      m.is_available &&
+      (!m.opens_at || new Date(m.opens_at) <= now) &&
+      (!m.closes_at || new Date(m.closes_at) >= now)
+    );
+  }).length;
+
   return (
     <main className="min-h-screen bg-page">
-      {/* Hero */}
-      <header className="px-6 py-16 md:px-12 md:py-24 max-w-4xl mx-auto">
+      {/* Hero — portada editorial: lockup primero, descripción como bajada */}
+      <header className="px-6 pt-16 pb-10 md:px-12 md:pt-24 md:pb-14 max-w-4xl mx-auto">
+        <p className="text-eyebrow text-ink-mute mb-6 animate-fade-up">Clase</p>
+        <div className="animate-fade-up" style={{ "--delay": "60ms" } as React.CSSProperties}>
+          <Lockup
+            title={cls.title}
+            accent={cls.accent}
+            splitAt={cls.lockup_split_at}
+            className="text-[clamp(48px,7vw,96px)]"
+          />
+        </div>
         {cls.description && (
-          <p className="text-eyebrow text-ink-mute mb-6">{cls.description}</p>
+          <p
+            className="font-serif italic text-[clamp(17px,2vw,20px)] leading-relaxed text-ink-soft mt-6 max-w-xl animate-fade-up"
+            style={{ "--delay": "140ms" } as React.CSSProperties}
+          >
+            {cls.description}
+          </p>
         )}
-        <Lockup
-          title={cls.title}
-          accent={cls.accent}
-          splitAt={cls.lockup_split_at}
-          className="text-[clamp(48px,7vw,96px)]"
-        />
+        {/* Colofón: metadata en mono, como ficha bibliográfica */}
+        <div
+          className="flex items-center gap-4 mt-8 animate-fade-up"
+          style={{ "--delay": "220ms" } as React.CSSProperties}
+        >
+          <span className="text-mono text-ink-mute">
+            {modules.length} {modules.length === 1 ? "módulo" : "módulos"}
+          </span>
+          <span className="text-mono text-ink-mute">·</span>
+          <span className="text-mono text-ink-mute">
+            {openModules} {openModules === 1 ? "abierto" : "abiertos"}
+          </span>
+        </div>
+        <hr className="rule mt-10" />
       </header>
 
       {/* Self-enroll banner */}
@@ -78,13 +112,13 @@ export default async function ClassLandingPage({ params }: Props) {
         />
       </section>
 
-      {/* Módulos */}
+      {/* Módulos — índice de libro: filas separadas por hairlines */}
       <section className="px-6 pb-24 md:px-12 max-w-4xl mx-auto">
-        <p className="text-eyebrow text-ink-mute mb-6">Módulos</p>
+        <p className="text-eyebrow text-ink-mute mb-2">Índice</p>
         {modules.length === 0 ? (
-          <p className="text-body text-ink-soft">No hay módulos disponibles todavía.</p>
+          <p className="text-body text-ink-soft mt-4">No hay módulos disponibles todavía.</p>
         ) : (
-          <ol className="space-y-2">
+          <ol className="stagger">
             {modules.map((mod, i) => {
               const now = new Date();
               const isScheduled = mod.opens_at && new Date(mod.opens_at) > now;
@@ -92,32 +126,44 @@ export default async function ClassLandingPage({ params }: Props) {
               const isBlocked = !mod.is_available;
               const locked = isScheduled || isClosed || isBlocked;
 
+              const number = (
+                <span className="text-mono text-ink-mute w-8 shrink-0 text-[13px] tabular-nums">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+              );
+
               return (
-                <li key={mod.id}>
+                <li key={mod.id} className="border-b border-hairline">
                   {locked ? (
-                    <div className="flex items-center gap-4 px-5 py-4 rounded-[12px] bg-surface border-subtle opacity-60 cursor-not-allowed">
-                      <span className="text-mono text-ink-mute w-6 shrink-0">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <span className="text-body text-ink flex-1">{mod.title}</span>
-                      <span className="text-mono text-ink-mute text-xs">
-                        {isScheduled
-                          ? `Abre ${new Date(mod.opens_at!).toLocaleDateString("es-CO")}`
-                          : isClosed
-                          ? "Cerrado"
-                          : "Bloqueado"}
+                    <div className="flex items-center gap-4 px-1 py-5">
+                      {number}
+                      <span className="text-h2 text-ink-mute flex-1">{mod.title}</span>
+                      <span className="flex items-center gap-2 shrink-0">
+                        <Lock size={13} className="text-ink-mute" aria-hidden />
+                        <span className="font-serif italic text-[14px] text-ink-mute">
+                          {isScheduled
+                            ? `Abre el ${formatDate(mod.opens_at!)}`
+                            : isClosed
+                            ? "Cerrado"
+                            : "Próximamente"}
+                        </span>
                       </span>
                     </div>
                   ) : (
                     <Link
                       href={`/c/${classSlug}/${mod.slug}`}
-                      className="flex items-center gap-4 px-5 py-4 rounded-[12px] bg-surface border-subtle hover:border-ink/20 transition-colors group"
+                      className="flex items-center gap-4 px-1 py-5 group transition-colors hover:bg-surface/60"
                     >
-                      <span className="text-mono text-ink-mute w-6 shrink-0">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <span className="text-body text-ink flex-1 group-hover:text-ink transition-colors">
+                      {number}
+                      <span className="text-h2 text-ink flex-1 transition-transform duration-200 group-hover:translate-x-1">
                         {mod.title}
+                      </span>
+                      <span
+                        className="text-mono text-[13px] shrink-0 opacity-0 -translate-x-1 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0"
+                        style={{ color: "var(--class-accent)" }}
+                        aria-hidden
+                      >
+                        →
                       </span>
                     </Link>
                   )}

@@ -65,7 +65,7 @@ export function CreateContentForm({ moduleId, classId }: Props) {
           onChange={(e) => setTitle(e.target.value)}
           required
           placeholder="Ej. Introducción al Pentateuco"
-          className="w-full h-10 px-3 rounded-[8px] border-subtle bg-page text-body text-ink placeholder:text-ink-mute focus:outline-none focus:ring-2 focus:ring-ink/20"
+          className="w-full h-10 px-3 rounded-[8px] border-subtle bg-page text-body text-ink placeholder:text-ink-mute focus:outline-none focus:ring-2 focus:ring-accent/40"
         />
       </div>
 
@@ -100,7 +100,7 @@ export function CreateContentForm({ moduleId, classId }: Props) {
         <button
           type="submit"
           disabled={isPending || !title.trim()}
-          className="h-9 px-4 rounded-[8px] bg-ink text-surface text-caption font-bold hover:bg-ink/90 transition-colors disabled:opacity-50"
+          className="h-9 px-4 rounded-[8px] bg-accent-deep text-page text-caption font-bold hover:bg-accent-deep/88 transition-colors disabled:opacity-50"
         >
           {isPending ? "Creando…" : "Crear"}
         </button>

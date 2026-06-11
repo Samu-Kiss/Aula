@@ -917,7 +917,7 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
                   value={colorLabels[c] ?? ""}
                   onChange={(e) => handleColorLabelChange(c, e.target.value)}
                   placeholder="Nombre del tipo (opcional)…"
-                  className="flex-1 h-6 px-2 text-[12px] rounded-[5px] border border-subtle bg-page focus:outline-none focus:ring-1 focus:ring-ink/15"
+                  className="flex-1 h-6 px-2 text-[12px] rounded-[5px] border border-subtle bg-page focus:outline-none focus:ring-1 focus:ring-accent/40"
                 />
               </div>
             ))}

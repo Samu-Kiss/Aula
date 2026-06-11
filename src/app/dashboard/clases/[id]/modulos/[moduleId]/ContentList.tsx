@@ -76,7 +76,7 @@ function SortableContent({
       <button
         {...attributes}
         {...listeners}
-        className="p-1.5 text-ink-mute opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing touch-none shrink-0"
+        className="p-1.5 text-ink-mute opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 max-md:opacity-100 cursor-grab active:cursor-grabbing touch-none shrink-0"
         aria-label="Reordenar"
       >
         ⠿
@@ -105,7 +105,7 @@ function SortableContent({
       </Link>
 
       {/* Actions — appear on hover */}
-      <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 shrink-0 transition-opacity">
+      <div className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 max-md:opacity-100 flex items-center gap-0.5 shrink-0 transition-opacity">
         {/* Duplicate button */}
         <button
           onClick={handleDuplicate}

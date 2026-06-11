@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { formatDateTime } from "@/lib/dates";
 import { ArrowLeft, Flag } from "lucide-react";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { classService } from "@/server/services/classService";
@@ -107,7 +108,7 @@ export default async function AttemptDetailPage({ params }: Props) {
           <p className="text-caption text-ink-mute mb-0.5">Intento #{attempt.attempt_number}</p>
           <p className="text-mono text-ink-soft">
             {attempt.submitted_at
-              ? new Date(attempt.submitted_at).toLocaleString("es", { dateStyle: "medium", timeStyle: "short" })
+              ? formatDateTime(attempt.submitted_at)
               : "En progreso"}
           </p>
           {pendingManual && (
@@ -159,7 +160,7 @@ export default async function AttemptDetailPage({ params }: Props) {
           <div className="border border-subtle rounded-[8px] overflow-hidden">
             <table className="w-full text-mono text-[12px]">
               <thead>
-                <tr className="bg-surface-alt border-b border-[rgba(0,0,0,0.06)]">
+                <tr className="bg-surface-alt border-b border-hairline">
                   <th className="text-left text-ink-mute font-medium px-3 py-2">Hora</th>
                   <th className="text-left text-ink-mute font-medium px-3 py-2">Evento</th>
                 </tr>

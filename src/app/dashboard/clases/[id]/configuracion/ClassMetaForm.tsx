@@ -76,7 +76,7 @@ export function ClassMetaForm({ classId, initialTitle, initialSlug, initialDescr
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           maxLength={80}
-          className="w-full border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-page focus:outline-none focus:ring-2 focus:ring-indigo/30"
+          className="w-full border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-page focus:outline-none focus:ring-2 focus:ring-accent/40"
           placeholder="Mi clase de Biología"
         />
       </div>
@@ -91,7 +91,7 @@ export function ClassMetaForm({ classId, initialTitle, initialSlug, initialDescr
             value={slug}
             onChange={(e) => handleSlugChange(e.target.value)}
             maxLength={60}
-            className="flex-1 border border-subtle rounded-[8px] px-3 py-2 text-mono text-ink bg-page focus:outline-none focus:ring-2 focus:ring-indigo/30"
+            className="flex-1 border border-subtle rounded-[8px] px-3 py-2 text-mono text-ink bg-page focus:outline-none focus:ring-2 focus:ring-accent/40"
             placeholder="mi-clase"
           />
         </div>
@@ -115,7 +115,7 @@ export function ClassMetaForm({ classId, initialTitle, initialSlug, initialDescr
           onChange={(e) => setDescription(e.target.value)}
           maxLength={500}
           rows={3}
-          className="w-full border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-page focus:outline-none focus:ring-2 focus:ring-indigo/30 resize-none"
+          className="w-full border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-page focus:outline-none focus:ring-2 focus:ring-accent/40 resize-none"
           placeholder="Una breve descripción visible en la página pública de la clase…"
         />
         <p className="text-mono text-ink-mute text-right">{description.length}/500</p>
@@ -126,7 +126,7 @@ export function ClassMetaForm({ classId, initialTitle, initialSlug, initialDescr
       <button
         type="submit"
         disabled={pending || !dirty || !title.trim() || !slug.trim()}
-        className="px-5 py-2 bg-ink text-surface rounded-[8px] text-caption font-bold hover:bg-ink/90 disabled:opacity-40 transition-colors"
+        className="px-5 py-2 bg-accent-deep text-page rounded-[8px] text-caption font-bold hover:bg-accent-deep/88 disabled:opacity-40 transition-colors"
       >
         {pending ? "Guardando…" : saved ? "¡Guardado!" : "Guardar cambios"}
       </button>

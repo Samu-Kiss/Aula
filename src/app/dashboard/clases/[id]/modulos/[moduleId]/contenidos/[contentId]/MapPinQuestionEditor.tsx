@@ -162,7 +162,7 @@ export function MapPinQuestionEditor({ body, onChange }: Props) {
                 className={`flex items-center gap-3 px-3 py-2 rounded-[8px] border cursor-pointer transition-colors ${
                   isCorrect
                     ? "border-bosque bg-bosque/8"
-                    : "border-subtle bg-surface hover:border-indigo/40"
+                    : "border-subtle bg-surface hover:border-accent/40"
                 }`}
                 onClick={() => onChange({ ...body, correct_marker_id: m.id })}
               >

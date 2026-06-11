@@ -4,6 +4,7 @@ import { classService } from "@/server/services/classService";
 import { Lockup } from "@/components/Lockup";
 import { DuplicateClassButton } from "./DuplicateClassButton";
 import { Plus } from "lucide-react";
+import { ACCENT_HEX } from "@/lib/accentColors";
 import type { Class } from "@/lib/types/db";
 
 function ClassCard({ cls }: { cls: Class }) {
@@ -11,7 +12,8 @@ function ClassCard({ cls }: { cls: Class }) {
     <div className="relative group/card">
       <Link
         href={`/dashboard/clases/${cls.id}`}
-        className="block p-6 bg-surface rounded-[12px] border-subtle hover:border-ink/20 transition-colors group"
+        className="block p-6 bg-surface rounded-[12px] border-subtle card-lift group"
+        style={{ "--class-accent": ACCENT_HEX[cls.accent] } as React.CSSProperties}
       >
         <Lockup
           title={cls.title}
@@ -33,7 +35,7 @@ function ClassCard({ cls }: { cls: Class }) {
           <span className="text-mono text-ink-mute">/c/{cls.slug}</span>
         </div>
       </Link>
-      <div className="absolute top-3 right-3 opacity-0 group-hover/card:opacity-100 transition-opacity">
+      <div className="absolute top-3 right-3 opacity-0 group-hover/card:opacity-100 focus-within:opacity-100 max-md:opacity-100 transition-opacity">
         <DuplicateClassButton classId={cls.id} />
       </div>
     </div>
@@ -44,7 +46,7 @@ function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center">
       <p className="text-eyebrow text-ink-mute mb-4">Empecemos</p>
-      <h2 className="text-[32px] font-black text-ink leading-none mb-3">
+      <h2 className="text-display text-ink mb-3">
         Crea tu primera clase
       </h2>
       <p className="text-body text-ink-soft max-w-sm mb-8">
@@ -91,7 +93,7 @@ export default async function DashboardPage() {
       {classes.length === 0 ? (
         <EmptyState />
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 stagger">
           {classes.map((cls) => (
             <ClassCard key={cls.id} cls={cls} />
           ))}

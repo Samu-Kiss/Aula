@@ -14,7 +14,7 @@ interface Props {
 
 export function ClassNav({ cls, crumbs = [] }: Props) {
   return (
-    <nav className="sticky top-0 z-10 bg-page/90 backdrop-blur border-b border-[rgba(0,0,0,0.06)]">
+    <nav className="sticky top-0 z-10 bg-page/90 backdrop-blur border-b border-hairline">
       <div className="px-5 md:px-10 max-w-4xl mx-auto h-16 flex items-center gap-3 min-w-0">
         <Link href={`/c/${cls.slug}`} className="shrink-0 hover:opacity-80 transition-opacity">
           <Lockup

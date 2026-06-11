@@ -69,8 +69,29 @@ async function NotasTab({ classId, className }: { classId: string; className: st
   if (categories.length === 0) {
     return (
       <div className="py-12 text-center border border-dashed border-subtle rounded-[12px]">
-        <p className="text-body text-ink-soft mb-3">No hay categorías configuradas.</p>
-        <Link href={`/dashboard/clases/${classId}/calificaciones/categorias`} className="px-4 py-2 bg-ink text-surface text-caption rounded-[8px] hover:bg-ink/90 transition-colors">
+        {/* Tabla fantasma: anticipa la estructura del gradebook */}
+        <div aria-hidden className="max-w-sm mx-auto mb-8 select-none">
+          <div className="grid grid-cols-4 gap-2 mb-2">
+            <div className="h-5 rounded-[4px] bg-surface-alt" />
+            <div className="h-5 rounded-[4px] bg-surface-alt opacity-80" />
+            <div className="h-5 rounded-[4px] bg-surface-alt opacity-60" />
+            <div className="h-5 rounded-[4px]" style={{ background: "color-mix(in srgb, var(--class-accent) 18%, transparent)" }} />
+          </div>
+          {[0.7, 0.5, 0.35].map((o) => (
+            <div key={o} className="grid grid-cols-4 gap-2 mb-2" style={{ opacity: o }}>
+              <div className="h-4 rounded-[4px] bg-surface-alt" />
+              <div className="h-4 rounded-[4px] bg-surface-alt" />
+              <div className="h-4 rounded-[4px] bg-surface-alt" />
+              <div className="h-4 rounded-[4px] bg-surface-alt" />
+            </div>
+          ))}
+        </div>
+        <p className="text-h3 text-ink mb-1">Tu libro de calificaciones empieza aquí</p>
+        <p className="text-body text-ink-soft mb-5 max-w-sm mx-auto">
+          Define categorías con peso (ej. Quizzes 40%, Trabajos 40%, Participación 20%) y los
+          quizzes alimentarán las notas solos.
+        </p>
+        <Link href={`/dashboard/clases/${classId}/calificaciones/categorias`} className="px-4 py-2 bg-accent-deep text-page text-caption rounded-[8px] hover:bg-accent-deep/88 transition-colors">
           <span className="inline-flex items-center gap-1">Configurar categorías <ChevronRight size={13} /></span>
         </Link>
       </div>
@@ -81,7 +102,7 @@ async function NotasTab({ classId, className }: { classId: string; className: st
     return (
       <div className="py-12 text-center border border-dashed border-subtle rounded-[12px]">
         <p className="text-body text-ink-soft mb-3">Las categorías no tienen ítems todavía.</p>
-        <Link href={`/dashboard/clases/${classId}/calificaciones/categorias`} className="px-4 py-2 bg-ink text-surface text-caption rounded-[8px] hover:bg-ink/90 transition-colors">
+        <Link href={`/dashboard/clases/${classId}/calificaciones/categorias`} className="px-4 py-2 bg-accent-deep text-page text-caption rounded-[8px] hover:bg-accent-deep/88 transition-colors">
           <span className="inline-flex items-center gap-1">Agregar ítems <ChevronRight size={13} /></span>
         </Link>
       </div>
@@ -254,7 +275,7 @@ async function QuicesTab({ classId, className }: { classId: string; className: s
       <div className="overflow-x-auto rounded-[12px] border border-subtle">
         <table className="min-w-full text-body border-collapse">
           <thead>
-            <tr className="bg-surface-alt border-b border-[rgba(0,0,0,0.06)]">
+            <tr className="bg-surface-alt border-b border-hairline">
               <th className="sticky left-0 z-10 bg-surface-alt text-left text-caption text-ink-mute font-medium px-4 py-3 whitespace-nowrap min-w-[180px]">
                 Estudiante
               </th>
@@ -269,8 +290,10 @@ async function QuicesTab({ classId, className }: { classId: string; className: s
           </thead>
           <tbody>
             {rows.map((row, ri) => (
-              <tr key={row.studentId} className={`border-b border-[rgba(0,0,0,0.04)] last:border-0 ${ri % 2 === 0 ? "bg-surface" : "bg-surface-alt/30"}`}>
-                <td className={`sticky left-0 z-10 px-4 py-3 ${ri % 2 === 0 ? "bg-surface" : "bg-[#f9f9f8]"}`}>
+              // Cebra opaca (#F7F5EF = surface-alt al 30% sobre page): la celda
+              // sticky necesita fondo opaco y debe coincidir con el resto de la fila
+              <tr key={row.studentId} className={`border-b border-[rgba(0,0,0,0.04)] last:border-0 ${ri % 2 === 0 ? "bg-surface" : "bg-[#F7F5EF]"}`}>
+                <td className={`sticky left-0 z-10 px-4 py-3 ${ri % 2 === 0 ? "bg-surface" : "bg-[#F7F5EF]"}`}>
                   <p className="text-body text-ink font-medium leading-snug">{row.name}</p>
                   <p className="text-mono text-ink-mute">{row.email}</p>
                 </td>
@@ -282,8 +305,17 @@ async function QuicesTab({ classId, className }: { classId: string; className: s
                         <span className="text-mono text-ink-mute">—</span>
                       ) : (
                         <div>
-                          <p className={`text-body font-semibold tabular-nums ${cell.passing === true ? "text-bosque" : cell.passing === false ? "text-borgona" : "text-ink"}`}>
+                          <p className={`text-body font-semibold tabular-nums inline-flex items-center gap-1.5 ${cell.passing === true ? "text-bosque" : cell.passing === false ? "text-borgona" : "text-ink"}`}>
+                            <span
+                              aria-hidden
+                              className={`w-1.5 h-1.5 rounded-full inline-block shrink-0 ${
+                                cell.passing === true ? "bg-bosque" : cell.passing === false ? "bg-borgona" : "bg-ink-mute"
+                              }`}
+                            />
                             {cell.pct}%
+                            <span className="sr-only">
+                              {cell.passing === true ? " — aprobado" : cell.passing === false ? " — reprobado" : " — sin puntaje mínimo"}
+                            </span>
                           </p>
                           <p className="text-mono text-ink-mute">{cell.score}/{cell.max}</p>
                           {cell.attemptCount > 1 && <p className="text-mono text-ink-mute opacity-60">{cell.attemptCount} intentos</p>}

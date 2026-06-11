@@ -177,7 +177,7 @@ export function RosterClient({ classId, initialEnrollments }: Props) {
           </button>
           <button
             onClick={() => { setShowAddForm((v) => !v); setShowImport(false); }}
-            className="px-3 py-1.5 text-caption bg-ink text-surface rounded-[8px] hover:bg-ink/90 transition-colors"
+            className="px-3 py-1.5 text-caption bg-accent-deep text-page rounded-[8px] hover:bg-accent-deep/88 transition-colors"
           >
             + Agregar
           </button>
@@ -191,20 +191,20 @@ export function RosterClient({ classId, initialEnrollments }: Props) {
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-3 sm:col-span-1">
               <label className="block text-mono text-ink-mute mb-1">Email *</label>
-              <input name="email" type="email" required className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-ink/20" />
+              <input name="email" type="email" required className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-accent/40" />
             </div>
             <div>
               <label className="block text-mono text-ink-mute mb-1">Nombre</label>
-              <input name="first_name" className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-ink/20" />
+              <input name="first_name" className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-accent/40" />
             </div>
             <div>
               <label className="block text-mono text-ink-mute mb-1">Apellido</label>
-              <input name="last_name" className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-ink/20" />
+              <input name="last_name" className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-accent/40" />
             </div>
           </div>
           {addError && <p className="text-caption text-borgona">{addError}</p>}
           <div className="flex gap-2">
-            <button type="submit" disabled={isPending} className="px-4 py-1.5 bg-ink text-surface text-caption rounded-[8px] disabled:opacity-50">Agregar</button>
+            <button type="submit" disabled={isPending} className="px-4 py-1.5 bg-accent-deep text-page text-caption rounded-[8px] disabled:opacity-50">Agregar</button>
             <button type="button" onClick={() => setShowAddForm(false)} className="px-4 py-1.5 text-caption text-ink-soft hover:text-ink transition-colors">Cancelar</button>
           </div>
         </form>
@@ -231,7 +231,7 @@ export function RosterClient({ classId, initialEnrollments }: Props) {
             </div>
           )}
           <div className="flex gap-2">
-            <button onClick={handleImport} disabled={isPending || !csvText.trim()} className="px-4 py-1.5 bg-ink text-surface text-caption rounded-[8px] disabled:opacity-50">Importar</button>
+            <button onClick={handleImport} disabled={isPending || !csvText.trim()} className="px-4 py-1.5 bg-accent-deep text-page text-caption rounded-[8px] disabled:opacity-50">Importar</button>
             <button onClick={() => { setShowImport(false); setCsvText(""); setImportResult(null); }} className="px-4 py-1.5 text-caption text-ink-soft hover:text-ink transition-colors">Cancelar</button>
           </div>
         </div>
@@ -247,7 +247,7 @@ export function RosterClient({ classId, initialEnrollments }: Props) {
         <div className="rounded-[12px] border border-subtle overflow-hidden">
           <table className="min-w-full text-body border-collapse">
             <thead>
-              <tr className="bg-surface-alt border-b border-[rgba(0,0,0,0.06)]">
+              <tr className="bg-surface-alt border-b border-hairline">
                 <th className="text-left text-caption text-ink-mute font-medium px-4 py-3">Estudiante</th>
                 <th className="text-left text-caption text-ink-mute font-medium px-4 py-3">Email</th>
                 <th className="text-center text-caption text-ink-mute font-medium px-4 py-3">Estado</th>
@@ -269,7 +269,8 @@ export function RosterClient({ classId, initialEnrollments }: Props) {
                     </td>
                     <td className="px-4 py-3 text-mono text-ink-soft">{e.students.email}</td>
                     <td className="px-4 py-3 text-center">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-mono ${e.status === "active" ? "bg-bosque/10 text-bosque" : "bg-surface-alt text-ink-mute"}`}>
+                      {/* Verde oscurecido: text-bosque sobre la fila tintada queda en 4.46:1, justo bajo AA */}
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-mono ${e.status === "active" ? "bg-bosque/10 text-[#1B5A46]" : "bg-surface-alt text-ink-mute"}`}>
                         {e.status === "active" ? "Activo" : "Inactivo"}
                       </span>
                     </td>
@@ -337,7 +338,7 @@ export function RosterClient({ classId, initialEnrollments }: Props) {
                               value={editFirst}
                               onChange={(ev) => setEditFirst(ev.target.value)}
                               onKeyDown={(ev) => { if (ev.key === "Enter") handleSaveEdit(e); if (ev.key === "Escape") setEditingId(null); }}
-                              className="h-8 px-3 w-40 rounded-[6px] border border-ink/30 bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-ink/30"
+                              className="h-8 px-3 w-40 rounded-[6px] border border-ink/30 bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-accent/40"
                             />
                           </div>
                           <div>
@@ -346,14 +347,14 @@ export function RosterClient({ classId, initialEnrollments }: Props) {
                               value={editLast}
                               onChange={(ev) => setEditLast(ev.target.value)}
                               onKeyDown={(ev) => { if (ev.key === "Enter") handleSaveEdit(e); if (ev.key === "Escape") setEditingId(null); }}
-                              className="h-8 px-3 w-40 rounded-[6px] border border-ink/30 bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-ink/30"
+                              className="h-8 px-3 w-40 rounded-[6px] border border-ink/30 bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-accent/40"
                             />
                           </div>
                           <div className="flex gap-2 pb-0.5">
                             <button
                               onClick={() => handleSaveEdit(e)}
                               disabled={isPending}
-                              className="px-3 py-1 bg-ink text-surface text-caption rounded-[6px] disabled:opacity-50"
+                              className="px-3 py-1 bg-accent-deep text-page text-caption rounded-[6px] disabled:opacity-50"
                             >
                               Guardar
                             </button>

@@ -126,7 +126,7 @@ export function GradePanel({ classId, selected, onSaved, onClose }: Props) {
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={isAuto ? `${selected.autoScore} (del quiz)` : "—"}
-          className="w-full border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30 tabular-nums"
+          className="w-full border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-accent/40 tabular-nums"
         />
         {isAuto && (
           <p className="text-mono text-ink-mute">Deja vacío para usar la nota del quiz automáticamente.</p>
@@ -144,7 +144,7 @@ export function GradePanel({ classId, selected, onSaved, onClose }: Props) {
           onChange={(e) => setDraftNotes(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="ej: entregó tarde, reposición…"
-          className="w-full border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30"
+          className="w-full border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-accent/40"
         />
       </div>
 
@@ -155,7 +155,7 @@ export function GradePanel({ classId, selected, onSaved, onClose }: Props) {
         <button
           onClick={handleSave}
           disabled={isPending}
-          className="w-full py-2.5 bg-ink text-surface rounded-[8px] text-caption font-bold hover:bg-ink/90 disabled:opacity-50 transition-colors"
+          className="w-full py-2.5 bg-accent-deep text-page rounded-[8px] text-caption font-bold hover:bg-accent-deep/88 disabled:opacity-50 transition-colors"
         >
           {isPending ? "Guardando…" : "Guardar"}
         </button>

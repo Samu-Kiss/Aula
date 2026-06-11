@@ -20,7 +20,7 @@ export function QrProjectionView({ url, accentHex, classTitle }: Props) {
       </button>
 
       <div className="flex flex-col items-center gap-8">
-        <div className="bg-white p-5 rounded-[20px] shadow-lg border border-[rgba(0,0,0,0.06)]">
+        <div className="bg-white p-5 rounded-[20px] shadow-lg border border-hairline">
           <QRCodeSVG
             value={url}
             title={`Código QR de acceso a la clase ${classTitle}: ${url}`}

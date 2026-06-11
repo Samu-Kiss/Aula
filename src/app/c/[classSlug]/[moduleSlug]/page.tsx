@@ -116,7 +116,7 @@ export default async function ModulePage({ params }: Props) {
             </aside>
           )}
 
-          <section className="pb-20 space-y-12">
+          <section className="pb-20 space-y-12 stagger">
             {contents.map((content, i) => {
                 const isInline = content.type === "rich_text" ||
                   ((content.type === "video" || content.type === "map" || content.type === "file") && content.body_published);
@@ -126,7 +126,7 @@ export default async function ModulePage({ params }: Props) {
                     <div key={content.id} id={content.slug}>
                       <ContentCard content={content} index={i} classSlug={classSlug} moduleSlug={moduleSlug} />
                       {i < contents.length - 1 && (
-                        <div className="mt-4 border-b border-[rgba(0,0,0,0.06)]" />
+                        <div className="mt-4 border-b border-hairline" />
                       )}
                     </div>
                   );
@@ -177,7 +177,7 @@ export default async function ModulePage({ params }: Props) {
                     )}
 
                     {i < contents.length - 1 && (
-                      <div className="mt-12 border-b border-[rgba(0,0,0,0.06)]" />
+                      <div className="mt-12 border-b border-hairline" />
                     )}
                   </article>
                 );

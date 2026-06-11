@@ -179,7 +179,7 @@ export function GradeSheetClient({
         <div className="overflow-x-auto rounded-[12px] border border-subtle">
           <table className="min-w-full text-body border-collapse">
             <thead>
-              <tr className="bg-surface-alt border-b border-[rgba(0,0,0,0.06)]">
+              <tr className="bg-surface-alt border-b border-hairline">
                 <th className="sticky left-0 z-10 bg-surface-alt text-left text-caption text-ink-mute font-medium px-4 py-3 whitespace-nowrap min-w-[180px]">
                   Estudiante
                 </th>
@@ -209,9 +209,9 @@ export function GradeSheetClient({
               ) : rows.map(({ student, final }, ri) => (
                 <tr
                   key={student.id}
-                  className={`border-b border-[rgba(0,0,0,0.04)] last:border-0 ${ri % 2 === 0 ? "bg-surface" : "bg-surface-alt/30"}`}
+                  className={`border-b border-[rgba(0,0,0,0.04)] last:border-0 ${ri % 2 === 0 ? "bg-surface" : "bg-[#F7F5EF]"}`}
                 >
-                  <td className={`sticky left-0 z-10 px-4 py-3 ${ri % 2 === 0 ? "bg-surface" : "bg-[#f9f9f8]"}`}>
+                  <td className={`sticky left-0 z-10 px-4 py-3 ${ri % 2 === 0 ? "bg-surface" : "bg-[#F7F5EF]"}`}>
                     <p className="text-body text-ink font-medium leading-snug">{studentLabel(student)}</p>
                     <p className="text-mono text-ink-mute">{student.email}</p>
                   </td>

@@ -183,7 +183,7 @@ export function MapCardEditor({
         onChange={(e) => handleTitleChange(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); editor?.commands.focus(); } }}
         placeholder={entityType === "marker" ? "Nombre del lugar" : entityType === "route" ? "Nombre de la ruta" : "Nombre del área"}
-        className="mx-3 mb-2 px-2.5 py-1.5 text-[13px] font-semibold rounded-[6px] border border-subtle bg-page focus:outline-none focus:ring-1 focus:ring-ink/20 shrink-0"
+        className="mx-3 mb-2 px-2.5 py-1.5 text-[13px] font-semibold rounded-[6px] border border-subtle bg-page focus:outline-none focus:ring-1 focus:ring-accent/40 shrink-0"
       />
 
       {/* Toolbar */}

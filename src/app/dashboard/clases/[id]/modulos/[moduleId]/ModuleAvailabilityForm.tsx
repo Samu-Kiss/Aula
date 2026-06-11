@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { saveModuleAvailabilityAction } from "@/app/dashboard/clases/[id]/actions";
+import { DateTimeField } from "@/components/dashboard/DateTimeField";
 import type { Module } from "@/lib/types/db";
 
 interface Props {
@@ -11,7 +12,10 @@ interface Props {
 
 function isoToLocal(iso: string | null): string {
   if (!iso) return "";
-  return new Date(iso).toISOString().slice(0, 16);
+  // Hora LOCAL (no UTC): el campo muestra dd/mm/aaaa hh:mm en hora del equipo
+  const d = new Date(iso);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
 function localToIso(val: string): string | null {
@@ -26,23 +30,33 @@ export function ModuleAvailabilityForm({ module: mod, classId }: Props) {
   const [saving, startSave] = useTransition();
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const firstRender = useRef(true);
 
-  function handleSave() {
-    setError("");
-    startSave(async () => {
-      const result = await saveModuleAvailabilityAction(mod.id, classId, {
-        is_available: isAvailable,
-        opens_at: localToIso(opensAt),
-        closes_at: localToIso(closesAt),
+  // Autosave on change (debounce corto para no disparar por cada tecla
+  // del datetime-local).
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      setError("");
+      startSave(async () => {
+        const result = await saveModuleAvailabilityAction(mod.id, classId, {
+          is_available: isAvailable,
+          opens_at: localToIso(opensAt),
+          closes_at: localToIso(closesAt),
+        });
+        if (result.ok) {
+          setSaved(true);
+          setTimeout(() => setSaved(false), 2000);
+        } else {
+          setError(result.error);
+        }
       });
-      if (result.ok) {
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
-      } else {
-        setError(result.error);
-      }
-    });
-  }
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [isAvailable, opensAt, closesAt, mod.id, classId]);
 
   return (
     <div className="p-4 bg-surface border border-subtle rounded-[12px] space-y-4">
@@ -62,7 +76,7 @@ export function ModuleAvailabilityForm({ module: mod, classId }: Props) {
           type="button"
           onClick={() => setIsAvailable((v) => !v)}
           style={{ width: 40, height: 24, borderRadius: 999, flexShrink: 0 }}
-          className={`relative transition-colors ${isAvailable ? "bg-bosque" : "bg-ink-mute"}`}
+          className={`relative transition-colors ${isAvailable ? "bg-accent-deep" : "bg-ink-mute"}`}
           role="switch"
           aria-checked={isAvailable}
         >
@@ -85,36 +99,22 @@ export function ModuleAvailabilityForm({ module: mod, classId }: Props) {
       {/* Date range */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-caption text-ink-mute block mb-1">Abre</label>
-          <input
-            type="datetime-local"
-            value={opensAt}
-            onChange={(e) => setOpensAt(e.target.value)}
-            className="w-full border border-subtle rounded-[8px] px-3 py-1.5 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30"
-          />
+          <label htmlFor="mod-opens-at" className="text-caption text-ink-mute block mb-1">Abre</label>
+          <DateTimeField id="mod-opens-at" value={opensAt} onChange={setOpensAt} />
         </div>
         <div>
-          <label className="text-caption text-ink-mute block mb-1">Cierra</label>
-          <input
-            type="datetime-local"
-            value={closesAt}
-            onChange={(e) => setClosesAt(e.target.value)}
-            className="w-full border border-subtle rounded-[8px] px-3 py-1.5 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30"
-          />
+          <label htmlFor="mod-closes-at" className="text-caption text-ink-mute block mb-1">Cierra</label>
+          <DateTimeField id="mod-closes-at" value={closesAt} onChange={setClosesAt} />
         </div>
       </div>
       <p className="text-mono text-ink-mute">Deja las fechas vacías para que el módulo esté disponible sin restricción de tiempo.</p>
 
       {error && <p className="text-caption text-borgona">{error}</p>}
 
-      <button
-        type="button"
-        onClick={handleSave}
-        disabled={saving}
-        className="px-4 py-2 bg-indigo text-white rounded-[8px] text-caption font-medium hover:bg-indigo/90 disabled:opacity-50 transition-colors"
-      >
-        {saving ? "Guardando…" : saved ? "¡Guardado!" : "Guardar disponibilidad"}
-      </button>
+      {/* Autosave: estado en vez de botón */}
+      <p className="text-mono text-ink-mute h-4" role="status" aria-live="polite">
+        {saving ? "Guardando…" : saved ? "Guardado ✓" : ""}
+      </p>
     </div>
   );
 }

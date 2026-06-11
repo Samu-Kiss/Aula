@@ -85,7 +85,7 @@ export function MarkerCardPanel({ markerIndex, initialCard, categories, selected
         onChange={(e) => setTitle(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); editor?.commands.focus(); } }}
         placeholder="Nombre del lugar"
-        className="w-full h-9 px-3 text-body font-medium rounded-[6px] border border-subtle bg-page focus:outline-none focus:ring-1 focus:ring-ink/20"
+        className="w-full h-9 px-3 text-body font-medium rounded-[6px] border border-subtle bg-page focus:outline-none focus:ring-1 focus:ring-accent/40"
       />
 
       {/* Tiptap body */}

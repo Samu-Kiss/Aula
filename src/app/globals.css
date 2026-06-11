@@ -20,7 +20,7 @@
   --color-accent-terracota: #C25733;
   --color-accent-bosque: #24755B;
   --color-accent-ciruela: #9B478A;
-  --color-accent-ambar: #C18924;
+  --color-accent-ambar: #B8821D;
   --color-accent-pizarra: #3F638A;
   --color-accent-borgona: #922F41;
   --color-accent-salvia: #737A43;
@@ -30,16 +30,25 @@
   --color-bosque: #24755B;
   --color-ciruela: #9B478A;
   /* Ámbar semántico (avisos/texto): oscurecido para AA; el acento de clase
-     sigue siendo --color-accent-ambar #C18924 */
+     sigue siendo --color-accent-ambar #B8821D */
   --color-ambar: #8A6419;
   --color-pizarra: #3F638A;
   --color-borgona: #922F41;
   --color-salvia: #737A43;
 
+  /* Acento contextual: los layouts de clase sobreescriben --class-accent
+     (identidad: lockup, focus, subrayados) y --class-accent-deep
+     (rellenos sólidos con texto blanco, AA garantizado). */
+  --color-accent: var(--class-accent);
+  --color-accent-deep: var(--class-accent-deep);
+
   /* Semánticos */
   --color-success: #24755B;
   --color-warning: #8A6419;
   --color-error: #922F41;
+
+  /* Hairline editorial — único color de borde del sistema */
+  --color-hairline: rgba(0, 0, 0, 0.08);
 
   /* Radios */
   --radius-chip: 4px;
@@ -64,20 +73,34 @@
   box-sizing: border-box;
 }
 
+:root {
+  /* Tinta de marca por defecto (índigo). Los layouts de clase la
+     sobreescriben con el acento de esa clase. */
+  --class-accent: #4C51BF;
+  --class-accent-deep: #4C51BF;
+}
+
 body {
   background-color: var(--color-page);
   color: var(--color-ink);
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
-/* Noise texture sutil sobre todos los fondos */
+/* La selección de texto lleva la tinta de la clase activa */
+::selection {
+  background: color-mix(in srgb, var(--class-accent) 22%, transparent);
+}
+
+/* Noise texture sutil sobre todos los fondos.
+   z-index 40: por debajo de modales/overlays (z-50+) para no granular
+   diálogos, mapas a pantalla completa ni QR ampliados. */
 body::after {
   content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 9999;
-  opacity: 20%;
+  z-index: 40;
+  opacity: 12%;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.50' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 256px 256px;
@@ -102,9 +125,19 @@ body::after {
   line-height: 0.9;
 }
 
+/* Display intermedio: titulares de sección dentro del dashboard.
+   Cierra el hueco entre h1 (24px) y el hero (44px+). */
+.text-display {
+  font-family: var(--font-sans);
+  font-size: clamp(28px, 3vw, 36px);
+  line-height: 1.05;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
 .text-h1 {
   font-family: var(--font-serif);
-  font-size: 22px;
+  font-size: 24px;
   line-height: 1.2;
   font-weight: 400;
   font-style: italic;
@@ -112,15 +145,30 @@ body::after {
 
 .text-h2 {
   font-family: var(--font-sans);
-  font-size: 16px;
+  font-size: 17px;
   line-height: 1.3;
   font-weight: 500;
 }
 
+.text-h3 {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
 .text-body {
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.65;
+  font-weight: 400;
+}
+
+/* Cuerpo de lectura prolongada (páginas públicas de contenido) */
+.text-reading {
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.75;
   font-weight: 400;
 }
 
@@ -158,8 +206,9 @@ body::after {
 .prose-aula {
   color: var(--color-ink);
   font-family: var(--font-sans);
-  font-size: 13px;
-  line-height: 1.65;
+  font-size: 16px;
+  line-height: 1.75;
+  max-width: 65ch;
 }
 
 .prose-aula p {
@@ -172,7 +221,7 @@ body::after {
 
 .prose-aula h1 {
   font-family: var(--font-serif);
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 400;
   font-style: italic;
   line-height: 1.2;
@@ -183,7 +232,7 @@ body::after {
 
 .prose-aula h2 {
   font-family: var(--font-sans);
-  font-size: 16px;
+  font-size: 19px;
   font-weight: 600;
   line-height: 1.3;
   margin-top: 1.75rem;
@@ -193,7 +242,7 @@ body::after {
 
 .prose-aula h3 {
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   line-height: 1.3;
   margin-top: 1.5rem;
@@ -243,7 +292,7 @@ body::after {
 
 .prose-aula code {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 0.85em;
 }
 
 .prose-aula pre code {
@@ -282,6 +331,110 @@ body::after {
   opacity: 0.7;
 }
 
+/* ── Sistema de botones ──────────────────────────────────────
+   Tres niveles. El primario toma la tinta de la clase activa via
+   --class-accent-deep (AA con texto blanco); fuera de contexto de
+   clase cae a tinta índigo de marca. Usar .btn-ink cuando el botón
+   deba ser neutro (tinta negra) independientemente del contexto. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2.5rem;
+  padding-inline: 1.25rem;
+  border-radius: var(--radius-input);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease,
+    color 0.2s ease, transform 0.15s ease;
+}
+
+.btn:active {
+  transform: scale(0.985);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--class-accent-deep);
+  color: #fffdf8;
+}
+
+.btn-primary:hover {
+  background: color-mix(in srgb, var(--class-accent-deep) 88%, black);
+}
+
+.btn-ink {
+  background: var(--color-ink);
+  color: var(--color-page);
+}
+
+.btn-ink:hover {
+  background: color-mix(in srgb, var(--color-ink) 88%, white);
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  color: var(--color-ink);
+}
+
+.btn-secondary:hover {
+  border-color: var(--class-accent);
+  background: color-mix(in srgb, var(--class-accent) 6%, transparent);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-ink-soft);
+  padding-inline: 0.75rem;
+}
+
+.btn-ghost:hover {
+  color: var(--color-ink);
+  background: var(--color-surface-alt);
+}
+
+.btn-sm {
+  height: 2.25rem;
+  padding-inline: 1rem;
+}
+
+/* Focus visible unificado: anillo con la tinta de la clase activa.
+   Los inputs conservan sus focus:ring de Tailwind (que también
+   resuelven el acento via --color-accent), así que aquí solo cubrimos
+   enlaces y botones. */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--class-accent);
+  outline-offset: 2px;
+}
+
+/* Cards con levitación sutil al hover — sin sombras, fiel al sistema */
+.card-lift {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.25s ease;
+}
+
+.card-lift:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--class-accent) 45%, transparent);
+}
+
+@media (hover: none) {
+  .card-lift:hover {
+    transform: none;
+  }
+}
+
 /* Animaciones de entrada */
 @keyframes fade-up {
   from {
@@ -294,9 +447,37 @@ body::after {
   }
 }
 
+/* fill-mode `backwards` (no `both`): al terminar, la animación suelta el
+   elemento y no deja un stacking context permanente — con `both`, cualquier
+   modal position:fixed descendiente queda atrapado y pierde su backdrop. */
 .animate-fade-up {
-  animation: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   animation-delay: var(--delay, 0ms);
+}
+
+/* Stagger: los hijos directos entran en cascada (listas, grids).
+   Tope en el hijo 12 para no retrasar listas largas. */
+.stagger > * {
+  animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 50ms; }
+.stagger > *:nth-child(3) { animation-delay: 100ms; }
+.stagger > *:nth-child(4) { animation-delay: 150ms; }
+.stagger > *:nth-child(5) { animation-delay: 200ms; }
+.stagger > *:nth-child(6) { animation-delay: 250ms; }
+.stagger > *:nth-child(7) { animation-delay: 300ms; }
+.stagger > *:nth-child(8) { animation-delay: 350ms; }
+.stagger > *:nth-child(9) { animation-delay: 400ms; }
+.stagger > *:nth-child(10) { animation-delay: 450ms; }
+.stagger > *:nth-child(11) { animation-delay: 500ms; }
+.stagger > *:nth-child(n + 12) { animation-delay: 550ms; }
+
+/* Hairline editorial — regla horizontal de composición */
+.rule {
+  border: none;
+  border-top: 0.5px solid rgba(0, 0, 0, 0.12);
 }
 
 /* Reducción de movimiento */

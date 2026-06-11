@@ -16,7 +16,7 @@ function isValidEmail(s: string) {
 }
 
 const inputBase =
-  "w-full border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30";
+  "w-full border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-accent/40";
 const inputLocked =
   "w-full border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface-alt cursor-not-allowed opacity-75";
 
@@ -211,7 +211,7 @@ export function SelfEnrollBanner({ classId, existingEmail, existingName }: Props
           <button
             type="submit"
             disabled={sendPending}
-            className="py-2.5 px-5 bg-ink text-surface rounded-[8px] text-caption font-bold hover:bg-ink/90 disabled:opacity-50 transition-colors"
+            className="py-2.5 px-5 bg-accent-deep text-page rounded-[8px] text-caption font-bold hover:bg-accent-deep/88 disabled:opacity-50 transition-colors"
           >
             {sendPending ? "Enviando…" : "Continuar →"}
           </button>
@@ -239,7 +239,7 @@ export function SelfEnrollBanner({ classId, existingEmail, existingName }: Props
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
             autoFocus
-            className="w-40 border border-subtle rounded-[8px] px-3 py-2 text-mono text-ink text-center tracking-widest bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30 text-base"
+            className="w-40 border border-subtle rounded-[8px] px-3 py-2 text-mono text-ink text-center tracking-widest bg-surface focus:outline-none focus:ring-2 focus:ring-accent/40 text-base"
             placeholder="000000"
           />
         </div>
@@ -248,7 +248,7 @@ export function SelfEnrollBanner({ classId, existingEmail, existingName }: Props
           <button
             type="submit"
             disabled={verifyPending}
-            className="py-2.5 px-5 bg-ink text-surface rounded-[8px] text-caption font-bold hover:bg-ink/90 disabled:opacity-50 transition-colors"
+            className="py-2.5 px-5 bg-accent-deep text-page rounded-[8px] text-caption font-bold hover:bg-accent-deep/88 disabled:opacity-50 transition-colors"
           >
             {verifyPending ? "Verificando…" : "Verificar →"}
           </button>

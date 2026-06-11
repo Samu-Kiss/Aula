@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect, Suspense, lazy } from "react";
+import { useState, useTransition, useEffect, useRef, Suspense, lazy } from "react";
 import {
   DndContext,
   closestCenter,
@@ -27,6 +27,7 @@ import {
   reorderQuestionsAction,
 } from "./quizActions";
 import { publishContentAction } from "@/app/dashboard/clases/[id]/actions";
+import { DateTimeField } from "@/components/dashboard/DateTimeField";
 
 const MapPinQuestionEditor = lazy(() =>
   import("./MapPinQuestionEditor").then((m) => ({ default: m.MapPinQuestionEditor }))
@@ -176,7 +177,7 @@ function QuestionForm({ quizId, classId, question, orderIndex, onSaved, onCancel
             onClick={() => handleTypeChange(t)}
             className={`px-3 py-1.5 rounded-[8px] text-caption font-medium transition-colors ${
               type === t
-                ? "bg-indigo text-white"
+                ? "bg-accent-deep text-page"
                 : "bg-surface-alt text-ink-soft hover:text-ink"
             }`}
           >
@@ -192,7 +193,7 @@ function QuestionForm({ quizId, classId, question, orderIndex, onSaved, onCancel
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           rows={2}
-          className="w-full border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30 resize-none"
+          className="w-full border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-accent/40 resize-none"
           placeholder="¿Cuál de las siguientes…?"
         />
       </div>
@@ -207,7 +208,7 @@ function QuestionForm({ quizId, classId, question, orderIndex, onSaved, onCancel
           step={0.5}
           value={points}
           onChange={(e) => setPoints(Number(e.target.value))}
-          className="w-20 border border-subtle rounded-[8px] px-3 py-1.5 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30"
+          className="w-20 border border-subtle rounded-[8px] px-3 py-1.5 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-accent/40"
         />
       </div>
 
@@ -233,7 +234,7 @@ function QuestionForm({ quizId, classId, question, orderIndex, onSaved, onCancel
                 type="text"
                 value={opt.text}
                 onChange={(e) => updateOptionText(opt.id, e.target.value)}
-                className="flex-1 border border-subtle rounded-[8px] px-3 py-1.5 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30"
+                className="flex-1 border border-subtle rounded-[8px] px-3 py-1.5 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-accent/40"
                 placeholder={`Opción ${opt.id.toUpperCase()}`}
               />
               <button
@@ -249,7 +250,7 @@ function QuestionForm({ quizId, classId, question, orderIndex, onSaved, onCancel
           <button
             type="button"
             onClick={addOption}
-            className="text-caption text-indigo hover:underline mt-1"
+            className="text-caption text-accent-deep hover:underline mt-1"
           >
             + Agregar opción
           </button>
@@ -259,7 +260,7 @@ function QuestionForm({ quizId, classId, question, orderIndex, onSaved, onCancel
               type="text"
               value={(body.explanation as string) ?? ""}
               onChange={(e) => setBody((b) => ({ ...b, explanation: e.target.value }))}
-              className="w-full border border-subtle rounded-[8px] px-3 py-1.5 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30"
+              className="w-full border border-subtle rounded-[8px] px-3 py-1.5 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-accent/40"
               placeholder="Se muestra al estudiante según la política de corrección"
             />
           </div>
@@ -291,7 +292,7 @@ function QuestionForm({ quizId, classId, question, orderIndex, onSaved, onCancel
               type="text"
               value={(body.explanation as string) ?? ""}
               onChange={(e) => setBody((b) => ({ ...b, explanation: e.target.value }))}
-              className="w-full border border-subtle rounded-[8px] px-3 py-1.5 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30"
+              className="w-full border border-subtle rounded-[8px] px-3 py-1.5 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-accent/40"
             />
           </div>
         </div>
@@ -310,7 +311,7 @@ function QuestionForm({ quizId, classId, question, orderIndex, onSaved, onCancel
                   arr[i] = e.target.value;
                   setAcceptedAnswers(arr);
                 }}
-                className="flex-1 border border-subtle rounded-[8px] px-3 py-1.5 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30"
+                className="flex-1 border border-subtle rounded-[8px] px-3 py-1.5 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-accent/40"
                 placeholder={`Respuesta ${i + 1}`}
               />
               <button
@@ -326,7 +327,7 @@ function QuestionForm({ quizId, classId, question, orderIndex, onSaved, onCancel
             <button
               type="button"
               onClick={() => setAcceptedAnswers([...(body.accepted_answers as string[]), ""])}
-              className="text-caption text-indigo hover:underline"
+              className="text-caption text-accent-deep hover:underline"
             >
               + Agregar respuesta aceptada
             </button>
@@ -337,7 +338,7 @@ function QuestionForm({ quizId, classId, question, orderIndex, onSaved, onCancel
               type="checkbox"
               checked={body.case_sensitive as boolean}
               onChange={(e) => setBody((b) => ({ ...b, case_sensitive: e.target.checked }))}
-              className="w-4 h-4 rounded accent-indigo"
+              className="w-3.5 h-3.5 rounded accent-[var(--class-accent-deep)]"
             />
             <label htmlFor="case_sensitive" className="text-caption text-ink-soft">
               Sensible a mayúsculas
@@ -347,7 +348,7 @@ function QuestionForm({ quizId, classId, question, orderIndex, onSaved, onCancel
               type="checkbox"
               checked={body.auto_grade as boolean}
               onChange={(e) => setBody((b) => ({ ...b, auto_grade: e.target.checked }))}
-              className="w-4 h-4 rounded accent-indigo ml-4"
+              className="w-3.5 h-3.5 rounded accent-[var(--class-accent-deep)] ml-4"
             />
             <label htmlFor="auto_grade" className="text-caption text-ink-soft">
               Calificar automáticamente
@@ -372,7 +373,7 @@ function QuestionForm({ quizId, classId, question, orderIndex, onSaved, onCancel
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className="px-4 py-2 bg-indigo text-white rounded-[8px] text-caption font-medium hover:bg-indigo/90 disabled:opacity-50 transition-colors"
+          className="px-4 py-2 bg-accent-deep text-page rounded-[8px] text-caption font-medium hover:bg-accent-deep/88 disabled:opacity-50 transition-colors"
         >
           {saving ? "Guardando…" : "Guardar pregunta"}
         </button>
@@ -452,7 +453,7 @@ function SortableQuestion({ question, index, quizId, classId, onUpdated, onDelet
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="text-caption text-indigo hover:underline"
+              className="text-caption text-accent-deep hover:underline"
             >
               Editar
             </button>
@@ -487,9 +488,10 @@ function localToIso(val: string): string | null {
 // Convierte ISO a datetime-local string para el input
 function isoToLocal(iso: string | null): string {
   if (!iso) return "";
+  // Hora LOCAL (no UTC): el campo muestra dd/mm/aaaa hh:mm en hora del equipo
   const d = new Date(iso);
-  // datetime-local necesita "YYYY-MM-DDTHH:MM"
-  return d.toISOString().slice(0, 16);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
 function QuizSettings({ quiz, classId, onUpdated }: QuizSettingsProps) {
@@ -512,28 +514,39 @@ function QuizSettings({ quiz, classId, onUpdated }: QuizSettingsProps) {
   const [saving, startSave] = useTransition();
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const firstRender = useRef(true);
 
-  function handleSave() {
-    startSave(async () => {
-      const result = await saveQuizSettingsAction(quiz.id, classId, {
-        is_available: isAvailable,
-        opens_at: localToIso(opensAt) as unknown as string,
-        closes_at: localToIso(closesAt) as unknown as string,
-        time_limit_min: timeLimitMin ? Number(timeLimitMin) : null as unknown as number,
-        attempts_allowed: attemptsAllowed,
-        passing_score: passScore ? Number(passScore) : null as unknown as number,
-        show_correct_answers: showCorrect,
-        attempt_scoring: attemptScoring,
+  // Autosave on change (debounce para inputs de texto/fecha).
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      setError("");
+      startSave(async () => {
+        const result = await saveQuizSettingsAction(quiz.id, classId, {
+          is_available: isAvailable,
+          opens_at: localToIso(opensAt) as unknown as string,
+          closes_at: localToIso(closesAt) as unknown as string,
+          time_limit_min: timeLimitMin ? Number(timeLimitMin) : null as unknown as number,
+          attempts_allowed: attemptsAllowed,
+          passing_score: passScore ? Number(passScore) : null as unknown as number,
+          show_correct_answers: showCorrect,
+          attempt_scoring: attemptScoring,
+        });
+        if (result.ok) {
+          onUpdated(result.quiz);
+          setSaved(true);
+          setTimeout(() => setSaved(false), 2000);
+        } else {
+          setError(result.error);
+        }
       });
-      if (result.ok) {
-        onUpdated(result.quiz);
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
-      } else {
-        setError(result.error);
-      }
-    });
-  }
+    }, 600);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAvailable, opensAt, closesAt, timeLimitMin, attemptsAllowed, passScore, showCorrect, attemptScoring]);
 
   return (
     <div className="space-y-6 max-w-lg">
@@ -551,7 +564,7 @@ function QuizSettings({ quiz, classId, onUpdated }: QuizSettingsProps) {
             type="button"
             onClick={() => setIsAvailable((v) => !v)}
             style={{ width: 40, height: 24, borderRadius: 999, flexShrink: 0 }}
-            className={`relative transition-colors ${isAvailable ? "bg-bosque" : "bg-ink-mute"}`}
+            className={`relative transition-colors ${isAvailable ? "bg-accent-deep" : "bg-ink-mute"}`}
             role="switch"
             aria-checked={isAvailable}
           >
@@ -573,22 +586,12 @@ function QuizSettings({ quiz, classId, onUpdated }: QuizSettingsProps) {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-caption text-ink-mute block mb-1">Abre</label>
-            <input
-              type="datetime-local"
-              value={opensAt}
-              onChange={(e) => setOpensAt(e.target.value)}
-              className="w-full border border-subtle rounded-[8px] px-3 py-1.5 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30"
-            />
+            <label htmlFor="quiz-opens-at" className="text-caption text-ink-mute block mb-1">Abre</label>
+            <DateTimeField id="quiz-opens-at" value={opensAt} onChange={setOpensAt} />
           </div>
           <div>
-            <label className="text-caption text-ink-mute block mb-1">Cierra</label>
-            <input
-              type="datetime-local"
-              value={closesAt}
-              onChange={(e) => setClosesAt(e.target.value)}
-              className="w-full border border-subtle rounded-[8px] px-3 py-1.5 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30"
-            />
+            <label htmlFor="quiz-closes-at" className="text-caption text-ink-mute block mb-1">Cierra</label>
+            <DateTimeField id="quiz-closes-at" value={closesAt} onChange={setClosesAt} />
           </div>
         </div>
         <p className="text-mono text-ink-mute">Deja las fechas vacías para que el quiz esté disponible sin ventana de tiempo.</p>
@@ -605,7 +608,7 @@ function QuizSettings({ quiz, classId, onUpdated }: QuizSettingsProps) {
           max={180}
           value={timeLimitMin}
           onChange={(e) => setTimeLimitMin(e.target.value)}
-          className="w-32 border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30"
+          className="w-32 border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-accent/40"
           placeholder="Sin límite"
         />
         <p className="text-caption text-ink-mute mt-1">Deja vacío para que no haya límite de tiempo.</p>
@@ -620,7 +623,7 @@ function QuizSettings({ quiz, classId, onUpdated }: QuizSettingsProps) {
           max={10}
           value={attemptsAllowed}
           onChange={(e) => setAttemptsAllowed(Number(e.target.value))}
-          className="w-24 border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30"
+          className="w-24 border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-accent/40"
         />
       </div>
 
@@ -641,11 +644,11 @@ function QuizSettings({ quiz, classId, onUpdated }: QuizSettingsProps) {
                 onClick={() => setAttemptScoring(opt.value)}
                 className={`flex-1 px-3 py-2.5 rounded-[8px] text-left transition-colors border ${
                   attemptScoring === opt.value
-                    ? "bg-indigo/8 border-indigo/30 text-ink"
+                    ? "bg-accent/8 border-accent/40 text-ink"
                     : "bg-surface border-subtle text-ink-soft hover:text-ink"
                 }`}
               >
-                <p className={`text-caption font-medium ${attemptScoring === opt.value ? "text-indigo" : ""}`}>
+                <p className={`text-caption font-medium ${attemptScoring === opt.value ? "text-accent-deep" : ""}`}>
                   {opt.label}
                 </p>
                 <p className="text-mono text-ink-mute mt-0.5">{opt.desc}</p>
@@ -666,7 +669,7 @@ function QuizSettings({ quiz, classId, onUpdated }: QuizSettingsProps) {
           max={100}
           value={passScore}
           onChange={(e) => setPassScore(e.target.value)}
-          className="w-32 border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30"
+          className="w-32 border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-accent/40"
           placeholder="Sin mínimo"
         />
       </div>
@@ -682,7 +685,7 @@ function QuizSettings({ quiz, classId, onUpdated }: QuizSettingsProps) {
               onClick={() => setShowCorrect(opt.value)}
               className={`px-3 py-1.5 rounded-[8px] text-caption font-medium transition-colors ${
                 showCorrect === opt.value
-                  ? "bg-indigo text-white"
+                  ? "bg-accent-deep text-page"
                   : "bg-surface-alt text-ink-soft hover:text-ink"
               }`}
             >
@@ -694,14 +697,10 @@ function QuizSettings({ quiz, classId, onUpdated }: QuizSettingsProps) {
 
       {error && <p className="text-caption text-borgona">{error}</p>}
 
-      <button
-        type="button"
-        onClick={handleSave}
-        disabled={saving}
-        className="px-5 py-2 bg-indigo text-white rounded-[8px] text-caption font-medium hover:bg-indigo/90 disabled:opacity-50 transition-colors"
-      >
-        {saving ? "Guardando…" : saved ? "¡Guardado!" : "Guardar ajustes"}
-      </button>
+      {/* Autosave: estado en vez de botón */}
+      <p className="text-mono text-ink-mute h-4" role="status" aria-live="polite">
+        {saving ? "Guardando…" : saved ? "Guardado ✓" : ""}
+      </p>
     </div>
   );
 }
@@ -789,7 +788,7 @@ export function QuizEditor({ contentId, classId, initialQuiz, initialQuestions, 
           className={`h-8 px-4 rounded-[8px] text-caption font-bold transition-colors disabled:opacity-50 ${
             published
               ? "bg-surface-alt text-ink-soft hover:bg-surface-alt"
-              : "bg-ink text-surface hover:bg-ink/90"
+              : "bg-accent-deep text-page hover:bg-accent-deep/88"
           }`}
         >
           {publishing ? "Publicando…" : published ? "Publicar cambios" : "Publicar"}
@@ -805,7 +804,7 @@ export function QuizEditor({ contentId, classId, initialQuiz, initialQuestions, 
             onClick={() => setTab(t)}
             className={`px-4 py-2 text-caption font-medium transition-colors border-b-2 -mb-px ${
               tab === t
-                ? "border-indigo text-indigo"
+                ? "border-accent text-accent-deep"
                 : "border-transparent text-ink-soft hover:text-ink"
             }`}
           >
@@ -858,7 +857,7 @@ export function QuizEditor({ contentId, classId, initialQuiz, initialQuestions, 
             <button
               type="button"
               onClick={() => setShowAddForm(true)}
-              className="w-full py-3 border-2 border-dashed border-subtle rounded-[10px] text-caption text-ink-soft hover:border-indigo hover:text-indigo transition-colors"
+              className="w-full py-3 border-2 border-dashed border-subtle rounded-[10px] text-caption text-ink-soft hover:border-accent hover:text-accent-deep transition-colors"
             >
               + Agregar pregunta
             </button>

@@ -5,6 +5,7 @@ import { classService } from "@/server/services/classService";
 import { moduleRepo } from "@/server/repositories/moduleRepo";
 import { ModuleSidebar } from "@/components/dashboard/ModuleSidebar";
 import { ClassHeaderCrumbs } from "@/components/dashboard/ClassHeaderCrumbs";
+import { accentVars } from "@/lib/accentColors";
 
 interface Props {
   children: React.ReactNode;
@@ -29,7 +30,10 @@ export default async function ClassEditorLayout({ children, params }: Props) {
   const modules = await moduleRepo(supabase).listByClass(id);
 
   return (
-    <div className="flex flex-1 min-h-0 -mx-4 -my-6 md:-mx-8 md:-my-8 max-md:flex-col">
+    <div
+      className="flex flex-1 min-h-0 -mx-4 -my-6 md:-mx-8 md:-my-8 max-md:flex-col"
+      style={accentVars(cls.accent)}
+    >
       {/* Título de la clase + breadcrumbs, inyectados en el header del dashboard */}
       <ClassHeaderCrumbs
         classId={id}

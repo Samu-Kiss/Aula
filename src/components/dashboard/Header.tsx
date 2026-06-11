@@ -7,7 +7,7 @@ interface Props {
 
 export function Header({ email }: Props) {
   return (
-    <header className="relative h-14 shrink-0 flex items-stretch border-b border-[rgba(0,0,0,0.08)] bg-surface">
+    <header className="relative h-14 shrink-0 flex items-stretch border-b border-hairline bg-surface">
       {/* Marca, alineada con el ancho del sidebar de abajo */}
       <Link
         href="/dashboard"

@@ -12,9 +12,13 @@ function getCommitHash(): string | null {
   }
 }
 
+/* Tres acentos del catálogo en familia cálida — manchas de tinta sobre papel,
+   ancladas a la composición tipográfica. Opacidades bajas para no competir
+   con lo editorial. */
 const ACCENT_BLOBS = [
-  { color: "#9B478A", size: 400, top: "-18%", right: "-4%",  opacity: 0.22 },  // ciruela — esquina superior
-  { color: "#C47BB8", size: 260, top:  "55%", right: "18%",  opacity: 0.14 },  // ciruela claro — más abajo
+  { color: "#9B478A", size: 420, top: "-16%", right: "-6%", opacity: 0.16 }, // ciruela — esquina superior
+  { color: "#C25733", size: 300, top: "48%",  right: "14%", opacity: 0.12 }, // terracota — media altura
+  { color: "#B8821D", size: 220, top: "20%",  right: "30%", opacity: 0.10 }, // ámbar — puente entre ambas
 ];
 
 const FEATURES = [
@@ -97,7 +101,7 @@ export default function Home() {
         >
           <Link
             href="/login"
-            className="inline-flex h-11 items-center rounded-full bg-accent-indigo px-8 text-caption text-white hover:bg-accent-indigo/85 transition-colors"
+            className="inline-flex h-11 items-center rounded-full bg-accent-indigo px-8 text-[13px] font-semibold text-white hover:bg-accent-indigo/85 transition-colors"
           >
             Entrar como profesor
           </Link>
@@ -110,7 +114,7 @@ export default function Home() {
           {FEATURES.map((f, i) => (
             <div
               key={f.number}
-              className="bg-surface rounded-[12px] border-subtle px-7 py-8 animate-fade-up"
+              className="bg-surface rounded-[12px] border-subtle px-7 py-8 animate-fade-up card-lift"
               style={{ "--delay": `${340 + i * 80}ms` } as React.CSSProperties}
             >
               <span className="text-mono text-ink-mute block mb-5">{f.number}</span>

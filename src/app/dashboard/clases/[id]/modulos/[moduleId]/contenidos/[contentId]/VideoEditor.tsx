@@ -100,7 +100,7 @@ export function VideoEditor({ contentId, classId, initialDraft, isPublished }: P
           }}
           onBlur={() => { if (url.trim()) save(url.trim()); }}
           placeholder="https://www.youtube.com/watch?v=… o https://vimeo.com/…"
-          className="w-full px-3 py-2.5 rounded-[8px] border border-[rgba(0,0,0,0.12)] bg-page text-body text-ink placeholder:text-ink-mute focus:outline-none focus:ring-2 focus:ring-ink/20"
+          className="w-full px-3 py-2.5 rounded-[8px] border border-[rgba(0,0,0,0.12)] bg-page text-body text-ink placeholder:text-ink-mute focus:outline-none focus:ring-2 focus:ring-accent/40"
         />
         {url.trim() && !parsed && (
           <p className="text-mono text-borgona text-[12px]">URL no reconocida. Pega un enlace de YouTube o Vimeo.</p>

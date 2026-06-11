@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ClipboardCheck } from "lucide-react";
+import { formatDate } from "@/lib/dates";
 
 type NotifPayload = {
   student_name?: string;
@@ -32,7 +33,7 @@ function relativeTime(iso: string): string {
   if (hrs < 24) return `hace ${hrs} h`;
   const days = Math.floor(hrs / 24);
   if (days < 7) return `hace ${days} d`;
-  return new Date(iso).toLocaleDateString("es", { day: "numeric", month: "short" });
+  return formatDate(iso);
 }
 
 export const metadata = { title: "Notificaciones" };

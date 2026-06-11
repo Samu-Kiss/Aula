@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
+import { formatDate } from "@/lib/dates";
 import { useRouter } from "next/navigation";
 import {
   createCategoryAction,
@@ -169,12 +170,12 @@ export function CategoriasClient({ classId, initialCategories, initialItems, qui
               {/* Category header */}
               {editingCat === cat.id ? (
                 <form onSubmit={(e) => handleUpdateCategory(cat.id, e)} className="p-4 bg-surface-alt flex items-center gap-3">
-                  <input name="name" defaultValue={cat.name} required maxLength={50} className="flex-1 h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-ink/20" />
+                  <input name="name" defaultValue={cat.name} required maxLength={50} className="flex-1 h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-accent/40" />
                   <div className="flex items-center gap-1">
-                    <input name="weight" type="number" min="0" max="100" step="0.1" defaultValue={cat.weight} required className="w-28 h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink tabular-nums focus:outline-none focus:ring-1 focus:ring-ink/20" />
+                    <input name="weight" type="number" min="0" max="100" step="0.1" defaultValue={cat.weight} required className="w-28 h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink tabular-nums focus:outline-none focus:ring-1 focus:ring-accent/40" />
                     <span className="text-body text-ink-mute">%</span>
                   </div>
-                  <button type="submit" disabled={isPending} className="px-3 py-1.5 text-caption bg-ink text-surface rounded-[8px] disabled:opacity-50">Guardar</button>
+                  <button type="submit" disabled={isPending} className="px-3 py-1.5 text-caption bg-accent-deep text-page rounded-[8px] disabled:opacity-50">Guardar</button>
                   <button type="button" onClick={() => setEditingCat(null)} className="px-3 py-1.5 text-caption text-ink-soft hover:text-ink">Cancelar</button>
                 </form>
               ) : (
@@ -209,7 +210,7 @@ export function CategoriasClient({ classId, initialCategories, initialItems, qui
                             required
                             maxLength={80}
                             defaultValue={item.title}
-                            className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-ink/20"
+                            className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-accent/40"
                           />
                         </div>
                         <div>
@@ -221,7 +222,7 @@ export function CategoriasClient({ classId, initialCategories, initialItems, qui
                             step="0.1"
                             defaultValue={item.max_score}
                             required
-                            className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-ink/20"
+                            className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-accent/40"
                           />
                         </div>
                         <div>
@@ -229,7 +230,7 @@ export function CategoriasClient({ classId, initialCategories, initialItems, qui
                           <select
                             name="quiz_id"
                             defaultValue={item.quiz_id ?? ""}
-                            className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-ink/20"
+                            className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-accent/40"
                           >
                             <option value="">— Ninguno —</option>
                             {quizOptions.map((q) => (
@@ -243,7 +244,7 @@ export function CategoriasClient({ classId, initialCategories, initialItems, qui
                             name="due_at"
                             type="datetime-local"
                             defaultValue={item.due_at ? item.due_at.slice(0, 16) : ""}
-                            className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-ink/20"
+                            className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-accent/40"
                           />
                         </div>
                         <div>
@@ -251,7 +252,7 @@ export function CategoriasClient({ classId, initialCategories, initialItems, qui
                           <select
                             name="missing_policy"
                             defaultValue={item.missing_policy ?? "ignore_until_due"}
-                            className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-ink/20"
+                            className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-accent/40"
                           >
                             <option value="ignore_until_due">Ignorar hasta vencimiento</option>
                             <option value="zero_immediately">Cero inmediato</option>
@@ -260,7 +261,7 @@ export function CategoriasClient({ classId, initialCategories, initialItems, qui
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <button type="submit" disabled={isPending} className="px-4 py-1.5 bg-ink text-surface text-caption rounded-[8px] disabled:opacity-50">Guardar</button>
+                        <button type="submit" disabled={isPending} className="px-4 py-1.5 bg-accent-deep text-page text-caption rounded-[8px] disabled:opacity-50">Guardar</button>
                         <button type="button" onClick={() => setEditingItem(null)} className="px-4 py-1.5 text-caption text-ink-soft hover:text-ink">Cancelar</button>
                       </div>
                     </form>
@@ -277,7 +278,7 @@ export function CategoriasClient({ classId, initialCategories, initialItems, qui
                             </span>
                           )}
                           {item.due_at && (
-                            <span className="ml-2">· Vence {new Date(item.due_at).toLocaleDateString("es-CO")}</span>
+                            <span className="ml-2">· Vence {formatDate(item.due_at)}</span>
                           )}
                         </p>
                       </div>
@@ -304,15 +305,15 @@ export function CategoriasClient({ classId, initialCategories, initialItems, qui
                     <div className="grid grid-cols-2 gap-3">
                       <div className="col-span-2">
                         <label className="block text-mono text-ink-mute mb-1">Título *</label>
-                        <input name="title" required maxLength={80} placeholder="ej: Taller 1, Parcial Midterm…" className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-ink/20" />
+                        <input name="title" required maxLength={80} placeholder="ej: Taller 1, Parcial Midterm…" className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-accent/40" />
                       </div>
                       <div>
                         <label className="block text-mono text-ink-mute mb-1">Puntaje máximo *</label>
-                        <input name="max_score" type="number" min="0.1" step="0.1" defaultValue={100} required className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-ink/20" />
+                        <input name="max_score" type="number" min="0.1" step="0.1" defaultValue={100} required className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-accent/40" />
                       </div>
                       <div>
                         <label className="block text-mono text-ink-mute mb-1">Vincular quiz (opcional)</label>
-                        <select name="quiz_id" className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-ink/20">
+                        <select name="quiz_id" className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-accent/40">
                           <option value="">— Ninguno —</option>
                           {quizOptions.map((q) => (
                             <option key={q.id} value={q.id}>{q.moduleName} / {q.title}</option>
@@ -321,11 +322,11 @@ export function CategoriasClient({ classId, initialCategories, initialItems, qui
                       </div>
                       <div>
                         <label className="block text-mono text-ink-mute mb-1">Fecha de entrega</label>
-                        <input name="due_at" type="datetime-local" className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-ink/20" />
+                        <input name="due_at" type="datetime-local" className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-accent/40" />
                       </div>
                       <div>
                         <label className="block text-mono text-ink-mute mb-1">Política de ausente</label>
-                        <select name="missing_policy" className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-ink/20">
+                        <select name="missing_policy" className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-accent/40">
                           <option value="ignore_until_due">Ignorar hasta vencimiento</option>
                           <option value="zero_immediately">Cero inmediato</option>
                           <option value="ignore_always">Ignorar siempre</option>
@@ -333,7 +334,7 @@ export function CategoriasClient({ classId, initialCategories, initialItems, qui
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <button type="submit" disabled={isPending} className="px-4 py-1.5 bg-ink text-surface text-caption rounded-[8px] disabled:opacity-50">Agregar ítem</button>
+                      <button type="submit" disabled={isPending} className="px-4 py-1.5 bg-accent-deep text-page text-caption rounded-[8px] disabled:opacity-50">Agregar ítem</button>
                       <button type="button" onClick={() => setAddingItemFor(null)} className="px-4 py-1.5 text-caption text-ink-soft hover:text-ink">Cancelar</button>
                     </div>
                   </form>
@@ -358,18 +359,18 @@ export function CategoriasClient({ classId, initialCategories, initialItems, qui
           <div className="flex items-end gap-3">
             <div className="flex-1">
               <label className="block text-mono text-ink-mute mb-1">Nombre *</label>
-              <input name="name" required maxLength={50} placeholder="ej: Quices, Parciales, Proyecto…" className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-ink/20" />
+              <input name="name" required maxLength={50} placeholder="ej: Quices, Parciales, Proyecto…" className="w-full h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink focus:outline-none focus:ring-1 focus:ring-accent/40" />
             </div>
             <div>
               <label className="block text-mono text-ink-mute mb-1">Peso %</label>
               <div className="flex items-center gap-1">
-                <input name="weight" type="number" min="0" max="100" step="0.1" defaultValue={Math.max(0, 100 - totalWeight)} required className="w-28 h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink tabular-nums focus:outline-none focus:ring-1 focus:ring-ink/20" />
+                <input name="weight" type="number" min="0" max="100" step="0.1" defaultValue={Math.max(0, 100 - totalWeight)} required className="w-28 h-9 px-3 rounded-[8px] border border-subtle bg-page text-body text-ink tabular-nums focus:outline-none focus:ring-1 focus:ring-accent/40" />
                 <span className="text-body text-ink-mute">%</span>
               </div>
             </div>
           </div>
           <div className="flex gap-2">
-            <button type="submit" disabled={isPending} className="px-4 py-1.5 bg-ink text-surface text-caption rounded-[8px] disabled:opacity-50">Crear</button>
+            <button type="submit" disabled={isPending} className="px-4 py-1.5 bg-accent-deep text-page text-caption rounded-[8px] disabled:opacity-50">Crear</button>
             <button type="button" onClick={() => setShowNewCat(false)} className="px-4 py-1.5 text-caption text-ink-soft hover:text-ink">Cancelar</button>
           </div>
         </form>

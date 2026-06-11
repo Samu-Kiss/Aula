@@ -35,7 +35,7 @@ export default async function LoginPage({ searchParams }: Props) {
               type="email"
               required
               autoComplete="email"
-              className="w-full h-11 px-3 rounded-[8px] border-subtle bg-surface text-body text-ink placeholder:text-ink-mute focus:outline-none focus:ring-2 focus:ring-accent-indigo"
+              className="w-full h-11 px-3 rounded-[8px] border-subtle bg-surface text-body text-ink placeholder:text-ink-mute focus:outline-none focus:ring-2 focus:ring-accent"
               placeholder="profe@correo.com"
             />
           </div>
@@ -53,7 +53,7 @@ export default async function LoginPage({ searchParams }: Props) {
               type="password"
               required
               autoComplete="current-password"
-              className="w-full h-11 px-3 rounded-[8px] border-subtle bg-surface text-body text-ink placeholder:text-ink-mute focus:outline-none focus:ring-2 focus:ring-accent-indigo"
+              className="w-full h-11 px-3 rounded-[8px] border-subtle bg-surface text-body text-ink placeholder:text-ink-mute focus:outline-none focus:ring-2 focus:ring-accent"
               placeholder="••••••••"
             />
           </div>
