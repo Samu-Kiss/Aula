@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ResizablePanel } from "@/components/dashboard/ResizablePanel";
 
 const NAV = [
   { label: "Clases", href: "/dashboard", badge: false },
@@ -17,14 +18,14 @@ export function Sidebar({ unreadNotifications = 0 }: Props) {
   const pathname = usePathname();
 
   return (
-    <aside className="w-56 shrink-0 flex flex-col border-r border-[rgba(0,0,0,0.08)] bg-surface min-h-screen">
-      <div className="px-6 py-6 border-b border-[rgba(0,0,0,0.08)]">
-        <span className="font-black text-2xl leading-none text-ink tracking-tight">
-          Aula
-        </span>
-      </div>
-
-      <nav className="flex-1 px-3 py-4 space-y-0.5">
+    <ResizablePanel
+      storageKey="aula:dash-sidebar-w"
+      defaultWidth={224}
+      minWidth={176}
+      maxWidth={400}
+      className="border-r border-[rgba(0,0,0,0.08)] bg-surface"
+    >
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
         {NAV.map(({ label, href, badge }) => {
           const active =
             href === "/dashboard"
@@ -49,6 +50,6 @@ export function Sidebar({ unreadNotifications = 0 }: Props) {
           );
         })}
       </nav>
-    </aside>
+    </ResizablePanel>
   );
 }

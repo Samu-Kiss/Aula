@@ -21,6 +21,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { Copy, Loader2, Trash2, X } from "lucide-react";
 import type { Module } from "@/lib/types/db";
 import { createModuleAction, reorderModulesAction, duplicateModuleAction, deleteModuleAction } from "@/app/dashboard/clases/[id]/actions";
+import { ResizablePanel } from "@/components/dashboard/ResizablePanel";
 
 function SortableModule({
   mod,
@@ -186,7 +187,13 @@ export function ModuleSidebar({ classId, initialModules }: Props) {
   }
 
   return (
-    <div className="w-56 shrink-0 flex flex-col border-r border-[rgba(0,0,0,0.08)] bg-surface">
+    <ResizablePanel
+      storageKey="aula:module-sidebar-w"
+      defaultWidth={224}
+      minWidth={176}
+      maxWidth={420}
+      className="border-r border-[rgba(0,0,0,0.08)] bg-surface"
+    >
       <div className="px-3 py-3 border-b border-[rgba(0,0,0,0.08)] flex items-center justify-between">
         <span className="text-caption text-ink-mute">Módulos</span>
         <button
@@ -305,6 +312,6 @@ export function ModuleSidebar({ classId, initialModules }: Props) {
           Vista previa ↗
         </Link>
       </div>
-    </div>
+    </ResizablePanel>
   );
 }
