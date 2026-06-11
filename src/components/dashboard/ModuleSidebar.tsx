@@ -71,68 +71,76 @@ function SortableModule({
       >
         ⠿
       </button>
-      <Link
-        href={`/dashboard/clases/${classId}/modulos/${mod.id}`}
-        className={`flex-1 flex items-center h-8 px-2 rounded-[8px] text-body truncate transition-colors ${
+      {/* Shade compartido: nombre + acciones viven dentro del mismo fondo */}
+      <div
+        className={`flex-1 flex items-center h-8 pl-2 pr-1 gap-0.5 rounded-[8px] min-w-0 transition-colors ${
           active
-            ? "bg-surface-alt text-ink font-medium shadow-[inset_2px_0_0_var(--class-accent)]"
-            : "text-ink-soft hover:bg-surface-alt hover:text-ink"
+            ? "bg-surface-alt shadow-[inset_2px_0_0_var(--class-accent)]"
+            : "hover:bg-surface-alt"
         }`}
       >
-        <span className="truncate">{mod.title}</span>
-        {!mod.is_published && (
-          <span className="ml-auto shrink-0 w-1.5 h-1.5 rounded-full bg-ink-mute" />
-        )}
-      </Link>
-      {/* Duplicate button — appears on hover */}
-      <button
-        onClick={handleDuplicate}
-        disabled={isPendingDup || isDeleting}
-        title="Duplicar módulo"
-        className="p-1 text-ink-mute opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 max-md:opacity-100 hover:text-ink transition-colors disabled:opacity-30 shrink-0"
-        aria-label="Duplicar módulo"
-      >
-        {isPendingDup ? (
-          <Loader2 size={12} className="animate-spin" />
-        ) : (
-          <Copy size={12} />
-        )}
-      </button>
-
-      {/* Delete button — appears on hover, requires confirm */}
-      {confirmingDelete ? (
-        <div className="flex items-center gap-0.5 opacity-100 shrink-0">
-          <button
-            onClick={handleDelete}
-            disabled={isDeleting}
-            title="Confirmar eliminación"
-            className="p-1 text-borgona hover:text-borgona/70 transition-colors disabled:opacity-40 shrink-0"
-          >
-            {isDeleting ? (
-              <Loader2 size={12} className="animate-spin" />
-            ) : (
-              <Trash2 size={12} />
-            )}
-          </button>
-          <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmingDelete(false); }}
-            className="p-1 text-ink-mute hover:text-ink transition-colors shrink-0"
-            title="Cancelar"
-          >
-            <X size={12} />
-          </button>
-        </div>
-      ) : (
-        <button
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmingDelete(true); }}
-          disabled={isPendingDup || isDeleting}
-          title="Eliminar módulo"
-          className="p-1 text-ink-mute opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 max-md:opacity-100 hover:text-borgona transition-colors disabled:opacity-30 shrink-0"
-          aria-label="Eliminar módulo"
+        <Link
+          href={`/dashboard/clases/${classId}/modulos/${mod.id}`}
+          className={`flex-1 flex items-center min-w-0 self-stretch text-body transition-colors ${
+            active ? "text-ink font-medium" : "text-ink-soft hover:text-ink"
+          }`}
         >
-          <Trash2 size={12} />
+          <span className="truncate">{mod.title}</span>
+          {!mod.is_published && (
+            <span className="ml-auto mr-1 shrink-0 w-1.5 h-1.5 rounded-full bg-ink-mute" />
+          )}
+        </Link>
+
+        {/* Duplicate button — appears on hover */}
+        <button
+          onClick={handleDuplicate}
+          disabled={isPendingDup || isDeleting}
+          title="Duplicar módulo"
+          className="p-1 text-ink-mute opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 max-md:opacity-100 hover:text-ink transition-colors disabled:opacity-30 shrink-0"
+          aria-label="Duplicar módulo"
+        >
+          {isPendingDup ? (
+            <Loader2 size={12} className="animate-spin" />
+          ) : (
+            <Copy size={12} />
+          )}
         </button>
-      )}
+
+        {/* Delete button — appears on hover, requires confirm */}
+        {confirmingDelete ? (
+          <div className="flex items-center gap-0.5 opacity-100 shrink-0">
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              title="Confirmar eliminación"
+              className="p-1 text-borgona hover:text-borgona/70 transition-colors disabled:opacity-40 shrink-0"
+            >
+              {isDeleting ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : (
+                <Trash2 size={12} />
+              )}
+            </button>
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmingDelete(false); }}
+              className="p-1 text-ink-mute hover:text-ink transition-colors shrink-0"
+              title="Cancelar"
+            >
+              <X size={12} />
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmingDelete(true); }}
+            disabled={isPendingDup || isDeleting}
+            title="Eliminar módulo"
+            className="p-1 text-ink-mute opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 max-md:opacity-100 hover:text-borgona transition-colors disabled:opacity-30 shrink-0"
+            aria-label="Eliminar módulo"
+          >
+            <Trash2 size={12} />
+          </button>
+        )}
+      </div>
     </div>
   );
 }
