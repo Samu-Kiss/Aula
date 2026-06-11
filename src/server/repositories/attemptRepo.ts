@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Attempt, AttemptQuestion, Answer, Student } from "@/lib/types/db";
 
 export interface AttemptWithStudent extends Attempt {
-  student: Pick<Student, "id" | "email" | "first_name" | "last_name" | "display_name">;
+  student: Pick<Student, "id" | "email" | "first_name" | "last_name" | "display_name" | "is_anonymized">;
 }
 
 export function attemptRepo(db: SupabaseClient) {
@@ -139,7 +139,7 @@ export function attemptRepo(db: SupabaseClient) {
     async listByQuiz(quizId: string): Promise<AttemptWithStudent[]> {
       const { data, error } = await db
         .from("attempts")
-        .select("*, student:students(id, email, first_name, last_name, display_name)")
+        .select("*, student:students(id, email, first_name, last_name, display_name, is_anonymized)")
         .eq("quiz_id", quizId)
         .in("status", ["submitted", "graded"])
         .order("submitted_at", { ascending: false });

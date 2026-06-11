@@ -116,16 +116,32 @@
 > - **OK navegación dashboard:** sidebar global (Clases/Notificaciones/Archivo) con estado activo; dentro de la clase, flecha ← de retorno a `/dashboard`, lockup de la clase en el header, h1 de sección y resaltado de sección activa en el sidebar dan ubicación clara; rutas REST consistentes (`/clases/[id]/{estudiantes,calificaciones,intentos,configuracion}`). El rename "Quices"→"Intentos" (arreglo 6.1) ya verificado.
 
 #### 6.3 Claridad de interfaz
-- [ ] `F6-10` Revisar microcopy, labels, ayudas y mensajes de error
-- [ ] `F6-11` Revisar estados vacíos, estados de carga y estados de error
-- [ ] `F6-12` Revisar claridad de estados: borrador, publicado, disponible, cerrado, enviado, calificado y pendiente
-- [ ] `F6-13` Revisar jerarquía visual de acciones primarias, secundarias y destructivas
+- [x] `F6-10` Revisar microcopy, labels, ayudas y mensajes de error
+- [x] `F6-11` Revisar estados vacíos, estados de carga y estados de error
+- [x] `F6-12` Revisar claridad de estados: borrador, publicado, disponible, cerrado, enviado, calificado y pendiente
+- [x] `F6-13` Revisar jerarquía visual de acciones primarias, secundarias y destructivas
 
 #### 6.4 Consistencia UI
-- [ ] `F6-14` Unificar cards, formularios, modales, tablas, badges, alerts, banners y tooltips
-- [ ] `F6-15` Revisar spacing, radios, bordes, sombras, tipografía, iconos y alineaciones
-- [ ] `F6-16` Revisar consistencia de tokens de diseño usando Tailwind y el sistema visual definido
-- [ ] `F6-17` Revisar uso consistente del color de acento del aula
+- [x] `F6-14` Unificar cards, formularios, modales, tablas, badges, alerts, banners y tooltips
+- [x] `F6-15` Revisar spacing, radios, bordes, sombras, tipografía, iconos y alineaciones
+- [x] `F6-16` Revisar consistencia de tokens de diseño usando Tailwind y el sistema visual definido
+- [x] `F6-17` Revisar uso consistente del color de acento del aula
+
+> **Hallazgos registrados en revisión 6.3/6.4 (2026-06-10, navegador real + análisis de código):**
+> - **[Bloqueante → ARREGLADO]** `/dashboard/archivo` crasheaba con elementos eliminados ("Event handlers cannot be passed to Client Component props"): la página server pasaba arrow functions a `ArchivedItemActions`. Fix: server actions con `.bind(null, id)` en `archivo/page.tsx`. Verificado en navegador (restaurar/eliminar visibles).
+> - **[Importante → ARREGLADO]** El `Lockup` perdía el espacio entre la parte serif y la bold ("Esdras& Nehemías", "Historiade América…") en dashboard, cards, header y archivo: el espacio inicial del segundo flex item se colapsa al inicio de línea. Fix: NBSP en `Lockup.tsx`.
+> - **[Importante → ARREGLADO]** Estudiantes anonimizados mostraban su identidad cruda (`anon.uuid@anonimizado.local`) como nombre y email en Intentos y en la revisión de intento. Fix: `is_anonymized` añadido a `attemptRepo.listByQuiz` y al fetch del detalle; se muestra "[Anónimo]" (mismo criterio que el roster) y se oculta el email.
+> - **[Importante → ARREGLADO]** Toolbar del editor rich_text desbordaba y se partía en dos filas con los controles de publicación entremezclados; además "Publicar cambios" en estado publicado usaba estilo apagado (`bg-surface-alt`) que parecía deshabilitado. Fix: contenedor `flex-wrap` (fila de formato + fila de estado/publicación alineada a la derecha) y botón de publicar siempre primario (`bg-ink`).
+> - **[Importante → ARREGLADO]** No existía ningún `loading.tsx`: las transiciones entre secciones del dashboard (queries server-side lentas) quedaban sin feedback. Fix: `src/app/dashboard/loading.tsx` con spinner accesible (`role="status"`).
+> - **[Menor → ARREGLADO]** Microcopy agramatical "Dejar las fechas vacías **para sin** restricción/ventana de tiempo" y "Dejar vacío para sin límite" en `ModuleAvailabilityForm` y `QuizEditor` → redactado en imperativo natural.
+> - **[Menor → ARREGLADO]** El chip de estado de contenido publicado en la lista del módulo era solo "✓" (críptico frente a "Borrador") → ahora "✓ Publicado" + tooltip con la explicación ("visible para estudiantes" / "solo tú puedes verlo").
+> - **[Menor → ARREGLADO]** "Eliminar" en el roster tenía el mismo estilo gris que "Editar"/"Desactivar" → ahora en `borgona` para diferenciar la acción destructiva (resto de destructivas ya estaban bien: zona de peligro, archivo, confirmaciones en dos pasos).
+> - **[Registrado / criterio]** El índigo funciona como **acento de plataforma** (focus rings, botones de guardar, tabs activos, links "Ver") de forma uniforme en el dashboard, mientras el acento del aula se reserva para identidad (lockup, QR, links públicos, markers de mapa). Excepción a vigilar: la UI pública del intento de quiz (`AttemptView`, `QuizResult`, `QuizAccess`) resalta opciones en índigo aunque el aula tenga otro acento; unificarlo requeriría acento dinámico vía CSS var — deuda visual consciente, no bloqueante.
+> - **[Registrado]** Cuando Supabase local responde lento (>5s, `fetchWithTimeout` aborta), el dashboard renderiza el onboarding "Crea tu primera clase" en vez de un error — un fallo de datos disfrazado de estado vacío; considerar distinguir error de lista vacía en `listByProfessor`.
+> - **[Registrado]** Radios: la escala de facto es 4/6/8/10/12 px (los tokens definen 4/8/12/14); hay outliers puntuales (3/5/7/16/20/24 px) en micro-controles del editor de mapa y vistas de proyección — deuda visual menor, no se tocó.
+> - **[Registrado]** La revisión de intento no renderiza la respuesta de preguntas `map_pin` (cae al caso `null`); el profesor solo ve el chip de puntaje. Pendiente de F5-04 follow-up.
+> - **[Registrado]** Inputs `datetime-local` muestran formato del navegador en inglés (mm/dd/yyyy) en UI en español — limitación del control nativo.
+> - **OK:** estados vacíos con CTA en todas las secciones (onboarding, archivo, intentos, categorías); aviso "clase en borrador" junto al QR (fix 6.1) funcionando; jerarquía primario oscuro / secundario outline / destructivo borgoña consistente; badges de estado (Publicada/Borrador, Activo, Mejor %, Por calificar, Auto-vinculado) con paleta semántica coherente; sin `rounded-sm/md/lg` fuera del sistema; tipografía y eyebrows consistentes en dashboard y público.
 
 #### 6.5 Responsive y accesibilidad
 - [ ] `F6-18` Responsive completo en mobile, tablet y desktop

@@ -591,7 +591,7 @@ function QuizSettings({ quiz, classId, onUpdated }: QuizSettingsProps) {
             />
           </div>
         </div>
-        <p className="text-mono text-ink-mute">Dejar las fechas vacías para sin ventana de tiempo.</p>
+        <p className="text-mono text-ink-mute">Deja las fechas vacías para que el quiz esté disponible sin ventana de tiempo.</p>
       </div>
 
       {/* Tiempo */}
@@ -608,7 +608,7 @@ function QuizSettings({ quiz, classId, onUpdated }: QuizSettingsProps) {
           className="w-32 border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-indigo/30"
           placeholder="Sin límite"
         />
-        <p className="text-caption text-ink-mute mt-1">Dejar vacío para sin límite de tiempo.</p>
+        <p className="text-caption text-ink-mute mt-1">Deja vacío para que no haya límite de tiempo.</p>
       </div>
 
       {/* Intentos */}

@@ -60,7 +60,8 @@ export function Lockup({ title, accent, splitAt, className = "", plain = false }
         className="font-sans font-black text-ink"
         style={{ marginLeft: "-0.02em", letterSpacing: "-0.04em" }}
       >
-        {bold ? ` ${bold}` : ""}
+        {/* NBSP: un espacio normal al inicio de un flex item se colapsa y las dos partes quedan pegadas */}
+        {bold ? ` ${bold}` : ""}
       </span>
     </span>
   );

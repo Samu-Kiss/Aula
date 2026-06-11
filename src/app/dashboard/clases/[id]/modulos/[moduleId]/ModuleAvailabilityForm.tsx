@@ -103,7 +103,7 @@ export function ModuleAvailabilityForm({ module: mod, classId }: Props) {
           />
         </div>
       </div>
-      <p className="text-mono text-ink-mute">Dejar las fechas vacías para sin restricción de tiempo.</p>
+      <p className="text-mono text-ink-mute">Deja las fechas vacías para que el módulo esté disponible sin restricción de tiempo.</p>
 
       {error && <p className="text-caption text-borgona">{error}</p>}
 

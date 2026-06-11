@@ -317,7 +317,7 @@ export function RosterClient({ classId, initialEnrollments }: Props) {
                           ) : (
                             <button
                               onClick={() => { setConfirmDeleteId(e.id); setEditingId(null); }}
-                              className="text-caption text-ink-mute hover:text-borgona transition-colors"
+                              className="text-caption text-borgona/70 hover:text-borgona transition-colors"
                             >
                               Eliminar
                             </button>

@@ -222,7 +222,7 @@ export function TiptapEditor({ contentId, classId, initialDraft, isPublished, ac
 
       {/* Toolbar */}
       <div className="flex flex-col gap-2 pb-3 border-b border-[rgba(0,0,0,0.08)]">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <div className="flex items-center gap-1 flex-wrap">
             <ToolbarButton onClick={() => editor?.chain().focus().undo().run()} active={false} label={<Undo2 size={14} />} title="Deshacer (Ctrl+Z)" />
             <ToolbarButton onClick={() => editor?.chain().focus().redo().run()} active={false} label={<Redo2 size={14} />} title="Rehacer (Ctrl+Y)" />
@@ -246,16 +246,14 @@ export function TiptapEditor({ contentId, classId, initialDraft, isPublished, ac
             <ToolbarButton onClick={openImageInput} active={imageUrl !== null} label={<ImagePlus size={14} />} title="Imagen por URL" />
           </div>
 
-          <div className="ml-auto flex items-center gap-4">
+          <div className="ml-auto flex items-center gap-3">
             <span aria-live="polite" className={`text-mono transition-colors ${imageUploading ? "text-indigo" : saveStatus === "unsaved" ? "text-warning" : "text-ink-mute"}`}>
               {imageUploading ? "Subiendo imagen…" : STATUS_LABEL[saveStatus]}
             </span>
             <button
               onClick={handlePublish}
               disabled={isPending}
-              className={`h-8 px-4 rounded-[8px] text-caption font-bold transition-colors disabled:opacity-50 ${
-                published ? "bg-surface-alt text-ink-soft hover:bg-surface-alt" : "bg-ink text-surface hover:bg-ink/90"
-              }`}
+              className="h-8 px-4 rounded-[8px] text-caption font-bold transition-colors disabled:opacity-50 bg-ink text-surface hover:bg-ink/90 whitespace-nowrap"
             >
               {isPending ? "Publicando…" : published ? "Publicar cambios" : "Publicar"}
             </button>

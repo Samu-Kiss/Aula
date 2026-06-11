@@ -92,12 +92,15 @@ function SortableContent({
         <span className="text-mono text-ink-mute text-xs">
           {CONTENT_LABELS[content.type] ?? content.type}
         </span>
-        <span className={`text-mono text-xs px-1.5 py-0.5 rounded-[4px] ${
-          content.is_published
-            ? "bg-bosque/10 text-bosque"
-            : "bg-surface-alt text-ink-mute"
-        }`}>
-          {content.is_published ? "✓" : "Borrador"}
+        <span
+          title={content.is_published ? "Publicado — visible para estudiantes" : "Borrador — solo tú puedes verlo"}
+          className={`text-mono text-xs px-1.5 py-0.5 rounded-[4px] ${
+            content.is_published
+              ? "bg-bosque/10 text-bosque"
+              : "bg-surface-alt text-ink-mute"
+          }`}
+        >
+          {content.is_published ? "✓ Publicado" : "Borrador"}
         </span>
       </Link>
 

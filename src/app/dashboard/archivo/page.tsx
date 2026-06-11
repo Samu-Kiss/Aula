@@ -33,8 +33,8 @@ function DeletedClassRow({ cls, classMap }: { cls: Class; classMap?: Map<string,
         </p>
       </div>
       <ArchivedItemActions
-        onRestore={() => restoreClassAction(cls.id)}
-        onPermanentDelete={() => permanentDeleteClassAction(cls.id)}
+        onRestore={restoreClassAction.bind(null, cls.id)}
+        onPermanentDelete={permanentDeleteClassAction.bind(null, cls.id)}
       />
     </div>
   );
@@ -54,8 +54,8 @@ function DeletedModuleRow({ mod, classMap }: { mod: Module; classMap: Map<string
         </p>
       </div>
       <ArchivedItemActions
-        onRestore={() => restoreModuleAction(mod.id)}
-        onPermanentDelete={() => permanentDeleteModuleAction(mod.id)}
+        onRestore={restoreModuleAction.bind(null, mod.id)}
+        onPermanentDelete={permanentDeleteModuleAction.bind(null, mod.id)}
       />
     </div>
   );

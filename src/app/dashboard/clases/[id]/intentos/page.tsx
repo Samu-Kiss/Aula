@@ -25,7 +25,8 @@ function formatDate(iso: string | null) {
   return new Date(iso).toLocaleString("es", { dateStyle: "short", timeStyle: "short" });
 }
 
-function studentName(s: { first_name: string | null; last_name: string | null; display_name: string | null; email: string }) {
+function studentName(s: { first_name: string | null; last_name: string | null; display_name: string | null; email: string; is_anonymized?: boolean }) {
+  if (s.is_anonymized) return "[Anónimo]";
   if (s.display_name) return s.display_name;
   if (s.first_name || s.last_name) return `${s.first_name ?? ""} ${s.last_name ?? ""}`.trim();
   return s.email;
@@ -292,8 +293,8 @@ export default async function IntentosPage({ params, searchParams }: Props) {
                 <div className="flex items-center gap-4 px-5 py-3.5 bg-surface-alt/50 border-b border-[rgba(0,0,0,0.05)]">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-body font-medium text-ink">{studentName(student)}</span>
-                      <span className="text-mono text-ink-soft">{student.email}</span>
+                      <span className={`text-body font-medium ${student.is_anonymized ? "text-ink-mute" : "text-ink"}`}>{studentName(student)}</span>
+                      {!student.is_anonymized && <span className="text-mono text-ink-soft">{student.email}</span>}
                     </div>
                   </div>
                   <div className="flex items-center gap-3 shrink-0 flex-wrap justify-end">
