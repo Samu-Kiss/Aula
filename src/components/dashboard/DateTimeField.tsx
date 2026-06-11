@@ -136,10 +136,10 @@ function CalendarPopover({ selected, onPick, onClose }: CalendarPopoverProps) {
     <div
       role="dialog"
       aria-label="Calendario"
-      className="absolute z-50 top-full right-0 mt-1.5 w-[248px] p-3 bg-surface border border-subtle rounded-[12px] shadow-[0_8px_24px_rgba(26,24,20,0.10)]"
+      className="absolute z-50 top-full right-0 mt-2 w-[300px] p-5 bg-surface border border-subtle rounded-[12px] shadow-[0_8px_24px_rgba(26,24,20,0.10)]"
     >
       {/* Navegación de mes */}
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-4">
         <button
           type="button"
           onClick={() => shiftMonth(-1)}
@@ -149,7 +149,7 @@ function CalendarPopover({ selected, onPick, onClose }: CalendarPopoverProps) {
           <ChevronLeft size={14} aria-hidden />
         </button>
         <p className="text-caption text-ink">
-          {MONTHS[viewMonth]} <span className="font-serif italic normal-case text-[12px] text-ink-soft">{viewYear}</span>
+          {MONTHS[viewMonth]} <span className="font-serif italic normal-case text-[13px] text-ink-soft">{viewYear}</span>
         </p>
         <button
           type="button"
@@ -162,14 +162,14 @@ function CalendarPopover({ selected, onPick, onClose }: CalendarPopoverProps) {
       </div>
 
       {/* Días de la semana */}
-      <div className="grid grid-cols-7 mb-1">
+      <div className="grid grid-cols-7 mb-2">
         {WEEKDAYS.map((d) => (
-          <span key={d} className="text-mono text-ink-mute text-center py-1">{d}</span>
+          <span key={d} className="text-mono text-ink-mute text-center py-1.5">{d}</span>
         ))}
       </div>
 
       {/* Grilla de días */}
-      <div className="grid grid-cols-7 gap-y-0.5">
+      <div className="grid grid-cols-7 gap-y-1.5">
         {Array.from({ length: firstWeekday }).map((_, i) => <span key={`pad-${i}`} />)}
         {Array.from({ length: daysInMonth }).map((_, i) => {
           const day = i + 1;
@@ -179,7 +179,7 @@ function CalendarPopover({ selected, onPick, onClose }: CalendarPopoverProps) {
               key={day}
               type="button"
               onClick={() => pickDay(day)}
-              className={`h-7 w-7 mx-auto rounded-[6px] text-[12px] tabular-nums transition-colors ${
+              className={`h-8 w-8 mx-auto rounded-[8px] text-[13px] tabular-nums transition-colors ${
                 sel
                   ? "bg-accent-deep text-page font-semibold"
                   : isToday(day)
@@ -194,7 +194,7 @@ function CalendarPopover({ selected, onPick, onClose }: CalendarPopoverProps) {
       </div>
 
       {/* Hora + cerrar */}
-      <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-hairline">
+      <div className="flex items-center justify-between gap-3 mt-4 pt-4 border-t border-hairline">
         <label className="flex items-center gap-2">
           <span className="text-caption text-ink-mute">Hora</span>
           <input
@@ -203,7 +203,7 @@ function CalendarPopover({ selected, onPick, onClose }: CalendarPopoverProps) {
             value={time}
             onChange={(e) => applyTime(maskTime(e.target.value))}
             placeholder="hh:mm"
-            className="w-16 border border-subtle rounded-[6px] px-2 py-1 text-[12px] tabular-nums text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-accent/40"
+            className="w-20 border border-subtle rounded-[6px] px-2.5 py-1.5 text-[13px] text-center tabular-nums text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-accent/40"
           />
         </label>
         <button
