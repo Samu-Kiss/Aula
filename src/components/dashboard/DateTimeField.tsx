@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 
 /**
@@ -24,6 +24,10 @@ interface Props {
   className?: string;
   "aria-label"?: string;
 }
+
+/** Ancho del popover; también decide el lado de anclaje en el viewport. */
+const POPOVER_WIDTH = 300;
+const VIEWPORT_MARGIN = 12;
 
 const WEEKDAYS = ["lu", "ma", "mi", "ju", "vi", "sá", "do"];
 const MONTHS = [
@@ -138,7 +142,8 @@ function CalendarPopover({ selected, onPick, onClose, align }: CalendarPopoverPr
     <div
       role="dialog"
       aria-label="Calendario"
-      className={`absolute z-50 top-full mt-2 w-[300px] p-5 bg-surface border border-subtle rounded-[12px] shadow-[0_8px_24px_rgba(26,24,20,0.10)] ${
+      style={{ width: POPOVER_WIDTH }}
+      className={`absolute z-50 top-full mt-2 p-5 bg-surface border border-subtle rounded-[12px] shadow-[0_8px_24px_rgba(26,24,20,0.10)] ${
         align === "left" ? "left-0" : "right-0"
       }`}
     >
@@ -231,17 +236,20 @@ export function DateTimeField({ value, onChange, id, className = "", ...aria }: 
   const [align, setAlign] = useState<"left" | "right">("left");
   const rootRef = useRef<HTMLDivElement>(null);
 
+  // Elegir el lado que no se salga del viewport: por defecto se
+  // extiende hacia la derecha del campo; si no cabe, hacia la izquierda.
+  const computeAlign = useCallback(() => {
+    if (!rootRef.current) return;
+    const rect = rootRef.current.getBoundingClientRect();
+    setAlign(rect.left + POPOVER_WIDTH <= window.innerWidth - VIEWPORT_MARGIN ? "left" : "right");
+  }, []);
+
   function toggleOpen() {
-    if (!open && rootRef.current) {
-      // Elegir el lado que no se salga del viewport: por defecto se
-      // extiende hacia la derecha del campo; si no cabe, hacia la izquierda.
-      const rect = rootRef.current.getBoundingClientRect();
-      setAlign(rect.left + 300 <= window.innerWidth - 12 ? "left" : "right");
-    }
+    if (!open) computeAlign();
     setOpen((v) => !v);
   }
 
-  // Cerrar el popover con click afuera o Escape
+  // Cerrar el popover con click afuera o Escape; re-anclar si cambia el viewport
   useEffect(() => {
     if (!open) return;
     function onPointerDown(e: PointerEvent) {
@@ -252,11 +260,13 @@ export function DateTimeField({ value, onChange, id, className = "", ...aria }: 
     }
     document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
+    window.addEventListener("resize", computeAlign);
     return () => {
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("resize", computeAlign);
     };
-  }, [open]);
+  }, [open, computeAlign]);
 
   function emit(display: string) {
     if (display === "") {

@@ -368,6 +368,21 @@ const MILESTONE_LABELS: Record<string, string> = {
 
 // ─── AttemptView ─────────────────────────────────────────────────────────────
 
+/** Botón de entrega compartido por el diálogo de salida y la confirmación
+ *  inline: un solo lugar para el estado "Enviando…" y el disabled. */
+function SubmitButton({ label, submitting, onClick, className }: {
+  label: string;
+  submitting: boolean;
+  onClick: () => void;
+  className: string;
+}) {
+  return (
+    <button type="button" disabled={submitting} onClick={onClick} className={className}>
+      {submitting ? "Enviando…" : label}
+    </button>
+  );
+}
+
 export function AttemptView({ attempt, questions, initialAnswers, quiz, student: _s, contentUrl }: Props) {
   const router = useRouter();
   const [answers, setAnswers] = useState<AnswerMap>(() => {
@@ -386,6 +401,18 @@ export function AttemptView({ attempt, questions, initialAnswers, quiz, student:
   const dirtyRef = useRef<Set<string>>(new Set());
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const offlineQueueRef = useRef<{ question_id: string; response: Record<string, unknown>; ts: string }[]>([]);
+
+  // Al volver con Atrás, el router cache de Next puede restaurar esta
+  // página sin pasar por el server (que redirige intentos enviados), con
+  // props stale donde el intento sigue "in_progress". La marca en
+  // sessionStorage detecta ese caso y reenvía a resultados.
+  const submittedFlagKey = `aula-attempt-submitted-${attempt.id}`;
+  useEffect(() => {
+    if (!submitted && sessionStorage.getItem(submittedFlagKey)) {
+      router.replace(`${contentUrl}?resultado=${attempt.id}`);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // F4-07: enhanced timer with milestones
   const { display: timerDisplay, expired: timerExpired, remaining, milestone } = useTimer(attempt.expires_at);
@@ -410,15 +437,23 @@ export function AttemptView({ attempt, questions, initialAnswers, quiz, student:
   // warning (salir = enviar el intento); cerrar/recargar usa el diálogo
   // nativo de beforeunload.
   useEffect(() => {
-    if (submitted) return;
+    // En la pantalla de pestaña duplicada no hay modal de aviso y el
+    // usuario DEBE poder salir, así que el guard no aplica. Tampoco si el
+    // intento ya se envió (incluida la restauración stale desde caché).
+    if (submitted || isDuplicate || sessionStorage.getItem(submittedFlagKey)) return;
 
     function onBeforeUnload(e: BeforeUnloadEvent) {
       e.preventDefault();
+      // Chromium <119 ignora preventDefault y requiere returnValue.
+      e.returnValue = "";
     }
 
     // Estado centinela: el botón Atrás dispara popstate, re-empujamos el
-    // estado para permanecer en la página y mostramos el aviso.
-    window.history.pushState({ aulaAttemptGuard: true }, "");
+    // estado para permanecer en la página y mostramos el aviso. Solo se
+    // empuja si no existe ya (StrictMode monta el efecto dos veces).
+    if (window.history.state?.aulaAttemptGuard !== true) {
+      window.history.pushState({ aulaAttemptGuard: true }, "");
+    }
     function onPopState() {
       window.history.pushState({ aulaAttemptGuard: true }, "");
       setLeaveWarning(true);
@@ -427,10 +462,13 @@ export function AttemptView({ attempt, questions, initialAnswers, quiz, student:
     // Links internos (breadcrumbs, etc.) no pasan por popstate ni
     // beforeunload — se interceptan en fase de captura.
     function onClickCapture(e: MouseEvent) {
-      const a = (e.target as HTMLElement).closest?.("a[href]");
+      // Clicks que abren otra pestaña/descarga no abandonan el intento.
+      if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+      const a = (e.target as HTMLElement).closest?.("a[href]") as HTMLAnchorElement | null;
       if (!a) return;
       const href = a.getAttribute("href") ?? "";
       if (href.startsWith("#")) return;
+      if (a.target === "_blank" || a.hasAttribute("download")) return;
       e.preventDefault();
       e.stopPropagation();
       setLeaveWarning(true);
@@ -444,7 +482,7 @@ export function AttemptView({ attempt, questions, initialAnswers, quiz, student:
       window.removeEventListener("popstate", onPopState);
       document.removeEventListener("click", onClickCapture, true);
     };
-  }, [submitted]);
+  }, [submitted, isDuplicate, submittedFlagKey]);
 
   // Autosave dirty answers every 3s
   const flush = useCallback(async () => {
@@ -523,13 +561,32 @@ export function AttemptView({ attempt, questions, initialAnswers, quiz, student:
   async function handleSubmit() {
     await flush();
     startSubmit(async () => {
-      const res = await fetch(`/api/attempts/${attempt.id}/submit`, { method: "POST" });
-      const data = await res.json();
-      if (res.ok) {
-        setSubmitted(true);
-        router.push(`${contentUrl}?resultado=${attempt.id}`);
-      } else {
-        setSubmitError(data.error ?? "Error al enviar.");
+      try {
+        const res = await fetch(`/api/attempts/${attempt.id}/submit`, { method: "POST" });
+        const data = await res.json();
+        const resultUrl = `${contentUrl}?resultado=${attempt.id}`;
+        if (res.ok) {
+          sessionStorage.setItem(submittedFlagKey, "1");
+          setSubmitted(true);
+          // Si estamos sobre la entrada centinela del guard, reemplazarla
+          // en vez de apilar — así Atrás desde resultados no cae en una
+          // entrada duplicada del intento.
+          if (window.history.state?.aulaAttemptGuard === true) {
+            router.replace(resultUrl);
+          } else {
+            router.push(resultUrl);
+          }
+        } else if (res.status === 409) {
+          // El intento ya no está en curso (enviado en otra pestaña o
+          // página restaurada desde caché): ir a resultados, no es error.
+          sessionStorage.setItem(submittedFlagKey, "1");
+          setSubmitted(true);
+          router.replace(resultUrl);
+        } else {
+          setSubmitError(data.error ?? "Error al enviar.");
+        }
+      } catch {
+        setSubmitError("No se pudo enviar. Revisa tu conexión e inténtalo de nuevo.");
       }
     });
   }
@@ -592,22 +649,24 @@ export function AttemptView({ attempt, questions, initialAnswers, quiz, student:
                 </p>
               </div>
             </div>
+            {submitError && (
+              <p className="text-caption text-borgona" role="alert">{submitError}</p>
+            )}
             <div className="flex gap-2">
               <button
                 type="button"
+                disabled={submitting}
                 onClick={() => setLeaveWarning(false)}
-                className="flex-1 py-2.5 bg-accent-deep text-page rounded-[8px] text-caption font-bold hover:bg-accent-deep/88 transition-colors"
+                className="flex-1 py-2.5 bg-accent-deep text-page rounded-[8px] text-caption font-bold hover:bg-accent-deep/88 disabled:opacity-50 transition-colors"
               >
                 Seguir respondiendo
               </button>
-              <button
-                type="button"
-                disabled={submitting}
-                onClick={() => { setLeaveWarning(false); handleSubmit(); }}
+              <SubmitButton
+                label="Enviar y salir"
+                submitting={submitting}
+                onClick={handleSubmit}
                 className="flex-1 py-2.5 border border-subtle text-ink-soft rounded-[8px] text-caption font-bold hover:text-borgona hover:border-borgona/40 disabled:opacity-50 transition-colors"
-              >
-                {submitting ? "Enviando…" : "Enviar y salir"}
-              </button>
+              />
             </div>
           </div>
         </div>
@@ -744,14 +803,12 @@ export function AttemptView({ attempt, questions, initialAnswers, quiz, student:
                 Una vez entregada no podrás cambiar tus respuestas.
               </p>
               <div className="flex gap-3">
-                <button
-                  type="button"
+                <SubmitButton
+                  label="Confirmar entrega"
+                  submitting={submitting}
                   onClick={handleSubmit}
-                  disabled={submitting}
                   className="flex-1 py-3 bg-accent-deep text-page rounded-[10px] text-caption font-bold hover:bg-accent-deep/88 disabled:opacity-50 transition-colors"
-                >
-                  {submitting ? "Enviando…" : "Confirmar entrega"}
-                </button>
+                />
                 <button
                   type="button"
                   onClick={() => setConfirmingSubmit(false)}
