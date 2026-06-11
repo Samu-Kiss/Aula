@@ -246,8 +246,8 @@ function SingleChoiceQuestion({ question, response, onChange, submitted }: QProp
           onClick={() => onChange({ selected_id: opt.id })}
           className={`w-full text-left px-4 py-3 rounded-[10px] border transition-colors text-body ${
             selected === opt.id
-              ? "border-indigo bg-indigo/8 text-ink"
-              : "border-subtle bg-surface text-ink hover:border-indigo/40"
+              ? "border-accent bg-accent/8 text-ink"
+              : "border-subtle bg-surface text-ink hover:border-accent/40"
           } disabled:cursor-default`}
         >
           {opt.text}
@@ -276,12 +276,12 @@ function MultiChoiceQuestion({ question, response, onChange, submitted }: QProps
           onClick={() => toggle(opt.id)}
           className={`w-full text-left px-4 py-3 rounded-[10px] border transition-colors text-body ${
             selected.includes(opt.id)
-              ? "border-indigo bg-indigo/8 text-ink"
-              : "border-subtle bg-surface text-ink hover:border-indigo/40"
+              ? "border-accent bg-accent/8 text-ink"
+              : "border-subtle bg-surface text-ink hover:border-accent/40"
           } disabled:cursor-default`}
         >
           <span className={`inline-block w-3.5 h-3.5 rounded-[3px] border mr-3 align-middle transition-colors ${
-            selected.includes(opt.id) ? "border-indigo bg-indigo" : "border-ink-mute"
+            selected.includes(opt.id) ? "border-accent-deep bg-accent-deep" : "border-ink-mute"
           }`} />
           {opt.text}
         </button>
@@ -303,8 +303,8 @@ function TrueFalseQuestion({ question, response, onChange, submitted }: QProps) 
           onClick={() => onChange({ answer: v })}
           className={`flex-1 py-3 rounded-[10px] border text-body font-medium transition-colors ${
             selected === v
-              ? "border-indigo bg-indigo/8 text-ink"
-              : "border-subtle bg-surface text-ink-soft hover:border-indigo/40"
+              ? "border-accent bg-accent/8 text-ink"
+              : "border-subtle bg-surface text-ink-soft hover:border-accent/40"
           } disabled:cursor-default`}
         >
           {v ? "Verdadero" : "Falso"}
@@ -382,6 +382,7 @@ export function AttemptView({ attempt, questions, initialAnswers, quiz, student:
   const [submitting, startSubmit] = useTransition();
   const [submitError, setSubmitError] = useState("");
   const [confirmingSubmit, setConfirmingSubmit] = useState(false);
+  const [leaveWarning, setLeaveWarning] = useState(false);
   const dirtyRef = useRef<Set<string>>(new Set());
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const offlineQueueRef = useRef<{ question_id: string; response: Record<string, unknown>; ts: string }[]>([]);
@@ -403,6 +404,47 @@ export function AttemptView({ attempt, questions, initialAnswers, quiz, student:
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timerExpired]);
+
+  // Guard de navegación: mientras el intento esté en curso no se puede
+  // salir sin aviso. Atrás del navegador y clicks en links muestran el
+  // warning (salir = enviar el intento); cerrar/recargar usa el diálogo
+  // nativo de beforeunload.
+  useEffect(() => {
+    if (submitted) return;
+
+    function onBeforeUnload(e: BeforeUnloadEvent) {
+      e.preventDefault();
+    }
+
+    // Estado centinela: el botón Atrás dispara popstate, re-empujamos el
+    // estado para permanecer en la página y mostramos el aviso.
+    window.history.pushState({ aulaAttemptGuard: true }, "");
+    function onPopState() {
+      window.history.pushState({ aulaAttemptGuard: true }, "");
+      setLeaveWarning(true);
+    }
+
+    // Links internos (breadcrumbs, etc.) no pasan por popstate ni
+    // beforeunload — se interceptan en fase de captura.
+    function onClickCapture(e: MouseEvent) {
+      const a = (e.target as HTMLElement).closest?.("a[href]");
+      if (!a) return;
+      const href = a.getAttribute("href") ?? "";
+      if (href.startsWith("#")) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setLeaveWarning(true);
+    }
+
+    window.addEventListener("beforeunload", onBeforeUnload);
+    window.addEventListener("popstate", onPopState);
+    document.addEventListener("click", onClickCapture, true);
+    return () => {
+      window.removeEventListener("beforeunload", onBeforeUnload);
+      window.removeEventListener("popstate", onPopState);
+      document.removeEventListener("click", onClickCapture, true);
+    };
+  }, [submitted]);
 
   // Autosave dirty answers every 3s
   const flush = useCallback(async () => {
@@ -529,6 +571,48 @@ export function AttemptView({ attempt, questions, initialAnswers, quiz, student:
 
   return (
     <div className="space-y-4">
+      {/* Warning al intentar salir del intento */}
+      {leaveWarning && !submitted && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 backdrop-blur-sm px-4">
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="leave-warning-title"
+            className="w-full max-w-sm bg-surface rounded-[14px] border border-subtle p-6 space-y-4"
+          >
+            <div className="flex items-start gap-3">
+              <AlertTriangle size={18} className="text-ambar shrink-0 mt-0.5" aria-hidden />
+              <div>
+                <h2 id="leave-warning-title" className="text-h3 text-ink mb-1">
+                  ¿Salir del intento?
+                </h2>
+                <p className="text-body text-ink-soft">
+                  Estás en medio de un intento. Si sales ahora, tus respuestas se
+                  enviarán tal como están y no podrás continuar después.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setLeaveWarning(false)}
+                className="flex-1 py-2.5 bg-accent-deep text-page rounded-[8px] text-caption font-bold hover:bg-accent-deep/88 transition-colors"
+              >
+                Seguir respondiendo
+              </button>
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => { setLeaveWarning(false); handleSubmit(); }}
+                className="flex-1 py-2.5 border border-subtle text-ink-soft rounded-[8px] text-caption font-bold hover:text-borgona hover:border-borgona/40 disabled:opacity-50 transition-colors"
+              >
+                {submitting ? "Enviando…" : "Enviar y salir"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* F4-08: Offline banner */}
       {!isOnline && (
         <div className="flex items-center gap-2 px-4 py-2.5 bg-ambar/10 border border-ambar/20 rounded-[10px]">
@@ -578,7 +662,7 @@ export function AttemptView({ attempt, questions, initialAnswers, quiz, student:
       {/* Barra de progreso */}
       <div className="h-1 bg-surface-alt rounded-full overflow-hidden">
         <div
-          className="h-full bg-indigo rounded-full transition-all"
+          className="h-full bg-accent-deep rounded-full transition-all"
           style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
         />
       </div>
@@ -621,7 +705,7 @@ export function AttemptView({ attempt, questions, initialAnswers, quiz, student:
               onClick={() => setCurrentIndex(i)}
               className={`w-7 h-7 rounded-[6px] text-mono transition-colors ${
                 i === currentIndex
-                  ? "bg-indigo text-white"
+                  ? "bg-accent-deep text-page"
                   : answers[q.id]
                   ? "bg-bosque/20 text-bosque"
                   : "bg-surface-alt text-ink-mute hover:bg-surface-alt/80"

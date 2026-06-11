@@ -79,9 +79,11 @@ interface CalendarPopoverProps {
   selected: Date | null;
   onPick: (d: Date) => void;
   onClose: () => void;
+  /** Anclaje horizontal: hacia dónde se extiende el popover sin salirse */
+  align: "left" | "right";
 }
 
-function CalendarPopover({ selected, onPick, onClose }: CalendarPopoverProps) {
+function CalendarPopover({ selected, onPick, onClose, align }: CalendarPopoverProps) {
   const today = new Date();
   const base = selected ?? today;
   const [viewYear, setViewYear] = useState(base.getFullYear());
@@ -136,7 +138,9 @@ function CalendarPopover({ selected, onPick, onClose }: CalendarPopoverProps) {
     <div
       role="dialog"
       aria-label="Calendario"
-      className="absolute z-50 top-full right-0 mt-2 w-[300px] p-5 bg-surface border border-subtle rounded-[12px] shadow-[0_8px_24px_rgba(26,24,20,0.10)]"
+      className={`absolute z-50 top-full mt-2 w-[300px] p-5 bg-surface border border-subtle rounded-[12px] shadow-[0_8px_24px_rgba(26,24,20,0.10)] ${
+        align === "left" ? "left-0" : "right-0"
+      }`}
     >
       {/* Navegación de mes */}
       <div className="flex items-center justify-between mb-4">
@@ -224,7 +228,18 @@ export function DateTimeField({ value, onChange, id, className = "", ...aria }: 
   const [text, setText] = useState(() => toDisplay(value));
   const [invalid, setInvalid] = useState(false);
   const [open, setOpen] = useState(false);
+  const [align, setAlign] = useState<"left" | "right">("left");
   const rootRef = useRef<HTMLDivElement>(null);
+
+  function toggleOpen() {
+    if (!open && rootRef.current) {
+      // Elegir el lado que no se salga del viewport: por defecto se
+      // extiende hacia la derecha del campo; si no cabe, hacia la izquierda.
+      const rect = rootRef.current.getBoundingClientRect();
+      setAlign(rect.left + 300 <= window.innerWidth - 12 ? "left" : "right");
+    }
+    setOpen((v) => !v);
+  }
 
   // Cerrar el popover con click afuera o Escape
   useEffect(() => {
@@ -302,7 +317,7 @@ export function DateTimeField({ value, onChange, id, className = "", ...aria }: 
       />
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={toggleOpen}
         aria-label="Abrir calendario"
         aria-expanded={open}
         className={`absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-[6px] transition-colors ${
@@ -317,6 +332,7 @@ export function DateTimeField({ value, onChange, id, className = "", ...aria }: 
           selected={selectedDate}
           onPick={handlePick}
           onClose={() => setOpen(false)}
+          align={align}
         />
       )}
     </div>
