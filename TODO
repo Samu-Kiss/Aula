@@ -144,15 +144,33 @@
 > - **OK:** estados vacíos con CTA en todas las secciones (onboarding, archivo, intentos, categorías); aviso "clase en borrador" junto al QR (fix 6.1) funcionando; jerarquía primario oscuro / secundario outline / destructivo borgoña consistente; badges de estado (Publicada/Borrador, Activo, Mejor %, Por calificar, Auto-vinculado) con paleta semántica coherente; sin `rounded-sm/md/lg` fuera del sistema; tipografía y eyebrows consistentes en dashboard y público.
 
 #### 6.5 Responsive y accesibilidad
-- [ ] `F6-18` Responsive completo en mobile, tablet y desktop
-- [ ] `F6-19` Accessibility audit con axe-core/playwright
-- [ ] `F6-20` Revisión manual de accesibilidad: contraste, foco, teclado, labels y estructura semántica
-- [ ] `F6-21` Revisar tamaños de click/tap y usabilidad en pantallas pequeñas
+- [x] `F6-18` Responsive completo en mobile, tablet y desktop
+- [x] `F6-19` Accessibility audit con axe-core/playwright
+- [x] `F6-20` Revisión manual de accesibilidad: contraste, foco, teclado, labels y estructura semántica
+- [x] `F6-21` Revisar tamaños de click/tap y usabilidad en pantallas pequeñas
+
+> **Trabajo registrado en revisión 6.5 (2026-06-10/11, Playwright + navegador real):**
+> - **Suite nueva `e2e/a11y.spec.ts`** (axe-core WCAG 2.1 AA + overflow horizontal a 375/768px + reporte de tap targets) sobre rutas públicas y dashboard; falla con violaciones critical/serious. Scripts de apoyo: `e2e/axe-summary.mjs`, `e2e/overflow-probe.mjs`, `e2e/tap-probe.mjs`. Estado: **19/19 e2e en verde**.
+> - **[Bloqueante a11y → ARREGLADO]** `--color-ink-mute` (#A8A398) fallaba contraste AA (~2.4:1) en *todas* las rutas (eyebrows, mono, hints) → token oscurecido a `#6F6960` (≥4.6:1 sobre page/surface/surface-alt). Igual `--color-ambar`/`--color-warning` semánticos #C18924 → `#8A6419` (texto de avisos); la paleta `--color-accent-*` (identidad de clase) no se tocó. `text-borgona/70` en acciones destructivas → borgoña plena.
+> - **[Importante → ARREGLADO]** Dashboard inutilizable a 375px (overflow 488px: sidebars `ResizablePanel` de ancho fijo + chip de estado del header). Fix: bajo `md` los paneles pasan a `w-full` (ancho elegido solo aplica en `md+` vía CSS var), layouts en columna, nav lateral → fila horizontal scrolleable, módulos con `max-h` y scroll propio, chip de estado oculto en móvil, header compacto (email oculto). Stats del overview a 1 col en móvil; URLs largas con `break-all`.
+> - **[Importante → ARREGLADO]** QR svg sin nombre accesible → prop `title` en los 3 usos de `QRCodeSVG`. Swatches de acento (radios `sr-only`) sin label → `aria-label="Color de acento …"`.
+> - **[Importante → ARREGLADO]** Tap targets <24px en dashboard ("Salir" 36×15, "+ Nuevo módulo" 9×21, Editar/Desactivar/Eliminar del roster 15px de alto) → áreas ampliadas con padding (≥24px, sin cambio visual). Vistas públicas ya estaban todas ≥24px.
+> - **OK manual:** focus rings consistentes (`focus:ring`), un `h1` por página, landmarks correctos (axe), dnd de preguntas con `KeyboardSensor`, opciones de quiz son botones enfocables.
+> - **[Registrado / pendiente]** `map_pin` no es completable por teclado (limitación Mapbox, ya registrada en 6.3); inputs `datetime-local` en inglés (control nativo); el modal de proyección de QR no atrapa el foco (menor: es overlay informativo con botón Cerrar etiquetado).
 
 #### 6.6 Pruebas de usuario y cierre
-- [ ] `F6-22` Crear checklist heurístico UI/UX para evaluar la plataforma
-- [ ] `F6-23` Hacer prueba manual tipo usuario nuevo con escenarios guiados
+- [x] `F6-22` Crear checklist heurístico UI/UX para evaluar la plataforma → `docs/ux-checklist.md` (10 heurísticas de Nielsen adaptadas + secciones de responsive, a11y y tap targets, con criterios de severidad y registro de resultados)
+- [x] `F6-23` Hacer prueba manual tipo usuario nuevo con escenarios guiados
 - [ ] `F6-24` Registrar fricciones, dudas, pasos innecesarios y puntos confusos
+
+> **Hallazgos de la prueba de usuario nuevo (2026-06-11, navegador real, 3 escenarios: profesor crea clase completa → estudiante consume y hace quiz → profesor califica):**
+> - **[Importante → ARREGLADO]** Publicar una evaluación NO la abría a estudiantes: `quizzes.is_available` nace en `false` y el toggle vive en la pestaña Configuración del quiz. El estudiante veía "Esta evaluación no está disponible en este momento" sin motivo y el profesor no recibía ningún aviso. Fix: banner ámbar en el QuizEditor cuando está publicada pero cerrada ("actívala en Configuración") + mensaje del estudiante reescrito ("Tu profesor aún no ha abierto esta evaluación…"). Considerar a futuro: activar disponibilidad por defecto al publicar.
+> - **[Importante → ARREGLADO]** "Entregar evaluación" se ejecutaba con un solo clic, sin confirmación, incluso con preguntas sin responder → confirmación en dos pasos ("Confirmar entrega" / "Seguir respondiendo") con aviso de irreversibilidad.
+> - **[Importante → ARREGLADO]** Con `RESEND_API_KEY` configurada el código de verificación solo llegaba por email real (QA local imposible, fricción ya registrada en 6.1) → en desarrollo el código siempre se loguea en consola y un fallo de Resend ya no rompe el endpoint con 500 (en producción devuelve `send_failed` 502).
+> - **[Menor / confuso]** El chip de estado del top bar (junto al breadcrumb "Contenido") muestra el estado de la CLASE, pero por posición se lee como estado del contenido actual — un contenido "Publicado" convive con chip "Borrador". Además el chip de estado del módulo es a la vez el botón de publicar ("Clic para publicar"), poco descubrible. → candidato a F6-26: etiquetar el chip ("Clase: borrador") y dar al módulo un botón explícito.
+> - **[Menor]** La página del intento en curso no define `document.title` (queda "Aula"); el resto de rutas públicas sí tienen título descriptivo.
+> - **[Menor]** En el header del quiz público, tras identificarse desde la pantalla del quiz la tarjeta "Identificado como" muestra solo el email sin el nombre (al volver a entrar sí muestra ambos).
+> - **OK:** onboarding → primera clase publicada sin fricciones (slug auto, lockup, QR con aviso de borrador del fix 6.1); formulario de módulo se cierra y refresca (fix 6.1 verificado); editor de contenido sin 404 transitorio; autosave "Guardando→Guardado"; feed público inline (F5-18) y sidebar de módulo (F5-22) correctos; identificación de estudiante con lookup de nombre; intento con autosave, paginación y contador de no respondidas; resultado 50% con "Revisión pendiente"; notificación in-app del intento; revisión manual 50%→100% con retroalimentación propagada al gradebook "Por quiz"; export CSV visible.
 - [ ] `F6-25` Priorizar mejoras UX: bloqueantes, importantes, deseables y deuda visual
 - [ ] `F6-26` Aplicar refinamientos finales sin agregar nuevas funcionalidades
 - [ ] `F6-27` Documentar criterios UX para futuras features

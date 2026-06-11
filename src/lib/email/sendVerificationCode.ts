@@ -5,8 +5,12 @@ export async function sendVerificationCode(
   firstName: string,
   code: string
 ): Promise<void> {
-  if (!process.env.RESEND_API_KEY) {
+  // En desarrollo el código siempre se loguea para poder hacer QA local
+  // aunque RESEND_API_KEY esté configurada.
+  if (process.env.NODE_ENV !== "production") {
     console.log(`\n📧 Código de verificación para ${to}: ${code}\n`);
+  }
+  if (!process.env.RESEND_API_KEY) {
     return;
   }
 

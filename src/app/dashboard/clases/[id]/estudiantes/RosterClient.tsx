@@ -279,7 +279,7 @@ export function RosterClient({ classId, initialEnrollments }: Props) {
                         {editingId !== e.id && (
                           <button
                             onClick={() => openEdit(e)}
-                            className="text-caption text-ink-mute hover:text-ink transition-colors"
+                            className="text-caption text-ink-mute hover:text-ink transition-colors py-1.5 px-1 -my-1.5"
                           >
                             Editar
                           </button>
@@ -289,7 +289,7 @@ export function RosterClient({ classId, initialEnrollments }: Props) {
                           <button
                             onClick={() => handleToggleStatus(e.id, e.status)}
                             disabled={isPending}
-                            className="text-caption text-ink-mute hover:text-ink transition-colors disabled:opacity-40"
+                            className="text-caption text-ink-mute hover:text-ink transition-colors disabled:opacity-40 py-1.5 px-1 -my-1.5"
                           >
                             {e.status === "active" ? "Desactivar" : "Reactivar"}
                           </button>
@@ -316,7 +316,7 @@ export function RosterClient({ classId, initialEnrollments }: Props) {
                           ) : (
                             <button
                               onClick={() => { setConfirmDeleteId(e.id); setEditingId(null); }}
-                              className="text-caption text-borgona/70 hover:text-borgona transition-colors"
+                              className="text-caption text-borgona hover:text-borgona/80 transition-colors py-1.5 px-1 -my-1.5"
                             >
                               Eliminar
                             </button>

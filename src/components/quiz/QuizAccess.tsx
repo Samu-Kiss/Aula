@@ -444,7 +444,9 @@ function QuizLanding({ quiz, content, student, availability, onSignOut, classSlu
       {/* Availability state */}
       {availability === "disabled" && (
         <div className="p-5 bg-surface-alt rounded-[10px] text-center">
-          <p className="text-body text-ink-soft">Esta evaluación no está disponible en este momento.</p>
+          <p className="text-body text-ink-soft">
+            Tu profesor aún no ha abierto esta evaluación. Vuelve a intentarlo más tarde.
+          </p>
         </div>
       )}
       {availability === "not_open" && quiz.opens_at && (

@@ -67,13 +67,14 @@ export function ClassQrCode({ url, accentHex, classId: _classId, classTitle, acc
         <div ref={qrRef} className="bg-white p-4 rounded-[12px] border border-subtle inline-block">
           <QRCodeSVG
             value={url}
+            title={`Código QR de acceso a la clase: ${url}`}
             size={160}
             fgColor={accentHex}
             bgColor="#ffffff"
             level="M"
           />
         </div>
-        <p className="text-mono text-ink-mute text-[12px]">{url}</p>
+        <p className="text-mono text-ink-mute text-[12px] break-all">{url}</p>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setProjecting(true)}
@@ -115,6 +116,7 @@ export function ClassQrCode({ url, accentHex, classId: _classId, classTitle, acc
             <div className="bg-white p-5 rounded-[16px] border border-[rgba(0,0,0,0.06)]">
               <QRCodeSVG
                 value={url}
+                title={`Código QR de acceso a la clase: ${url}`}
                 size={340}
                 fgColor={accentHex}
                 bgColor="#ffffff"

@@ -31,7 +31,7 @@ export default async function ClassOverviewPage({ params }: Props) {
         <p className="text-body text-ink-soft mb-6">{cls.description}</p>
       )}
 
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <div className="bg-surface rounded-[12px] border-subtle p-4">
           <p className="text-[28px] font-black text-ink leading-none">{modules.length}</p>
           <p className="text-caption text-ink-mute mt-1">Módulos</p>
@@ -43,7 +43,7 @@ export default async function ClassOverviewPage({ params }: Props) {
           <p className="text-caption text-ink-mute mt-1">Publicados</p>
         </div>
         <div className="bg-surface rounded-[12px] border-subtle p-4">
-          <p className="text-mono text-ink leading-none pt-1">/c/{cls.slug}</p>
+          <p className="text-mono text-ink leading-none pt-1 break-all">/c/{cls.slug}</p>
           <p className="text-caption text-ink-mute mt-1">URL pública</p>
         </div>
       </div>

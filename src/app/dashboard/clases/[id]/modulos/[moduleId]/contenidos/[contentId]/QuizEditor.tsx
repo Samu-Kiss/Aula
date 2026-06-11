@@ -764,6 +764,17 @@ export function QuizEditor({ contentId, classId, initialQuiz, initialQuestions, 
 
   return (
     <div className="space-y-5">
+      {/* Aviso: publicada pero cerrada para estudiantes */}
+      {published && !quiz.is_available && (
+        <div className="flex items-start gap-2 rounded-[10px] border border-ambar/40 bg-ambar/10 p-3">
+          <p className="text-caption text-ink-soft leading-snug">
+            La evaluación está publicada pero{" "}
+            <span className="font-medium text-ink">cerrada para estudiantes</span>: actívala con
+            &ldquo;Disponible para estudiantes&rdquo; en la pestaña Configuración.
+          </p>
+        </div>
+      )}
+
       {/* Header con botón publicar */}
       <div className="flex items-center justify-end mb-1">
         <button

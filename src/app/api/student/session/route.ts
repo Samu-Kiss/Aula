@@ -49,7 +49,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "internal_error" }, { status: 500 });
   }
 
-  await sendVerificationCode(email, first_name, code);
+  try {
+    await sendVerificationCode(email, first_name, code);
+  } catch {
+    // En desarrollo el código ya quedó logueado en consola; en producción
+    // un fallo de envío sí debe reportarse al estudiante.
+    if (process.env.NODE_ENV === "production") {
+      return NextResponse.json({ error: "send_failed" }, { status: 502 });
+    }
+  }
 
   return NextResponse.json({ ok: true });
 }

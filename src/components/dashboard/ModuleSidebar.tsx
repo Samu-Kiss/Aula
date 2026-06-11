@@ -192,13 +192,13 @@ export function ModuleSidebar({ classId, initialModules }: Props) {
       defaultWidth={224}
       minWidth={176}
       maxWidth={420}
-      className="border-r border-[rgba(0,0,0,0.08)] bg-surface"
+      className="border-[rgba(0,0,0,0.08)] bg-surface md:border-r max-md:border-b max-md:max-h-64 max-md:overflow-y-auto"
     >
       <div className="px-3 py-3 border-b border-[rgba(0,0,0,0.08)] flex items-center justify-between">
         <span className="text-caption text-ink-mute">Módulos</span>
         <button
           onClick={() => setShowForm((v) => !v)}
-          className="text-body text-ink-soft hover:text-ink transition-colors leading-none"
+          className="w-6 h-6 flex items-center justify-center rounded-[6px] text-body text-ink-soft hover:text-ink hover:bg-surface-alt transition-colors leading-none"
           aria-label="Nuevo módulo"
         >
           +

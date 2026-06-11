@@ -29,7 +29,7 @@ export default async function ClassEditorLayout({ children, params }: Props) {
   const modules = await moduleRepo(supabase).listByClass(id);
 
   return (
-    <div className="flex flex-1 min-h-0 -mx-8 -my-8">
+    <div className="flex flex-1 min-h-0 -mx-4 -my-6 md:-mx-8 md:-my-8 max-md:flex-col">
       {/* Título de la clase + breadcrumbs, inyectados en el header del dashboard */}
       <ClassHeaderCrumbs
         classId={id}
@@ -44,7 +44,7 @@ export default async function ClassEditorLayout({ children, params }: Props) {
       <ModuleSidebar classId={id} initialModules={modules} />
 
       {/* Page content */}
-      <div className="flex-1 min-w-0 overflow-y-auto px-8 py-8">
+      <div className="flex-1 min-w-0 overflow-y-auto px-4 py-6 md:px-8 md:py-8">
         {children}
       </div>
     </div>

@@ -92,12 +92,18 @@ export function ResizablePanel({
 
   const autoFit = useCallback(() => setMeasuring(true), []);
 
+  // En móvil (<md) el panel ocupa el ancho completo y el ancho elegido
+  // solo aplica en pantallas md+ vía la variable CSS.
   const style = measuring
     ? ({ width: "max-content", minWidth, maxWidth } as const)
-    : ({ width } as const);
+    : ({ "--panel-w": `${width}px` } as React.CSSProperties);
 
   return (
-    <div ref={ref} style={style} className={`relative box-border shrink-0 flex flex-col ${className}`}>
+    <div
+      ref={ref}
+      style={style}
+      className={`relative box-border shrink-0 flex flex-col w-full md:w-[var(--panel-w)] ${className}`}
+    >
       {children}
 
       {/* Divisor: arrastrar = redimensionar; doble-clic = autoajustar al contenido */}
@@ -107,7 +113,7 @@ export function ResizablePanel({
         role="separator"
         aria-orientation="vertical"
         aria-label="Redimensionar columna (doble clic para ajustar al contenido)"
-        className="group absolute top-0 right-0 h-full w-2 translate-x-1/2 cursor-col-resize z-20 flex justify-center"
+        className="group absolute top-0 right-0 h-full w-2 translate-x-1/2 cursor-col-resize z-20 hidden md:flex justify-center"
       >
         <span className="w-px h-full bg-transparent group-hover:bg-ink/20 group-active:bg-ink/30 transition-colors" />
       </div>

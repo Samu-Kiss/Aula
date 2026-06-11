@@ -23,6 +23,7 @@ export function QrProjectionView({ url, accentHex, classTitle }: Props) {
         <div className="bg-white p-5 rounded-[20px] shadow-lg border border-[rgba(0,0,0,0.06)]">
           <QRCodeSVG
             value={url}
+            title={`Código QR de acceso a la clase ${classTitle}: ${url}`}
             size={380}
             fgColor={accentHex}
             bgColor="#ffffff"

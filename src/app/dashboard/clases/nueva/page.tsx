@@ -122,6 +122,7 @@ export default function NuevaClasePage() {
                   value={a.value}
                   checked={accent === a.value}
                   onChange={() => setAccent(a.value)}
+                  aria-label={`Color de acento ${a.label}`}
                   className="sr-only"
                 />
                 <span

@@ -184,7 +184,7 @@ export function CategoriasClient({ classId, initialCategories, initialItems, qui
                     <span className="ml-2 text-caption text-ink-mute">{cat.weight}%</span>
                   </div>
                   <button onClick={() => setEditingCat(cat.id)} className="text-caption text-ink-mute hover:text-ink transition-colors">Editar</button>
-                  <button onClick={() => handleDeleteCategory(cat.id)} disabled={isPending} className="text-caption text-borgona/70 hover:text-borgona transition-colors disabled:opacity-40">Eliminar</button>
+                  <button onClick={() => handleDeleteCategory(cat.id)} disabled={isPending} className="text-caption text-borgona hover:text-borgona/80 transition-colors disabled:opacity-40">Eliminar</button>
                 </div>
               )}
 
@@ -290,7 +290,7 @@ export function CategoriasClient({ classId, initialCategories, initialItems, qui
                       <button
                         onClick={() => handleDeleteItem(item.id)}
                         disabled={isPending}
-                        className="text-caption text-borgona/70 hover:text-borgona transition-colors disabled:opacity-40"
+                        className="text-caption text-borgona hover:text-borgona/80 transition-colors disabled:opacity-40"
                       >
                         Eliminar
                       </button>

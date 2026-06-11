@@ -92,7 +92,7 @@ export function ClassHeaderCrumbs({ classId, title, accent, splitAt, isPublished
       ))}
 
       <span
-        className={`ml-2 text-mono px-2 py-0.5 rounded-[4px] shrink-0 ${
+        className={`ml-2 text-mono px-2 py-0.5 rounded-[4px] shrink-0 max-md:hidden ${
           isPublished ? "bg-bosque/10 text-bosque" : "bg-surface-alt text-ink-mute"
         }`}
       >

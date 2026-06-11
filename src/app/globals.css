@@ -12,7 +12,8 @@
   --color-surface-alt: #F0EDE5;
   --color-ink: #1A1814;
   --color-ink-soft: #6B665C;
-  --color-ink-mute: #A8A398;
+  /* AA 4.5:1 sobre page, surface y surface-alt (antes #A8A398, ~2.4:1) */
+  --color-ink-mute: #6F6960;
 
   /* Acentos por clase — definidos con y sin prefijo para que bg-indigo y bg-accent-indigo funcionen */
   --color-accent-indigo: #4C51BF;
@@ -28,14 +29,16 @@
   --color-terracota: #C25733;
   --color-bosque: #24755B;
   --color-ciruela: #9B478A;
-  --color-ambar: #C18924;
+  /* Ámbar semántico (avisos/texto): oscurecido para AA; el acento de clase
+     sigue siendo --color-accent-ambar #C18924 */
+  --color-ambar: #8A6419;
   --color-pizarra: #3F638A;
   --color-borgona: #922F41;
   --color-salvia: #737A43;
 
   /* Semánticos */
   --color-success: #24755B;
-  --color-warning: #C18924;
+  --color-warning: #8A6419;
   --color-error: #922F41;
 
   /* Radios */

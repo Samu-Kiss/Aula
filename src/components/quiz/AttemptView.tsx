@@ -381,6 +381,7 @@ export function AttemptView({ attempt, questions, initialAnswers, quiz, student:
   const [isDuplicate, setIsDuplicate] = useState(false);
   const [submitting, startSubmit] = useTransition();
   const [submitError, setSubmitError] = useState("");
+  const [confirmingSubmit, setConfirmingSubmit] = useState(false);
   const dirtyRef = useRef<Set<string>>(new Set());
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const offlineQueueRef = useRef<{ question_id: string; response: Record<string, unknown>; ts: string }[]>([]);
@@ -653,14 +654,39 @@ export function AttemptView({ attempt, questions, initialAnswers, quiz, student:
             </p>
           )}
           {submitError && <p className="text-caption text-borgona text-center">{submitError}</p>}
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="w-full py-3 bg-ink text-surface rounded-[10px] text-caption font-bold hover:bg-ink/90 disabled:opacity-50 transition-colors"
-          >
-            {submitting ? "Enviando…" : "Entregar evaluación"}
-          </button>
+          {confirmingSubmit ? (
+            <div className="space-y-2">
+              <p className="text-caption text-ink-soft text-center" role="status">
+                Una vez entregada no podrás cambiar tus respuestas.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  className="flex-1 py-3 bg-ink text-surface rounded-[10px] text-caption font-bold hover:bg-ink/90 disabled:opacity-50 transition-colors"
+                >
+                  {submitting ? "Enviando…" : "Confirmar entrega"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmingSubmit(false)}
+                  disabled={submitting}
+                  className="px-5 py-3 bg-surface-alt text-ink-soft rounded-[10px] text-caption font-medium hover:text-ink disabled:opacity-50 transition-colors"
+                >
+                  Seguir respondiendo
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmingSubmit(true)}
+              className="w-full py-3 bg-ink text-surface rounded-[10px] text-caption font-bold hover:bg-ink/90 transition-colors"
+            >
+              Entregar evaluación
+            </button>
+          )}
         </div>
       )}
     </div>

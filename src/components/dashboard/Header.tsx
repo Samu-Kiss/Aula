@@ -11,7 +11,7 @@ export function Header({ email }: Props) {
       {/* Marca, alineada con el ancho del sidebar de abajo */}
       <Link
         href="/dashboard"
-        className="w-56 shrink-0 flex items-center px-6 hover:opacity-80 transition-opacity"
+        className="w-auto px-4 md:w-56 md:px-6 shrink-0 flex items-center hover:opacity-80 transition-opacity"
       >
         <span className="font-black text-2xl leading-none text-ink tracking-tight">
           Aula
@@ -21,15 +21,15 @@ export function Header({ email }: Props) {
       {/* Título + breadcrumbs centrados respecto a toda la barra (vía portal) */}
       <div
         id="dashboard-header-slot"
-        className="absolute left-1/2 top-0 h-full -translate-x-1/2 flex items-center gap-3 px-8 min-w-0 max-w-[55%]"
+        className="absolute left-1/2 top-0 h-full -translate-x-1/2 flex items-center gap-3 px-8 min-w-0 max-w-[55%] overflow-hidden"
       />
 
-      <div className="ml-auto flex items-center gap-4 px-8 shrink-0">
-        <span className="text-mono text-ink-mute">{email}</span>
+      <div className="ml-auto flex items-center gap-4 px-4 md:px-8 shrink-0">
+        <span className="text-mono text-ink-mute max-md:hidden">{email}</span>
         <form action={logoutAction}>
           <button
             type="submit"
-            className="text-caption text-ink-soft hover:text-ink transition-colors"
+            className="text-caption text-ink-soft hover:text-ink transition-colors px-2 py-2.5 -mx-2"
           >
             Salir
           </button>
