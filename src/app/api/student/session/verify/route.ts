@@ -50,7 +50,6 @@ export async function POST(request: NextRequest) {
     .from("students")
     .select("id, email")
     .eq("email", email)
-    .eq("is_anonymized", false)
     .maybeSingle();
 
   let student: { id: string; email: string } | null = existing;

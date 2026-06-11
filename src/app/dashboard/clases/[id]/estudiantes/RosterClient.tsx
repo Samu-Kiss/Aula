@@ -20,7 +20,6 @@ interface Enrollment {
     first_name: string | null;
     last_name: string | null;
     display_name: string | null;
-    is_anonymized: boolean;
   };
 }
 
@@ -264,8 +263,8 @@ export function RosterClient({ classId, initialEnrollments }: Props) {
                     className={`border-b border-[rgba(0,0,0,0.04)] ${editingId === e.id ? "" : "last:border-0"} ${i % 2 === 0 ? "bg-surface" : "bg-surface-alt/30"}`}
                   >
                     <td className="px-4 py-3">
-                      <p className={`text-body font-medium ${e.students.is_anonymized ? "text-ink-mute" : "text-ink"}`}>
-                        {e.students.is_anonymized ? "[Anónimo]" : studentLabel(e.students)}
+                      <p className="text-body font-medium text-ink">
+                        {studentLabel(e.students)}
                       </p>
                     </td>
                     <td className="px-4 py-3 text-mono text-ink-soft">{e.students.email}</td>
@@ -277,7 +276,7 @@ export function RosterClient({ classId, initialEnrollments }: Props) {
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-3">
                         {/* Edit */}
-                        {!e.students.is_anonymized && editingId !== e.id && (
+                        {editingId !== e.id && (
                           <button
                             onClick={() => openEdit(e)}
                             className="text-caption text-ink-mute hover:text-ink transition-colors"

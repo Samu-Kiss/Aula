@@ -11,8 +11,7 @@ interface Props {
   params: Promise<{ id: string; attemptId: string }>;
 }
 
-function studentName(s: { first_name: string | null; last_name: string | null; display_name: string | null; email: string; is_anonymized?: boolean }) {
-  if (s.is_anonymized) return "[Anónimo]";
+function studentName(s: { first_name: string | null; last_name: string | null; display_name: string | null; email: string }) {
   if (s.display_name) return s.display_name;
   if (s.first_name || s.last_name) return `${s.first_name ?? ""} ${s.last_name ?? ""}`.trim();
   return s.email;
@@ -50,7 +49,7 @@ export default async function AttemptDetailPage({ params }: Props) {
   // Cargar datos del estudiante
   const { data: student } = await svc
     .from("students")
-    .select("id, email, first_name, last_name, display_name, is_anonymized")
+    .select("id, email, first_name, last_name, display_name")
     .eq("id", attempt.student_id)
     .single();
 
@@ -80,7 +79,7 @@ export default async function AttemptDetailPage({ params }: Props) {
         <h1 className="text-h2 text-ink mt-2 mb-1">
           {student ? studentName(student) : "Estudiante"}
         </h1>
-        {student && !student.is_anonymized && <p className="text-mono text-ink-mute">{student.email}</p>}
+        {student && <p className="text-mono text-ink-mute">{student.email}</p>}
       </div>
 
       {/* Score card */}

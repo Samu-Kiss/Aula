@@ -64,9 +64,7 @@ async function NotasTab({ classId, className }: { classId: string; className: st
     repo.listGradesByClass(classId),
   ]);
 
-  const activeEnrollments = enrollments.filter(
-    (e) => e.status === "active" && !e.students.is_anonymized
-  );
+  const activeEnrollments = enrollments.filter((e) => e.status === "active");
 
   if (categories.length === 0) {
     return (
@@ -204,7 +202,6 @@ async function QuicesTab({ classId, className }: { classId: string; className: s
     .from("students")
     .select("id, email, first_name, last_name, display_name")
     .in("id", studentIds)
-    .eq("is_anonymized", false)
     .order("last_name", { ascending: true });
 
   type ScoreEntry = { score: number; max: number };

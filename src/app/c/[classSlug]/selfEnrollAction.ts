@@ -26,7 +26,6 @@ export async function selfEnrollAction(
     .from("students")
     .select("id, email, first_name, last_name, display_name")
     .eq("email", email)
-    .eq("is_anonymized", false)
     .maybeSingle();
 
   let student: { id: string; email: string; first_name: string | null; last_name: string | null; display_name: string | null } | null = null;

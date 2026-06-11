@@ -229,14 +229,10 @@ create table students (
   email_verified_at timestamptz,
   notes text check (notes is null or char_length(notes) <= 2000),
 
-  -- Anonimización (right to be forgotten)
-  is_anonymized boolean not null default false,
-  anonymized_at timestamptz,
-
   first_seen_at timestamptz not null default now(),
   last_seen_at timestamptz not null default now(),
 
-  unique (email) where is_anonymized = false
+  unique (email)
 );
 
 create table class_students (
@@ -255,7 +251,7 @@ create table student_email_codes (
   email text not null,
   code_hash text not null,
   purpose text not null default 'quiz_login'
-    check (purpose in ('quiz_login','anonymization')),
+    check (purpose = 'quiz_login'),
   expires_at timestamptz not null,
   consumed_at timestamptz,
   created_at timestamptz not null default now()
@@ -845,7 +841,6 @@ El profesor accede a `/dashboard/clases/[id]/intentos` para ver una cola de inte
 | `/api/student/session` | POST | Solicitar código de verificación por email |
 | `/api/student/session/verify` | POST | Verificar código y emitir JWT de estudiante |
 | `/api/student/session` | DELETE | Cerrar sesión |
-| `/api/student/anonymize` | POST | Solicitar anonimización |
 | `/api/uploads/sign` | POST | URL firmada para R2 |
 | `/api/classes/[id]/students/import` | POST | Importar roster CSV |
 | `/api/classes/[id]/grades/export` | GET | Exportar calificaciones CSV |
@@ -1305,7 +1300,7 @@ Estados de carga: skeleton loaders en listados, spinners en botones, indicador "
 
 ---
 
-## 13. Soft delete y anonimización
+## 13. Soft delete
 
 ### 13.1 Soft delete
 
@@ -1321,7 +1316,7 @@ Tablas con hard delete controlado desde su parent directo:
 Tablas que no deben borrarse por cascada desde contenido académico:
 
 - `attempts`: evidencia académica. `attempts.quiz_id` usa `on delete set null` y el intento conserva sus preguntas mediante snapshots.
-- `students`: ver anonimización.
+- `students`: se conservan como evidencia académica; la eliminación de datos se gestiona manualmente por el profesor si un estudiante lo solicita.
 - `notifications`: TTL de 90 días via cron.
 
 ### 13.2 Comportamiento al borrar
@@ -1330,23 +1325,9 @@ Tablas que no deben borrarse por cascada desde contenido académico:
 |---|---|
 | Profe borra clase | `classes.deleted_at = now()`. Cascade lógico: módulos, contenidos, quizzes, grade_items quedan accesibles para el profe en una sección de "Archivo" en el dashboard, recuperables por 30 días, luego hard delete por cron. |
 | Profe borra módulo | `modules.deleted_at = now()`. Contenidos y quizzes asociados quedan deleted_at también. |
-| Estudiante solicita eliminación | Anonimización (no hard delete). |
+| Estudiante solicita eliminación | El profesor gestiona la solicitud manualmente (eliminándolo del roster). |
 
-### 13.3 Anonimización del estudiante
-
-**Endpoint:** `/api/student/anonymize`. Requiere confirmación por email (envía link con token).
-
-**Proceso:**
-
-1. `students.email` → `redacted-{uuid}@aula.local`.
-2. `students.display_name` → `null`.
-3. `students.notes` → `null`.
-4. `students.is_anonymized = true`, `anonymized_at = now()`.
-5. Los `attempts`, `answers` y `grades` quedan asociados al `student.id` anonimizado.
-
-Esto permite preservar la integridad del gradebook sin retener PII.
-
-### 13.4 Restauración
+### 13.3 Restauración
 
 El profesor tiene una sección `/dashboard/archivo` que lista clases, módulos y contenidos soft-deleted en los últimos 30 días con botón "Restaurar". Pasados los 30 días, un cron job hace hard delete.
 
@@ -1378,9 +1359,8 @@ Resend con plantillas React Email. Eventos:
 |---|---|
 | Intento enviado | "Recibimos tu intento — Evaluación módulo 2" |
 | Intento calificado manualmente | "Tu nota está lista — Evaluación módulo 2" |
-| Solicitud de anonimización (confirmación) | "Confirma la eliminación de tus datos" |
 
-Cada email incluye un link de unsubscribe que excluye al estudiante de futuros emails (excepto los de seguridad/legales como la confirmación de anonimización).
+Cada email incluye un link de unsubscribe que excluye al estudiante de futuros emails.
 
 Variables de entorno: `RESEND_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO`.
 
@@ -1881,7 +1861,7 @@ Ninguno usa los datos para fines distintos al servicio.
 
 **Derechos del estudiante:**
 - Acceso: solicitar copia de sus datos vía email a `privacidad@aula.com`.
-- Eliminación: anonimización vía `/privacidad/eliminar` con confirmación por email.
+- Eliminación: solicitar la eliminación de sus datos vía email a `privacidad@aula.com`.
 - Rectificación: contactar al profesor para corregir display name o notas; los emails se modifican vía soporte.
 
 **Menores de edad:**
@@ -2167,7 +2147,6 @@ Quedan estas dos, ambas no bloqueantes para empezar Fase 0:
 | Acento | Color identificatorio de cada clase. Uno de 8 valores. |
 | Session token | UUID generado al iniciar un intento. Detecta instancias paralelas. |
 | Soft delete | Borrado lógico con `deleted_at`. Recuperable por 30 días. |
-| Anonimización | Reemplazo de PII del estudiante preservando histórico de notas. |
 | Optimistic locking | Control de concurrencia via campo `version`. |
 | Auto-guardado | Persistencia automática de drafts con debounce. |
 | PITR | Point-In-Time Recovery de Supabase. |

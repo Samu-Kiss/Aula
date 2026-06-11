@@ -3,6 +3,19 @@
 -- All tables locked down; service role bypasses RLS by default.
 -- ============================================================
 
+-- Drop the policies from the initial schema that this migration supersedes
+drop policy if exists "public reads published classes" on classes;
+drop policy if exists "professor manages own classes" on classes;
+drop policy if exists "public reads visible modules metadata" on modules;
+drop policy if exists "professor manages own modules" on modules;
+drop policy if exists "public reads contents of available modules" on contents;
+drop policy if exists "professor manages own contents" on contents;
+drop policy if exists "professor reads own class attempts" on attempts;
+drop policy if exists "professor reads own notifications" on notifications;
+drop policy if exists "professor manages grade_categories" on grade_categories;
+drop policy if exists "professor manages grade_items" on grade_items;
+drop policy if exists "professor manages grades" on grades;
+
 -- Enable RLS on all tables that don't have it yet
 alter table classes enable row level security;
 alter table modules enable row level security;

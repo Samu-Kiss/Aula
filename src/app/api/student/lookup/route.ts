@@ -13,7 +13,6 @@ export async function GET(request: NextRequest) {
     .from("students")
     .select("first_name, last_name")
     .eq("email", email)
-    .eq("is_anonymized", false)
     .maybeSingle();
 
   if (!data) return NextResponse.json({});

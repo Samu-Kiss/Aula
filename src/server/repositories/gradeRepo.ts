@@ -208,7 +208,7 @@ export function gradeRepo(supabase: SupabaseClient) {
     students: {
       id: string; email: string;
       first_name: string | null; last_name: string | null;
-      display_name: string | null; is_anonymized: boolean;
+      display_name: string | null;
     };
   };
 
@@ -216,7 +216,7 @@ export function gradeRepo(supabase: SupabaseClient) {
     // Source 1: students with an explicit class_students row
     const { data: csRows } = await supabase
       .from("class_students")
-      .select("id, status, created_at, students(id, email, first_name, last_name, display_name, is_anonymized)")
+      .select("id, status, created_at, students(id, email, first_name, last_name, display_name)")
       .eq("class_id", classId)
       .order("created_at", { ascending: true });
 
@@ -267,9 +267,8 @@ export function gradeRepo(supabase: SupabaseClient) {
         if (unseenIds.length > 0) {
           const { data: studentRows } = await supabase
             .from("students")
-            .select("id, email, first_name, last_name, display_name, is_anonymized")
-            .in("id", unseenIds)
-            .eq("is_anonymized", false);
+            .select("id, email, first_name, last_name, display_name")
+            .in("id", unseenIds);
 
           for (const s of studentRows ?? []) {
             enrolled.push({

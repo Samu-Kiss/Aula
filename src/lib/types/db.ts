@@ -40,7 +40,6 @@ export interface Student {
   last_name: string | null;
   display_name: string | null;
   email_verified_at: string | null;
-  is_anonymized: boolean;
   first_seen_at: string;
   last_seen_at: string;
 }
