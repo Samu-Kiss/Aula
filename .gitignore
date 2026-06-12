@@ -39,3 +39,6 @@ playwright-report/
 .vercel
 
 docs/deploy.md
+
+# Sentry Config File
+.env.sentry-build-plugin

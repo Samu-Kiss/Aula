@@ -17,8 +17,9 @@ if (process.env.NEXT_PUBLIC_SENTRY_ENABLED === "true" && process.env.NEXT_PUBLIC
   });
 }
 
-export function onRouterTransitionStart(url: string) {
+// Hook oficial de navegación (App Router); solo cuando Sentry está activo.
+export function onRouterTransitionStart(url: string, navigationType: string) {
   if (process.env.NEXT_PUBLIC_SENTRY_ENABLED === "true") {
-    Sentry.addBreadcrumb({ category: "navigation", message: url, level: "info" });
+    Sentry.captureRouterTransitionStart(url, navigationType);
   }
 }

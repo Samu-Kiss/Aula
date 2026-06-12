@@ -1,0 +1,36 @@
+name: Supabase keepalive
+
+# El free tier de Supabase pausa el proyecto tras ~7 días sin actividad.
+# Este ping cada 2 días por la API REST (PostgREST) cuenta como actividad
+# y mantiene la base de datos despierta.
+
+on:
+  schedule:
+    - cron: "0 5 */2 * *" # cada 2 días, 05:00 UTC (00:00 Bogotá)
+  workflow_dispatch:
+
+jobs:
+  ping:
+    name: Ping Supabase REST
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: Query mínima vía PostgREST
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "::error::Faltan los secrets NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY"
+            exit 1
+          fi
+          code=$(curl -sS -o /dev/null -w "%{http_code}" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            "$SUPABASE_URL/rest/v1/classes?select=id&limit=1")
+          echo "HTTP $code"
+          if [ "$code" != "200" ]; then
+            echo "::error::El ping a Supabase devolvió HTTP $code"
+            exit 1
+          fi
