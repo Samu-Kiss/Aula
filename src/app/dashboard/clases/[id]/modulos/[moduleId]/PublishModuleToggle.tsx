@@ -25,19 +25,30 @@ export function PublishModuleToggle({ moduleId, classId, isPublished }: Props) {
     });
   }
 
+  // Chip de estado (informativo) + botón de acción explícito: antes el chip
+  // era a la vez el botón de publicar, y nadie lo descubría.
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      disabled={pending}
-      className={`text-mono px-2 py-0.5 rounded-[4px] transition-colors disabled:opacity-50 cursor-pointer ${
-        published
-          ? "bg-bosque/10 text-bosque hover:bg-borgona/10 hover:text-borgona"
-          : "bg-surface-alt text-ink-mute hover:bg-ink/10 hover:text-ink"
-      }`}
-      title={published ? "Clic para despublicar" : "Clic para publicar"}
-    >
-      {pending ? "…" : published ? "Publicado" : "Borrador"}
-    </button>
+    <div className="flex items-center gap-2">
+      <span
+        className={`text-mono px-2 py-0.5 rounded-[4px] ${
+          published ? "bg-bosque/10 text-bosque" : "bg-surface-alt text-ink-mute"
+        }`}
+      >
+        {published ? "Publicado" : "Borrador"}
+      </span>
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={pending}
+        className="text-caption font-medium px-3 py-1 rounded-[6px] border border-subtle text-ink-soft hover:text-ink hover:bg-surface-alt transition-colors disabled:opacity-50 cursor-pointer"
+        title={
+          published
+            ? "Ocultar este módulo a los estudiantes"
+            : "Hacer visible este módulo para los estudiantes"
+        }
+      >
+        {pending ? "…" : published ? "Despublicar" : "Publicar módulo"}
+      </button>
+    </div>
   );
 }

@@ -24,22 +24,22 @@ interface Props {
   onClose: () => void;
 }
 
+// El padre remonta el panel vía `key` cuando cambia la celda seleccionada,
+// así el estado se inicializa desde props sin efectos de sincronización.
 export function GradePanel({ classId, selected, onSaved, onClose }: Props) {
-  const [draft, setDraft] = useState("");
-  const [draftNotes, setDraftNotes] = useState("");
+  const [draft, setDraft] = useState(selected?.currentScore?.toString() ?? "");
+  const [draftNotes, setDraftNotes] = useState(selected?.currentNotes ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Sync draft when selection changes
+  // Enfocar el input al montar (cada selección monta una instancia nueva)
   useEffect(() => {
     if (selected) {
-      setDraft(selected.currentScore?.toString() ?? "");
-      setDraftNotes(selected.currentNotes ?? "");
-      setError(null);
-      setTimeout(() => inputRef.current?.focus(), 0);
+      const t = setTimeout(() => inputRef.current?.focus(), 0);
+      return () => clearTimeout(t);
     }
-  }, [selected?.gradeItemId, selected?.studentId]);
+  }, [selected]);
 
   function handleSave() {
     if (!selected) return;

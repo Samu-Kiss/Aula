@@ -20,6 +20,8 @@ interface Props {
   classSlug: string;
   moduleSlug: string;
   initialStudent: StudentPayload | null;
+  /** Nombre del estudiante pre-identificado (el JWT solo trae email). */
+  initialStudentName: { firstName: string; lastName: string } | null;
   initialAttempts: Attempt[];
 }
 
@@ -59,7 +61,8 @@ function IdentStep1({ onSent }: Step1Props) {
 
   useEffect(() => {
     if (lookupTimer.current) clearTimeout(lookupTimer.current);
-    if (!isValidEmail(email)) { setNamesLocked(false); return; }
+    // handleEmailChange ya desbloquea los nombres cuando el email es inválido
+    if (!isValidEmail(email)) return;
     lookupTimer.current = setTimeout(async () => {
       try {
         const res = await fetch(`/api/student/lookup?email=${encodeURIComponent(email)}`);
@@ -489,7 +492,7 @@ function QuizLanding({ quiz, content, student, availability, onSignOut, classSlu
 
 // ─── QuizAccess (root) ────────────────────────────────────────────────────────
 
-export function QuizAccess({ quiz, content, classSlug, moduleSlug, initialStudent, initialAttempts }: Props) {
+export function QuizAccess({ quiz, content, classSlug, moduleSlug, initialStudent, initialStudentName, initialAttempts }: Props) {
   // If student is pre-identified from cookie, jump straight to landing
   const [step, setStep] = useState<Step>(initialStudent ? "landing" : "identify_1");
   const [studentData, setStudentData] = useState<{
@@ -498,7 +501,11 @@ export function QuizAccess({ quiz, content, classSlug, moduleSlug, initialStuden
     lastName: string;
   } | null>(
     initialStudent
-      ? { email: initialStudent.email, firstName: "", lastName: "" }
+      ? {
+          email: initialStudent.email,
+          firstName: initialStudentName?.firstName ?? "",
+          lastName: initialStudentName?.lastName ?? "",
+        }
       : null
   );
   const [formBuffer, setFormBuffer] = useState<{

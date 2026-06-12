@@ -31,7 +31,6 @@ export function ModuleContentsSidebar({ contents, accent }: Props) {
   useEffect(() => {
     const slugs = contents.map((c) => c.slug);
     let rafId: number;
-    let lastY = -1;
 
     function detect() {
       // getBoundingClientRect doesn't depend on which element scrolls —

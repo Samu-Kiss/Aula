@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition } from "react";
 import { AlertTriangle } from "lucide-react";
 import { updateClassMetaAction } from "@/app/dashboard/clases/[id]/actions";
 
@@ -34,11 +34,10 @@ export function ClassMetaForm({ classId, initialTitle, initialSlug, initialDescr
   const [pending, startPending] = useTransition();
 
   // Auto-update slug from title unless manually edited
-  useEffect(() => {
-    if (!slugManuallyEdited) {
-      setSlug(slugify(title));
-    }
-  }, [title, slugManuallyEdited]);
+  function handleTitleChange(val: string) {
+    setTitle(val);
+    if (!slugManuallyEdited) setSlug(slugify(val));
+  }
 
   function handleSlugChange(val: string) {
     setSlugManuallyEdited(true);
@@ -74,7 +73,7 @@ export function ClassMetaForm({ classId, initialTitle, initialSlug, initialDescr
         <input
           type="text"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={(e) => handleTitleChange(e.target.value)}
           maxLength={80}
           className="w-full border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-page focus:outline-none focus:ring-2 focus:ring-accent/40"
           placeholder="Mi clase de Biología"

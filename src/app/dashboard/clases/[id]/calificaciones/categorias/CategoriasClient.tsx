@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition } from "react";
 import { formatDate } from "@/lib/dates";
 import { useRouter } from "next/navigation";
 import {
@@ -53,9 +53,19 @@ export function CategoriasClient({ classId, initialCategories, initialItems, qui
   const [categories, setCategories] = useState(initialCategories);
   const [items, setItems] = useState(initialItems);
 
-  // Sync local state when server component passes fresh props after router.refresh()
-  useEffect(() => { setCategories(initialCategories); }, [initialCategories]);
-  useEffect(() => { setItems(initialItems); }, [initialItems]);
+  // Sync local state when server component passes fresh props after
+  // router.refresh() — patrón "adjust state during render" de la doc de React:
+  // la identidad de las props solo cambia cuando llega payload nuevo del server.
+  const [prevCategories, setPrevCategories] = useState(initialCategories);
+  if (initialCategories !== prevCategories) {
+    setPrevCategories(initialCategories);
+    setCategories(initialCategories);
+  }
+  const [prevItems, setPrevItems] = useState(initialItems);
+  if (initialItems !== prevItems) {
+    setPrevItems(initialItems);
+    setItems(initialItems);
+  }
   const [editingCat, setEditingCat] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<string | null>(null);
   const [addingItemFor, setAddingItemFor] = useState<string | null>(null);

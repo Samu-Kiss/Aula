@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { createClassAction } from "./actions";
 import type { Accent } from "@/lib/schemas/shared";
 
@@ -34,9 +34,11 @@ export default function NuevaClasePage() {
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
 
-  useEffect(() => {
-    if (!slugEdited) setSlug(slugify(title));
-  }, [title, slugEdited]);
+  // Auto-deriva el slug del título mientras el usuario no lo haya editado a mano
+  function handleTitleChange(val: string) {
+    setTitle(val);
+    if (!slugEdited) setSlug(slugify(val));
+  }
 
   const fields = state.status === "error" ? state.fields ?? {} : {};
 
@@ -59,7 +61,7 @@ export default function NuevaClasePage() {
             type="text"
             required
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => handleTitleChange(e.target.value)}
             aria-invalid={!!fields.title}
             aria-describedby={fields.title ? "title-error" : undefined}
             className="w-full h-11 px-3 rounded-[8px] border-subtle bg-surface text-body text-ink placeholder:text-ink-mute focus:outline-none focus:ring-2 focus:ring-accent"

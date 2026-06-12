@@ -56,6 +56,7 @@ export default async function ContentPage({ params, searchParams }: Props) {
   // Para quizzes: cargar datos con service client y leer cookie del estudiante
   let quiz = null;
   let initialStudent = null;
+  let initialStudentName: { firstName: string; lastName: string } | null = null;
   let initialAttempts: import("@/lib/types/db").Attempt[] = [];
   let resultData: {
     attempt: import("@/lib/types/db").Attempt;
@@ -69,12 +70,21 @@ export default async function ContentPage({ params, searchParams }: Props) {
     quiz = await quizRepo(svc).findByContentId(content.id);
     initialStudent = await getStudentFromCookie();
 
-    // Cargar intentos previos si el estudiante está identificado
+    // Cargar intentos previos y nombre si el estudiante está identificado
     if (initialStudent && quiz) {
-      initialAttempts = await attemptRepo(svc).listFinishedByStudent(
-        quiz.id,
-        initialStudent.student_id
-      );
+      const [attempts, studentRow] = await Promise.all([
+        attemptRepo(svc).listFinishedByStudent(quiz.id, initialStudent.student_id),
+        svc
+          .from("students")
+          .select("first_name, last_name")
+          .eq("id", initialStudent.student_id)
+          .single(),
+      ]);
+      initialAttempts = attempts;
+      initialStudentName = {
+        firstName: studentRow.data?.first_name ?? "",
+        lastName: studentRow.data?.last_name ?? "",
+      };
     }
 
     // Cargar resultado si viene el param ?resultado=
@@ -155,6 +165,7 @@ export default async function ContentPage({ params, searchParams }: Props) {
             classSlug={classSlug}
             moduleSlug={moduleSlug}
             initialStudent={initialStudent}
+            initialStudentName={initialStudentName}
             initialAttempts={initialAttempts}
           />
         )}

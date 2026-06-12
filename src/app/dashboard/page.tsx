@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { classService } from "@/server/services/classService";
 import { Lockup } from "@/components/Lockup";
@@ -67,8 +68,18 @@ export const metadata = { title: "Tus clases" };
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const classes = user ? await classService(supabase).list(user.id) : [];
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  // Distinguir "sin sesión" de "Supabase no responde": antes un timeout
+  // renderizaba el onboarding vacío como si el profesor no tuviera clases.
+  if (!user) {
+    if (authError && authError.name !== "AuthSessionMissingError") {
+      throw new Error("No se pudo cargar tu sesión. Verifica la conexión e intenta de nuevo.");
+    }
+    redirect("/login");
+  }
+
+  const classes = await classService(supabase).list(user.id);
 
   return (
     <div>

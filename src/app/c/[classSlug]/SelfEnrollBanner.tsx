@@ -41,7 +41,8 @@ export function SelfEnrollBanner({ classId, existingEmail, existingName }: Props
   // Lookup student when email reaches valid format
   useEffect(() => {
     if (lookupTimer.current) clearTimeout(lookupTimer.current);
-    if (!isValidEmail(email)) { setNamesLocked(false); return; }
+    // handleEmailChange ya desbloquea los nombres cuando el email es inválido
+    if (!isValidEmail(email)) return;
     lookupTimer.current = setTimeout(async () => {
       try {
         const res = await fetch(`/api/student/lookup?email=${encodeURIComponent(email)}`);

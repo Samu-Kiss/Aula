@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getStudentFromCookie } from "@/lib/auth/studentJwt";
@@ -17,6 +18,18 @@ interface Props {
     contentSlug: string;
     attemptId: string;
   }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { classSlug, moduleSlug, contentSlug } = await params;
+  const supabase = await createClient();
+  const cls = await classService(supabase).getBySlug(classSlug);
+  if (!cls) return {};
+  const mod = await moduleRepo(supabase).findBySlug(cls.id, moduleSlug);
+  if (!mod) return {};
+  const content = await contentRepo(supabase).findBySlug(mod.id, contentSlug);
+  if (!content) return {};
+  return { title: `Intento — ${content.title} — ${cls.title}` };
 }
 
 export default async function AttemptPage({ params }: Props) {

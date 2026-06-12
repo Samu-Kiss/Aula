@@ -600,18 +600,21 @@ function QuizSettings({ quiz, classId, onUpdated }: QuizSettingsProps) {
       {/* Tiempo */}
       <div>
         <label className="text-caption font-medium text-ink block mb-1">
-          Tiempo límite (minutos)
+          Tiempo límite
         </label>
-        <input
-          type="number"
-          min={1}
-          max={180}
-          value={timeLimitMin}
-          onChange={(e) => setTimeLimitMin(e.target.value)}
-          className="w-32 border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-accent/40"
-          placeholder="Sin límite"
-        />
-        <p className="text-caption text-ink-mute mt-1">Deja vacío para que no haya límite de tiempo.</p>
+        <div className="flex items-center gap-1.5">
+          <input
+            type="number"
+            min={1}
+            max={180}
+            value={timeLimitMin}
+            onChange={(e) => setTimeLimitMin(e.target.value)}
+            className="w-24 border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-accent/40"
+            aria-describedby="time-limit-hint"
+          />
+          <span className="text-body text-ink-soft">minutos</span>
+        </div>
+        <p id="time-limit-hint" className="text-caption text-ink-mute mt-1">Deja vacío para que no haya límite de tiempo.</p>
       </div>
 
       {/* Intentos */}
@@ -661,17 +664,23 @@ function QuizSettings({ quiz, classId, onUpdated }: QuizSettingsProps) {
       {/* Puntaje mínimo */}
       <div>
         <label className="text-caption font-medium text-ink block mb-1">
-          Puntaje mínimo para aprobar (%)
+          Puntaje mínimo para aprobar
         </label>
-        <input
-          type="number"
-          min={0}
-          max={100}
-          value={passScore}
-          onChange={(e) => setPassScore(e.target.value)}
-          className="w-32 border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-accent/40"
-          placeholder="Sin mínimo"
-        />
+        <div className="flex items-center gap-1.5">
+          <input
+            type="number"
+            min={0}
+            max={100}
+            value={passScore}
+            onChange={(e) => setPassScore(e.target.value)}
+            className="w-24 border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface focus:outline-none focus:ring-2 focus:ring-accent/40"
+            aria-describedby="pass-score-hint"
+          />
+          <span className="text-body text-ink-soft">%</span>
+        </div>
+        <p id="pass-score-hint" className="text-caption text-ink-mute mt-1">
+          Por ejemplo, 60 aprueba con el 60 % del puntaje. Deja vacío si no hay mínimo.
+        </p>
       </div>
 
       {/* Mostrar respuestas */}

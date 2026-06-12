@@ -161,7 +161,7 @@
 #### 6.6 Pruebas de usuario y cierre
 - [x] `F6-22` Crear checklist heurístico UI/UX para evaluar la plataforma → `docs/ux-checklist.md` (10 heurísticas de Nielsen adaptadas + secciones de responsive, a11y y tap targets, con criterios de severidad y registro de resultados)
 - [x] `F6-23` Hacer prueba manual tipo usuario nuevo con escenarios guiados
-- [ ] `F6-24` Registrar fricciones, dudas, pasos innecesarios y puntos confusos
+- [x] `F6-24` Registrar fricciones, dudas, pasos innecesarios y puntos confusos — registradas en las notas de 6.1–6.6 de este TODO
 
 > **Hallazgos de la prueba de usuario nuevo (2026-06-11, navegador real, 3 escenarios: profesor crea clase completa → estudiante consume y hace quiz → profesor califica):**
 > - **[Importante → ARREGLADO]** Publicar una evaluación NO la abría a estudiantes: `quizzes.is_available` nace en `false` y el toggle vive en la pestaña Configuración del quiz. El estudiante veía "Esta evaluación no está disponible en este momento" sin motivo y el profesor no recibía ningún aviso. Fix: banner ámbar en el QuizEditor cuando está publicada pero cerrada ("actívala en Configuración") + mensaje del estudiante reescrito ("Tu profesor aún no ha abierto esta evaluación…"). Considerar a futuro: activar disponibilidad por defecto al publicar.
@@ -171,6 +171,20 @@
 > - **[Menor]** La página del intento en curso no define `document.title` (queda "Aula"); el resto de rutas públicas sí tienen título descriptivo.
 > - **[Menor]** En el header del quiz público, tras identificarse desde la pantalla del quiz la tarjeta "Identificado como" muestra solo el email sin el nombre (al volver a entrar sí muestra ambos).
 > - **OK:** onboarding → primera clase publicada sin fricciones (slug auto, lockup, QR con aviso de borrador del fix 6.1); formulario de módulo se cierra y refresca (fix 6.1 verificado); editor de contenido sin 404 transitorio; autosave "Guardando→Guardado"; feed público inline (F5-18) y sidebar de módulo (F5-22) correctos; identificación de estudiante con lookup de nombre; intento con autosave, paginación y contador de no respondidas; resultado 50% con "Revisión pendiente"; notificación in-app del intento; revisión manual 50%→100% con retroalimentación propagada al gradebook "Por quiz"; export CSV visible.
-- [ ] `F6-25` Priorizar mejoras UX: bloqueantes, importantes, deseables y deuda visual
-- [ ] `F6-26` Aplicar refinamientos finales sin agregar nuevas funcionalidades
-- [ ] `F6-27` Documentar criterios UX para futuras features
+- [x] `F6-25` Priorizar mejoras UX: bloqueantes, importantes, deseables y deuda visual
+- [x] `F6-26` Aplicar refinamientos finales sin agregar nuevas funcionalidades
+- [x] `F6-27` Documentar criterios UX para futuras features → `docs/ux-criterios.md` (10 criterios de decisión destilados de la Fase 6)
+
+> **Cierre de Fase 6 (2026-06-11):**
+> Priorización F6-25 sobre lo pendiente registrado: no quedaban bloqueantes; los "importantes/menores" abiertos se aplicaron en F6-26 y la deuda consciente quedó documentada en `docs/ux-criterios.md` §10.
+>
+> **Refinamientos aplicados en F6-26:**
+> - Chip del header de clase etiquetado ("Clase: borrador / Clase: publicada") — ya no se lee como estado del contenido actual (`ClassHeaderCrumbs`).
+> - Módulo: chip de estado informativo + botón explícito "Publicar módulo / Despublicar" con tooltip del efecto (`PublishModuleToggle`); antes el chip era el botón y no se descubría.
+> - `generateMetadata` en la página del intento en curso ("Intento — [contenido] — [clase]").
+> - "Identificado como" en el quiz muestra nombre + email también cuando el estudiante viene pre-identificado por cookie (el server ahora busca el nombre en `students` y lo pasa como `initialStudentName` a `QuizAccess`).
+> - `/dashboard` distingue fallo de Supabase (timeout de `auth.getUser`) de "sin clases": ya no se disfraza un error de datos como onboarding vacío; lanza al `error.tsx` existente.
+> - Revisión de intento: las preguntas `map_pin` ya renderizan la respuesta (lista de marcadores con elegido/correcto, mismo lenguaje visual que opciones) — cierra el pendiente de 6.4.
+> - Wontfix cosmético: param interno `?tab=quices` vs label "Por quiz" (sin impacto de uso).
+>
+> **Además (CI):** corregidos los 16 errores de ESLint (react-hooks `set-state-in-effect` / refs-en-render / prefer-const) con los patrones canónicos: slug derivado en el handler (no en efecto — de paso se corrigió que el form de configuración sobrescribiera el slug guardado al montar), `useSyncExternalStore` para online/hidratación/ancho persistido, remount por `key` en `GradePanel`, ajuste-en-render en `CategoriasClient`, refs reasignadas en efecto en `MapEditorInner`, y timer del intento recalculado contra reloj de pared (resiste throttling de pestañas). `npm run lint` → 0 errores.

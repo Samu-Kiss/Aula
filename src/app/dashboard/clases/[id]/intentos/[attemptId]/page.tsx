@@ -266,6 +266,8 @@ export default async function AttemptDetailPage({ params }: Props) {
                     />
                   )}
                 </div>
+              ) : q.type === "map_pin" ? (
+                <MapPinAnswerView question={q} answer={answer} />
               ) : null}
 
               {/* Feedback (if set) */}
@@ -323,6 +325,57 @@ function ChoiceAnswerView({
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function MapPinAnswerView({
+  question,
+  answer,
+}: {
+  question: { body_snapshot: Record<string, unknown> };
+  answer: { response: Record<string, unknown> };
+}) {
+  const markers =
+    (question.body_snapshot.markers as { id: string; label?: string }[]) ?? [];
+  const correctId = question.body_snapshot.correct_marker_id as string | undefined;
+  const selectedId = answer.response.marker_id as string | undefined;
+  const label = (m: { id: string; label?: string }, idx: number) =>
+    m.label || `Marcador ${idx + 1}`;
+
+  return (
+    <div className="space-y-1.5">
+      {markers.map((m, idx) => {
+        const isSelected = m.id === selectedId;
+        const isCorrect = m.id === correctId;
+        return (
+          <div
+            key={m.id}
+            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-[8px] text-body ${
+              isSelected && isCorrect
+                ? "bg-bosque/8 border border-bosque/30 text-ink"
+                : isSelected && !isCorrect
+                ? "bg-borgona/8 border border-borgona/30 text-ink"
+                : isCorrect
+                ? "bg-bosque/4 border border-bosque/20 text-ink-soft"
+                : "bg-surface-alt border border-transparent text-ink-mute"
+            }`}
+          >
+            <span className={`shrink-0 text-mono text-[11px] ${
+              isSelected && isCorrect ? "text-bosque" :
+              isSelected ? "text-borgona" :
+              isCorrect ? "text-bosque" : "text-ink-mute"
+            }`}>
+              {isSelected && isCorrect ? "✓" : isSelected ? "✗" : isCorrect ? "✓" : " "}
+            </span>
+            <span>{label(m, idx)}</span>
+            {isSelected && (
+              <span className="ml-auto text-mono text-[11px] text-ink-mute">elegido</span>
+            )}
+          </div>
+        );
+      })}
+      {!selectedId && <p className="text-mono text-ink-mute">Sin marcador elegido</p>}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 
 interface Props {
   /** Clave de localStorage para persistir el ancho elegido. */
@@ -16,6 +16,8 @@ function clamp(n: number, min: number, max: number) {
   return Math.min(Math.max(n, min), max);
 }
 
+const subscribeNoop = () => () => {};
+
 export function ResizablePanel({
   storageKey,
   defaultWidth = 224,
@@ -25,8 +27,24 @@ export function ResizablePanel({
   children,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(defaultWidth);
+  // Ancho persistido leído de forma segura para hidratación: el snapshot del
+  // servidor es null (se renderiza defaultWidth) y el del cliente lee
+  // localStorage desde el primer render — sin setState en efectos.
+  const persistedRaw = useSyncExternalStore(
+    subscribeNoop,
+    () => {
+      try { return localStorage.getItem(storageKey); } catch { return null; }
+    },
+    () => null
+  );
+  // null = el usuario no ha redimensionado en esta sesión
+  const [widthOverride, setWidthOverride] = useState<number | null>(null);
   const [measuring, setMeasuring] = useState(false);
+
+  const persistedNum = persistedRaw !== null ? parseInt(persistedRaw, 10) : NaN;
+  const width =
+    widthOverride ??
+    (Number.isNaN(persistedNum) ? defaultWidth : clamp(persistedNum, minWidth, maxWidth));
 
   const persist = useCallback(
     (w: number) => {
@@ -39,15 +57,6 @@ export function ResizablePanel({
     [storageKey]
   );
 
-  // Cargar ancho persistido tras montar (evita mismatch de hidratación).
-  useEffect(() => {
-    const saved = localStorage.getItem(storageKey);
-    if (saved) {
-      const n = parseInt(saved, 10);
-      if (!Number.isNaN(n)) setWidth(clamp(n, minWidth, maxWidth));
-    }
-  }, [storageKey, minWidth, maxWidth]);
-
   // Autoajuste: mientras `measuring`, el panel usa max-content; medimos su
   // ancho natural, lo fijamos numéricamente y persistimos.
   useLayoutEffect(() => {
@@ -56,7 +65,7 @@ export function ResizablePanel({
     if (el) {
       const natural = el.scrollWidth;
       const w = clamp(natural, minWidth, maxWidth);
-      setWidth(w);
+      setWidthOverride(w);
       persist(w);
     }
     setMeasuring(false);
@@ -69,15 +78,15 @@ export function ResizablePanel({
       const startW = ref.current?.getBoundingClientRect().width ?? width;
 
       const onMove = (ev: PointerEvent) => {
-        setWidth(clamp(startW + (ev.clientX - startX), minWidth, maxWidth));
+        setWidthOverride(clamp(startW + (ev.clientX - startX), minWidth, maxWidth));
       };
       const onUp = () => {
         window.removeEventListener("pointermove", onMove);
         window.removeEventListener("pointerup", onUp);
         document.body.style.cursor = "";
         document.body.style.userSelect = "";
-        setWidth((w) => {
-          persist(w);
+        setWidthOverride((w) => {
+          if (w !== null) persist(w);
           return w;
         });
       };

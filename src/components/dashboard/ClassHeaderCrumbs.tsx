@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -11,6 +11,11 @@ interface Crumb {
   label: string;
   href?: string;
 }
+
+// Helpers para detectar hidratación vía useSyncExternalStore
+const subscribeNoop = () => () => {};
+const getTrue = () => true;
+const getFalse = () => false;
 
 interface Props {
   classId: string;
@@ -57,9 +62,8 @@ function buildCrumbs(pathname: string, base: string, moduleTitles: Record<string
 
 export function ClassHeaderCrumbs({ classId, title, accent, splitAt, isPublished, moduleTitles }: Props) {
   const pathname = usePathname();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
+  // false en servidor/hidratación, true en cliente — sin setState en efecto
+  const mounted = useSyncExternalStore(subscribeNoop, getTrue, getFalse);
 
   // Volvemos a buscar el slot en cada render (no lo cacheamos): así el portal
   // nunca queda apuntando a un nodo desconectado tras un remonte/HMR del header.
@@ -96,7 +100,7 @@ export function ClassHeaderCrumbs({ classId, title, accent, splitAt, isPublished
           isPublished ? "bg-bosque/10 text-bosque" : "bg-surface-alt text-ink-mute"
         }`}
       >
-        {isPublished ? "Publicada" : "Borrador"}
+        {isPublished ? "Clase: publicada" : "Clase: borrador"}
       </span>
     </>,
     slot

@@ -255,7 +255,6 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
       setSaveStatus("saved");
     } catch { setSaveStatus("unsaved"); }
   }, [contentId, initial.center, initial.zoom]);
-  saveRef.current = save;
 
   // ── History functions (assigned to refs so closures are always fresh) ─────
   function pushHistory(m: MapMarker[], r: MapRoute[], a: MapArea[]) {
@@ -267,7 +266,6 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
     setCanUndo(next.length > 1);
     setCanRedo(false);
   }
-  pushHistoryRef.current = pushHistory;
 
   function undo() {
     const idx = historyIdxRef.current;
@@ -282,7 +280,6 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
     setCanRedo(true);
     setTimeout(() => saveRef.current?.({ markers: entry.markers, routes: entry.routes, areas: entry.areas }), 0);
   }
-  undoRef.current = undo;
 
   function redo() {
     const hist   = historyRef.current;
@@ -298,7 +295,15 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
     setCanRedo(newIdx < hist.length - 1);
     setTimeout(() => saveRef.current?.({ markers: entry.markers, routes: entry.routes, areas: entry.areas }), 0);
   }
-  redoRef.current = redo;
+
+  // Reasignadas tras cada render (no durante): los handlers del mapa y el
+  // teclado disparan después del render, así que siempre ven el closure fresco.
+  useEffect(() => {
+    saveRef.current        = save;
+    pushHistoryRef.current = pushHistory;
+    undoRef.current        = undo;
+    redoRef.current        = redo;
+  });
 
   // ── Keyboard shortcut (Ctrl/Cmd+Z, Ctrl/Cmd+Y, Ctrl/Cmd+Shift+Z) ─────────
   useEffect(() => {

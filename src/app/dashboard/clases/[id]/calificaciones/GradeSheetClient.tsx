@@ -150,6 +150,7 @@ export function GradeSheetClient({
       {/* ── Left panel ─────────────────────────────────────────────────────── */}
       <div className="w-72 shrink-0 sticky top-6 border border-subtle rounded-[12px] bg-surface p-5">
         <GradePanel
+          key={selected ? `${selected.gradeItemId}:${selected.studentId}` : "none"}
           classId={classId}
           selected={selected}
           onSaved={handleSaved}

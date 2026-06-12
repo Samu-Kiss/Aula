@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useTransition, lazy, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, useTransition, useSyncExternalStore, lazy, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Clock, AlertTriangle } from "lucide-react";
 import type { Attempt, AttemptQuestion, Answer, Quiz } from "@/lib/types/db";
@@ -39,22 +39,17 @@ function useTimer(expiresAt: string | null): {
   const triggeredRef = useRef<Set<TimerMilestone>>(new Set());
   const [milestone, setMilestone] = useState<TimerMilestone>(null);
 
-  // Sync initial remaining time on the client only
+  // Recalcula contra el reloj de pared (autoritativo respecto a expiresAt):
+  // resiste el throttling de pestañas en segundo plano y no acumula drift.
+  // setTimeout(0) para el valor inicial: el markup de hidratación no cambia.
   useEffect(() => {
     if (!expiresAt) return;
-    const initial = Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
-    setRemaining(initial);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // only on mount — expiresAt won't change
-
-  // Count down every second
-  useEffect(() => {
-    if (remaining === null || remaining <= 0) return;
-    const id = setInterval(() => {
-      setRemaining((r) => (r !== null ? Math.max(0, r - 1) : null));
-    }, 1000);
-    return () => clearInterval(id);
-  }, [remaining]);
+    const compute = () =>
+      Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
+    const t = setTimeout(() => setRemaining(compute()), 0);
+    const id = setInterval(() => setRemaining(compute()), 1000);
+    return () => { clearTimeout(t); clearInterval(id); };
+  }, [expiresAt]);
 
   // Detect milestones
   useEffect(() => {
@@ -84,23 +79,19 @@ function useTimer(expiresAt: string | null): {
 
 // ─── Online/offline hook (F4-08) ─────────────────────────────────────────────
 
+function subscribeOnline(cb: () => void) {
+  window.addEventListener("online", cb);
+  window.addEventListener("offline", cb);
+  return () => {
+    window.removeEventListener("online", cb);
+    window.removeEventListener("offline", cb);
+  };
+}
+
 function useOnline(): boolean {
-  // Always start as true on both server and client to avoid hydration mismatch.
-  // useEffect syncs the real browser value after hydration (client-only).
-  const [online, setOnline] = useState(true);
-  useEffect(() => {
-    // Immediately correct if browser is already offline
-    setOnline(navigator.onLine);
-    const on = () => setOnline(true);
-    const off = () => setOnline(false);
-    window.addEventListener("online", on);
-    window.addEventListener("offline", off);
-    return () => {
-      window.removeEventListener("online", on);
-      window.removeEventListener("offline", off);
-    };
-  }, []);
-  return online;
+  // useSyncExternalStore: snapshot del servidor `true` (evita mismatch de
+  // hidratación) y valor real del navegador desde el primer render cliente.
+  return useSyncExternalStore(subscribeOnline, () => navigator.onLine, () => true);
 }
 
 // ─── Anti-cheating hook (F4-06) ──────────────────────────────────────────────
