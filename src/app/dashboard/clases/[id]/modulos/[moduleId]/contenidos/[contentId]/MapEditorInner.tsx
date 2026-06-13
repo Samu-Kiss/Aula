@@ -5,6 +5,7 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { publishContentAction } from "@/app/dashboard/clases/[id]/actions";
 import { accentHex } from "@/lib/accentColors";
+import { AULA_MAP_STYLE } from "@/lib/mapStyle";
 import { MapCardEditor, MAP_PALETTE } from "./MapCardEditor";
 import type { MapCard } from "./MapCardEditor";
 
@@ -23,6 +24,7 @@ interface Props {
 }
 
 const TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
+const MAP_STYLE = process.env.NEXT_PUBLIC_MAPBOX_STYLE_URL || AULA_MAP_STYLE;
 const DEFAULT_CENTER: [number, number] = [-74.0721, 4.711];
 const DEFAULT_ZOOM = 11;
 
@@ -324,7 +326,7 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
     mapboxgl.accessToken = TOKEN;
     const map = new mapboxgl.Map({
       container: containerRef.current,
-      style: "mapbox://styles/mapbox/light-v11",
+      style: MAP_STYLE,
       center: initial.center, zoom: initial.zoom,
     });
     map.addControl(new mapboxgl.NavigationControl(), "top-right");

@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { AULA_MAP_STYLE } from "@/lib/mapStyle";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
+const MAP_STYLE = process.env.NEXT_PUBLIC_MAPBOX_STYLE_URL || AULA_MAP_STYLE;
 
 export interface MapPinMarker {
   id: string;
@@ -62,7 +64,7 @@ export function MapPinQuestionEditor({ body, onChange }: Props) {
     if (!containerRef.current || mapRef.current) return;
     const map = new mapboxgl.Map({
       container: containerRef.current,
-      style: "mapbox://styles/mapbox/light-v11",
+      style: MAP_STYLE,
       center: body.center ?? DEFAULT_CENTER,
       zoom: body.zoom ?? DEFAULT_ZOOM,
     });

@@ -1768,7 +1768,7 @@ EMAIL_REPLY_TO=
 
 # === Mapbox ===
 NEXT_PUBLIC_MAPBOX_TOKEN=            # token público con scope restringido
-MAPBOX_STYLE_URL=mapbox://styles/aula/custom
+NEXT_PUBLIC_MAPBOX_STYLE_URL=mapbox://styles/aula/custom   # opcional; fallback al estilo incrustado en src/lib/mapStyle.ts
 
 # === Observabilidad ===
 SENTRY_DSN=

@@ -52,6 +52,7 @@ jobs:
           SENTRY_DSN: ''
           # Mapbox
           NEXT_PUBLIC_MAPBOX_TOKEN: ${{ secrets.NEXT_PUBLIC_MAPBOX_TOKEN || 'pk.placeholder' }}
+          # NEXT_PUBLIC_MAPBOX_STYLE_URL omitido → usa el estilo incrustado en src/lib/mapStyle.ts
           # App
           NEXT_PUBLIC_APP_URL: https://aula.example.com
           NEXT_PUBLIC_DEFAULT_TIMEZONE: America/Bogota

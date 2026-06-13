@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { accentHex } from "@/lib/accentColors";
+import { AULA_MAP_STYLE } from "@/lib/mapStyle";
 import { RichTextRenderer } from "@/components/content/RichTextRenderer";
 import { MAP_PALETTE } from "@/app/dashboard/clases/[id]/modulos/[moduleId]/contenidos/[contentId]/MapCardEditor";
 
@@ -20,6 +21,7 @@ interface Props {
 }
 
 const TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
+const MAP_STYLE = process.env.NEXT_PUBLIC_MAPBOX_STYLE_URL || AULA_MAP_STYLE;
 
 const DASH_SEQ = [
   [0,4,3],[0.5,4,2.5],[1,4,2],[1.5,4,1.5],[2,4,1],
@@ -34,6 +36,10 @@ export function MapRenderer({ body, accent }: Props) {
   const [selectedCard, setSelectedCard] = useState<SelectedCard | null>(null);
 
   useEffect(() => {
+    // El contenedor del mapa cambia de ancho al abrir/cerrar la carta lateral;
+    // Mapbox no observa el resize del contenedor, así que lo forzamos.
+    const map = mapRef.current;
+    if (map) requestAnimationFrame(() => map.resize());
     if (selectedCard) {
       cardPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
@@ -77,7 +83,7 @@ export function MapRenderer({ body, accent }: Props) {
 
     const map = new mapboxgl.Map({
       container: containerRef.current,
-      style: "mapbox://styles/mapbox/light-v11",
+      style: MAP_STYLE,
       center, zoom, interactive: true,
     });
     mapRef.current = map;
@@ -253,8 +259,9 @@ export function MapRenderer({ body, accent }: Props) {
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-col md:flex-row gap-4 items-stretch">
       {/* Map — containerRef goes on this div so Mapbox reads correct dimensions */}
-      <div ref={containerRef} className="relative w-full rounded-[12px] overflow-hidden shadow-sm" style={{ height: 480 }}>
+      <div ref={containerRef} className="relative flex-1 min-w-0 rounded-[12px] overflow-hidden shadow-sm" style={{ height: 560 }}>
         {allPtsForFit.length > 0 && (
           <button
             onClick={handleRecenter}
@@ -273,9 +280,9 @@ export function MapRenderer({ body, accent }: Props) {
         )}
       </div>
 
-      {/* Card panel — shows on marker or route click */}
+      {/* Card panel — lateral en md+, apilada debajo en móvil */}
       {selectedCard && (
-        <div ref={cardPanelRef} className="bg-surface rounded-[12px] border border-subtle p-5 relative">
+        <div ref={cardPanelRef} className="bg-surface rounded-[12px] border border-subtle p-5 relative md:w-[340px] md:shrink-0 md:self-start md:max-h-[560px] md:overflow-y-auto">
           <div className="absolute top-3 right-3 flex items-center gap-1">
             <button
               onClick={() => {
@@ -320,6 +327,7 @@ export function MapRenderer({ body, accent }: Props) {
           )}
         </div>
       )}
+      </div>
 
       {/* Legend — only shown when colors have named labels */}
       {legendEntries.length > 0 && (
