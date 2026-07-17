@@ -1,4 +1,4 @@
-import { createServiceClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getStudentFromCookie, type StudentPayload } from "@/lib/auth/studentJwt";
 
 export type StudentAccessState =
@@ -17,8 +17,15 @@ export interface StudentAccess {
  * Resuelve el estado de acceso del estudiante actual a una clase.
  * La landing pública no lo usa (siempre visible); módulos, contenidos y
  * quizzes solo se muestran con state === "approved".
+ *
+ * El profesor dueño de la clase (sesión Supabase) siempre queda "approved":
+ * puede previsualizar la vista pública sin identificarse como estudiante.
  */
 export async function getStudentAccess(classId: string): Promise<StudentAccess> {
+  if (await isClassProfessor(classId)) {
+    return { state: "approved", student: null };
+  }
+
   const student = await getStudentFromCookie();
   if (!student) return { state: "anonymous", student: null };
 
@@ -34,6 +41,25 @@ export async function getStudentAccess(classId: string): Promise<StudentAccess> 
   if (data.status === "active") return { state: "approved", student };
   if (data.status === "pending") return { state: "pending", student };
   return { state: "inactive", student };
+}
+
+/** ¿La sesión Supabase actual es del profesor dueño de esta clase? */
+async function isClassProfessor(classId: string): Promise<boolean> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+    const { data } = await supabase
+      .from("classes")
+      .select("id")
+      .eq("id", classId)
+      .eq("professor_id", user.id)
+      .maybeSingle();
+    return !!data;
+  } catch {
+    // Supabase caído o sin sesión — no es profesor.
+    return false;
+  }
 }
 
 /** Nombre para mostrar del estudiante (display_name > nombre compuesto > null). */

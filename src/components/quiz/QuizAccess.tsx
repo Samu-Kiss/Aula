@@ -336,6 +336,7 @@ function QuizLanding({ quiz, content, student, availability, onSignOut, classSlu
           quiz_unavailable: "El quiz no está disponible.",
           quiz_closed: "El período del quiz ha cerrado.",
           quiz_has_no_questions: "Este quiz no tiene preguntas todavía.",
+          not_approved: "Tu acceso a la clase aún no ha sido aprobado por tu profesor.",
         };
         setStartError(msgs[data.error] ?? "No se pudo iniciar. Intenta de nuevo.");
       }

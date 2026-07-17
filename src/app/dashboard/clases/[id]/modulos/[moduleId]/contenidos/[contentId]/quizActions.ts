@@ -5,11 +5,29 @@ import { createClient } from "@/lib/supabase/server";
 import { quizRepo } from "@/server/repositories/quizRepo";
 import type { Quiz, QuizQuestion } from "@/lib/types/db";
 
+const SESSION_EXPIRED =
+  "Tu sesión expiró. Recarga la página e inicia sesión de nuevo.";
+
+class NotAuthenticatedError extends Error {
+  constructor() {
+    super("No autenticado.");
+  }
+}
+
 async function authedSupabase() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("No autenticado.");
+  let user = null;
+  try {
+    ({ data: { user } } = await supabase.auth.getUser());
+  } catch {
+    // Supabase caído o refresh token revocado — tratar como sin sesión.
+  }
+  if (!user) throw new NotAuthenticatedError();
   return supabase;
+}
+
+function actionError(e: unknown, fallback: string): { ok: false; error: string } {
+  return { ok: false, error: e instanceof NotAuthenticatedError ? SESSION_EXPIRED : fallback };
 }
 
 export async function ensureQuizAction(contentId: string): Promise<Quiz> {
@@ -30,8 +48,8 @@ export async function saveQuizSettingsAction(
     const quiz = await quizRepo(supabase).updateSettings(quizId, fields);
     revalidatePath(`/dashboard/clases/${classId}`);
     return { ok: true, quiz };
-  } catch {
-    return { ok: false, error: "No se pudieron guardar los ajustes." };
+  } catch (e) {
+    return actionError(e, "No se pudieron guardar los ajustes.");
   }
 }
 
@@ -46,8 +64,8 @@ export async function upsertQuestionAction(
     const q = await quizRepo(supabase).upsertQuestion(quizId, question, orderIndex);
     revalidatePath(`/dashboard/clases/${classId}`);
     return { ok: true, question: q };
-  } catch {
-    return { ok: false, error: "No se pudo guardar la pregunta." };
+  } catch (e) {
+    return actionError(e, "No se pudo guardar la pregunta.");
   }
 }
 
@@ -60,8 +78,8 @@ export async function deleteQuestionAction(
     await quizRepo(supabase).deleteQuestion(questionId);
     revalidatePath(`/dashboard/clases/${classId}`);
     return { ok: true };
-  } catch {
-    return { ok: false, error: "No se pudo eliminar la pregunta." };
+  } catch (e) {
+    return actionError(e, "No se pudo eliminar la pregunta.");
   }
 }
 
