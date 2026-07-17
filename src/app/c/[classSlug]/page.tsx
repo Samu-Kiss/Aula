@@ -7,9 +7,10 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { classService } from "@/server/services/classService";
 import { moduleRepo } from "@/server/repositories/moduleRepo";
-import { getStudentFromCookie } from "@/lib/auth/studentJwt";
+import { getStudentAccess } from "@/lib/auth/studentAccess";
 import { Lockup } from "@/components/Lockup";
 import { SelfEnrollBanner } from "./SelfEnrollBanner";
+import type { EnrollmentStatus } from "./enrollInClassAction";
 
 interface Props {
   params: Promise<{ classSlug: string }>;
@@ -38,10 +39,17 @@ export default async function ClassLandingPage({ params }: Props) {
   const cls = await classService(supabase).getBySlug(classSlug);
   if (!cls) notFound();
 
-  const [modules, student] = await Promise.all([
+  const [modules, access] = await Promise.all([
     moduleRepo(supabase).listPublishedByClass(cls.id),
-    getStudentFromCookie(),
+    getStudentAccess(cls.id),
   ]);
+  const student = access.student;
+  const enrollmentStatus: EnrollmentStatus | null =
+    access.state === "approved"
+      ? "active"
+      : access.state === "pending" || access.state === "inactive"
+        ? access.state
+        : null;
 
   // Resolve display name for one-click enroll banner
   let studentName: string | null = null;
@@ -109,6 +117,7 @@ export default async function ClassLandingPage({ params }: Props) {
           classId={cls.id}
           existingEmail={student?.email ?? null}
           existingName={studentName}
+          enrollmentStatus={enrollmentStatus}
         />
       </section>
 

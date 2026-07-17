@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Maximize, Minimize } from "lucide-react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { accentHex } from "@/lib/accentColors";
@@ -34,6 +35,35 @@ export function MapRenderer({ body, accent }: Props) {
   const cardPanelRef = useRef<HTMLDivElement>(null);
   const mapRef       = useRef<mapboxgl.Map | null>(null);
   const [selectedCard, setSelectedCard] = useState<SelectedCard | null>(null);
+  // Pantalla completa como overlay CSS (fixed inset-0) en vez del Fullscreen
+  // API: el API nativo falla o se revoca en iOS Safari y en vistas embebidas,
+  // y el overlay se comporta igual en todos los navegadores.
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  function toggleFullscreen() {
+    setIsFullscreen((v) => !v);
+    // El contenedor cambia de tamaño y Mapbox no lo observa; forzar resize
+    // tras aplicar el nuevo layout.
+    requestAnimationFrame(() => mapRef.current?.resize());
+  }
+
+  // ESC cierra el overlay; sin scroll de fondo mientras está abierto.
+  useEffect(() => {
+    if (!isFullscreen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setIsFullscreen(false);
+        requestAnimationFrame(() => mapRef.current?.resize());
+      }
+    }
+    document.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isFullscreen]);
 
   useEffect(() => {
     // El contenedor del mapa cambia de ancho al abrir/cerrar la carta lateral;
@@ -185,7 +215,12 @@ export function MapRenderer({ body, accent }: Props) {
         const hasContent = card.title || (card.body && Object.keys(card.body).length > 0);
 
         const el = document.createElement("div");
-        el.style.position = "relative";
+        // Tamaño explícito del elemento = tamaño del pin. Sin esto (o con
+        // position:relative que anula el absolute de .mapboxgl-marker) el div
+        // queda en el flujo con ancho completo del mapa y los translate(-50%)
+        // del anchor y el apilado de markers corren los pines de su lugar.
+        el.style.width = "28px";
+        el.style.height = "28px";
         el.innerHTML = `
           <div data-pin style="width:28px;height:28px;background:${color};border:3px solid white;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 6px rgba(0,0,0,0.25);cursor:${hasContent ? "pointer" : "default"}">
             <span style="transform:rotate(45deg);display:block;text-align:center;line-height:22px;color:white;font-size:11px;font-weight:bold">${i + 1}</span>
@@ -198,7 +233,10 @@ export function MapRenderer({ body, accent }: Props) {
             setSelectedRef.current({ type: "marker", index: i, card, color, points: [[m.lng, m.lat]] });
           });
         }
-        const mk = new mapboxgl.Marker({ element: el, anchor: "bottom-left" }).setLngLat([m.lng, m.lat]).addTo(map);
+        // La punta del pin rotado queda en el centro-abajo del elemento, ~6px
+        // por fuera de la caja; el anchor debe coincidir con la punta o el pin
+        // "se corre" del punto geográfico al hacer zoom.
+        const mk = new mapboxgl.Marker({ element: el, anchor: "bottom", offset: [0, -6] }).setLngLat([m.lng, m.lat]).addTo(map);
         cleanup.push(() => mk.remove());
       });
 
@@ -258,10 +296,28 @@ export function MapRenderer({ body, accent }: Props) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col md:flex-row gap-4 items-stretch">
+    <div
+      className={
+        isFullscreen
+          ? "fixed inset-0 z-50 flex flex-col gap-4 bg-page p-4 overflow-hidden"
+          : "space-y-4"
+      }
+    >
+      <div className={`flex flex-col md:flex-row gap-4 items-stretch ${isFullscreen ? "flex-1 min-h-0" : ""}`}>
       {/* Map — containerRef goes on this div so Mapbox reads correct dimensions */}
-      <div ref={containerRef} className="relative flex-1 min-w-0 rounded-[12px] overflow-hidden shadow-sm" style={{ height: 560 }}>
+      <div
+        ref={containerRef}
+        className="relative flex-1 min-w-0 rounded-[12px] overflow-hidden shadow-sm"
+        style={isFullscreen ? { minHeight: 0 } : { height: 560 }}
+      >
+        <button
+          onClick={toggleFullscreen}
+          title={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"}
+          aria-label={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"}
+          className="absolute top-[10px] left-[10px] z-10 flex items-center justify-center w-8 h-8 rounded-[8px] bg-white/90 backdrop-blur-sm border border-black/10 shadow text-[#1A1814] hover:bg-white transition-colors"
+        >
+          {isFullscreen ? <Minimize size={15} /> : <Maximize size={15} />}
+        </button>
         {allPtsForFit.length > 0 && (
           <button
             onClick={handleRecenter}
@@ -282,7 +338,7 @@ export function MapRenderer({ body, accent }: Props) {
 
       {/* Card panel — lateral en md+, apilada debajo en móvil */}
       {selectedCard && (
-        <div ref={cardPanelRef} className="bg-surface rounded-[12px] border border-subtle p-5 relative md:w-[340px] md:shrink-0 md:self-start md:max-h-[560px] md:overflow-y-auto">
+        <div ref={cardPanelRef} className={`bg-surface rounded-[12px] border border-subtle p-5 relative md:w-[340px] md:shrink-0 md:self-start md:overflow-y-auto ${isFullscreen ? "md:max-h-full shrink-0 max-h-[40vh] overflow-y-auto" : "md:max-h-[560px]"}`}>
           <div className="absolute top-3 right-3 flex items-center gap-1">
             <button
               onClick={() => {

@@ -1,12 +1,15 @@
 "use client";
 
 import { useState, useTransition, useEffect, useRef } from "react";
-import { enrollInClassAction } from "./enrollInClassAction";
+import { useRouter } from "next/navigation";
+import { enrollInClassAction, type EnrollmentStatus } from "./enrollInClassAction";
 
 interface Props {
   classId: string;
   existingEmail: string | null;
   existingName: string | null;
+  /** Estado de inscripción en ESTA clase (null = identificado pero sin solicitar). */
+  enrollmentStatus?: EnrollmentStatus | null;
 }
 
 type Step = "identify" | "verify" | "identified";
@@ -20,11 +23,14 @@ const inputBase =
 const inputLocked =
   "w-full border border-subtle rounded-[8px] px-3 py-2 text-body text-ink bg-surface-alt cursor-not-allowed opacity-75";
 
-export function SelfEnrollBanner({ classId, existingEmail, existingName }: Props) {
+export function SelfEnrollBanner({ classId, existingEmail, existingName, enrollmentStatus = null }: Props) {
+  const router = useRouter();
   const [step, setStep] = useState<Step>(existingEmail ? "identified" : "identify");
   const [activeEmail, setActiveEmail] = useState(existingEmail ?? "");
   const [activeName, setActiveName] = useState(existingName ?? "");
+  const [status, setStatus] = useState<EnrollmentStatus | null>(enrollmentStatus);
   const [error, setError] = useState<string | null>(null);
+  const [requestPending, startRequest] = useTransition();
 
   // Step 1 state
   const [email, setEmail] = useState("");
@@ -110,14 +116,30 @@ export function SelfEnrollBanner({ classId, existingEmail, existingName }: Props
         setError(data.error === "invalid_code" ? "Código incorrecto o expirado." : "Error al verificar. Intenta de nuevo.");
         return;
       }
-      // Cookie is now set — enroll in class
+      // Cookie is now set — enroll in class (queda pendiente de aprobación)
       const enroll = await enrollInClassAction(classId);
       if (enroll.ok) {
         setActiveEmail(enroll.email!);
         setActiveName(enroll.name ?? enroll.email!);
+        setStatus(enroll.status ?? "pending");
         setStep("identified");
+        router.refresh();
       } else {
         setError("Verificado, pero no se pudo completar el registro. Recarga la página.");
+      }
+    });
+  }
+
+  // Ya identificado por cookie pero sin inscripción en esta clase → un clic
+  function handleRequestAccess() {
+    setError(null);
+    startRequest(async () => {
+      const enroll = await enrollInClassAction(classId);
+      if (enroll.ok) {
+        setStatus(enroll.status ?? "pending");
+        router.refresh();
+      } else {
+        setError("No se pudo enviar la solicitud. Recarga la página e intenta de nuevo.");
       }
     });
   }
@@ -131,17 +153,42 @@ export function SelfEnrollBanner({ classId, existingEmail, existingName }: Props
   // ── Identified ──────────────────────────────────────────────────────────────
   if (step === "identified") {
     return (
-      <div className="flex items-center justify-between py-3 px-4 bg-surface-alt rounded-[10px]">
-        <div>
-          <p className="text-caption text-ink-mute mb-0.5">Identificado como</p>
-          <p className="text-body text-ink font-medium">{activeName || activeEmail}</p>
-          {activeName && activeName !== activeEmail && (
-            <p className="text-mono text-ink-mute">{activeEmail}</p>
-          )}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between py-3 px-4 bg-surface-alt rounded-[10px]">
+          <div>
+            <p className="text-caption text-ink-mute mb-0.5">Identificado como</p>
+            <p className="text-body text-ink font-medium">{activeName || activeEmail}</p>
+            {activeName && activeName !== activeEmail && (
+              <p className="text-mono text-ink-mute">{activeEmail}</p>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            {status === null && (
+              <button
+                type="button"
+                onClick={handleRequestAccess}
+                disabled={requestPending}
+                className="py-2 px-4 bg-accent-deep text-page rounded-[8px] text-caption font-bold hover:bg-accent-deep/88 disabled:opacity-50 transition-colors"
+              >
+                {requestPending ? "Enviando…" : "Solicitar acceso"}
+              </button>
+            )}
+            <button type="button" onClick={handleSwitch} className="text-caption text-ink-soft hover:text-borgona transition-colors">
+              No soy yo
+            </button>
+          </div>
         </div>
-        <button type="button" onClick={handleSwitch} className="text-caption text-ink-soft hover:text-borgona transition-colors">
-          No soy yo
-        </button>
+        {status === "pending" && (
+          <p className="text-caption text-warning py-1 px-4" role="status">
+            Tu solicitud de acceso está pendiente de aprobación del profesor.
+          </p>
+        )}
+        {status === "inactive" && (
+          <p className="text-caption text-ink-mute py-1 px-4" role="status">
+            Tu acceso a esta clase está desactivado. Habla con tu profesor.
+          </p>
+        )}
+        {error && <p className="text-caption text-borgona px-4">{error}</p>}
       </div>
     );
   }

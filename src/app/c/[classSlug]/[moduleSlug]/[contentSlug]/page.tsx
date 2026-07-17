@@ -7,7 +7,9 @@ import { contentRepo } from "@/server/repositories/contentRepo";
 import { quizRepo } from "@/server/repositories/quizRepo";
 import { attemptRepo } from "@/server/repositories/attemptRepo";
 import { getStudentFromCookie } from "@/lib/auth/studentJwt";
+import { getStudentAccess, getStudentDisplayName } from "@/lib/auth/studentAccess";
 import { ClassNav } from "@/components/public/ClassNav";
+import { StudentAccessGate } from "@/components/public/StudentAccessGate";
 import { RichTextRenderer } from "@/components/content/RichTextRenderer";
 import { VideoRenderer } from "@/components/content/VideoRenderer";
 import { MapRendererClient } from "@/components/content/MapRendererClient";
@@ -52,6 +54,26 @@ export default async function ContentPage({ params, searchParams }: Props) {
 
   const content = await contentRepo(supabase).findBySlug(mod.id, contentSlug);
   if (!content || !content.is_published) notFound();
+
+  // Solo estudiantes aprobados por el profesor ven contenidos y evaluaciones
+  const access = await getStudentAccess(cls.id);
+  if (access.state !== "approved") {
+    const studentName = access.student
+      ? await getStudentDisplayName(access.student.student_id)
+      : null;
+    return (
+      <StudentAccessGate
+        cls={cls}
+        access={access.state}
+        student={access.student}
+        studentName={studentName}
+        crumbs={[
+          { label: mod.title, href: `/c/${classSlug}/${moduleSlug}` },
+          { label: content.title },
+        ]}
+      />
+    );
+  }
 
   // Para quizzes: cargar datos con service client y leer cookie del estudiante
   let quiz = null;

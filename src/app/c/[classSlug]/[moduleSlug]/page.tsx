@@ -7,7 +7,9 @@ import { createClient } from "@/lib/supabase/server";
 import { classService } from "@/server/services/classService";
 import { moduleRepo } from "@/server/repositories/moduleRepo";
 import { contentRepo } from "@/server/repositories/contentRepo";
+import { getStudentAccess, getStudentDisplayName } from "@/lib/auth/studentAccess";
 import { ClassNav } from "@/components/public/ClassNav";
+import { StudentAccessGate } from "@/components/public/StudentAccessGate";
 import { ModuleContentsSidebar } from "@/components/public/ModuleContentsSidebar";
 import { RichTextRenderer } from "@/components/content/RichTextRenderer";
 import { VideoRenderer } from "@/components/content/VideoRenderer";
@@ -80,6 +82,23 @@ export default async function ModulePage({ params }: Props) {
     (mod.opens_at && new Date(mod.opens_at) > now) ||
     (mod.closes_at && new Date(mod.closes_at) < now);
   if (unavailable) notFound();
+
+  // Solo estudiantes aprobados por el profesor ven el contenido del módulo
+  const access = await getStudentAccess(cls.id);
+  if (access.state !== "approved") {
+    const studentName = access.student
+      ? await getStudentDisplayName(access.student.student_id)
+      : null;
+    return (
+      <StudentAccessGate
+        cls={cls}
+        access={access.state}
+        student={access.student}
+        studentName={studentName}
+        crumbs={[{ label: mod.title }]}
+      />
+    );
+  }
 
   const contents = await contentRepo(supabase).listPublishedByModule(mod.id);
 

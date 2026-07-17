@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { Fragment, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   enrollStudentAction,
@@ -156,17 +156,83 @@ export function RosterClient({ classId, initialEnrollments }: Props) {
     });
   }
 
+  function handleApprove(enrollmentId: string) {
+    startTransition(async () => {
+      const res = await setEnrollmentStatusAction(classId, enrollmentId, "active");
+      if (!res.ok) return;
+      setEnrollments((prev) =>
+        prev.map((e) => (e.id === enrollmentId ? { ...e, status: "active" } : e))
+      );
+      router.refresh();
+    });
+  }
+
+  function handleReject(enrollment: Enrollment) {
+    startTransition(async () => {
+      const res = await removeFromRosterAction(classId, enrollment.id, enrollment.students.id);
+      if (!res.ok) return;
+      setEnrollments((prev) => prev.filter((e) => e.id !== enrollment.id));
+      router.refresh();
+    });
+  }
+
+  const pending = enrollments.filter((e) => e.status === "pending");
+  const roster = enrollments.filter((e) => e.status !== "pending");
   const active = enrollments.filter((e) => e.status === "active");
   const inactive = enrollments.filter((e) => e.status === "inactive");
 
   return (
     <div className="space-y-5">
+      {/* Pending access requests */}
+      {pending.length > 0 && (
+        <div className="rounded-[12px] border border-warning/30 bg-warning/5 overflow-hidden">
+          <div className="px-4 py-3 border-b border-warning/20">
+            <p className="text-caption font-bold text-ink">
+              Solicitudes de acceso pendientes ({pending.length})
+            </p>
+            <p className="text-mono text-ink-mute mt-0.5">
+              Estos estudiantes se registraron desde la página pública de la clase y esperan tu aprobación.
+            </p>
+          </div>
+          <ul>
+            {pending.map((e) => (
+              <li
+                key={e.id}
+                className="flex flex-wrap items-center gap-3 px-4 py-3 border-b border-warning/10 last:border-0"
+              >
+                <div className="flex-1 min-w-[180px]">
+                  <p className="text-body font-medium text-ink">{studentLabel(e.students)}</p>
+                  <p className="text-mono text-ink-soft">{e.students.email}</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => handleApprove(e.id)}
+                    disabled={isPending}
+                    className="px-4 py-1.5 bg-accent-deep text-page text-caption font-bold rounded-[8px] hover:bg-accent-deep/88 disabled:opacity-50 transition-colors"
+                  >
+                    Aprobar
+                  </button>
+                  <button
+                    onClick={() => handleReject(e)}
+                    disabled={isPending}
+                    className="px-4 py-1.5 text-caption text-borgona border border-borgona/30 rounded-[8px] hover:bg-borgona/5 disabled:opacity-50 transition-colors"
+                  >
+                    Rechazar
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <p className="text-caption text-ink-mute pt-1">
           {active.length} activo{active.length !== 1 ? "s" : ""}
           {inactive.length > 0 && ` · ${inactive.length} inactivo${inactive.length !== 1 ? "s" : ""}`}
-          {" · "}Los estudiantes también se inscriben al presentar un quiz.
+          {pending.length > 0 && ` · ${pending.length} pendiente${pending.length !== 1 ? "s" : ""}`}
+          {" · "}Los estudiantes solicitan acceso desde la página pública de la clase.
         </p>
         <div className="flex gap-2 shrink-0">
           <button
@@ -238,10 +304,10 @@ export function RosterClient({ classId, initialEnrollments }: Props) {
       )}
 
       {/* Table */}
-      {enrollments.length === 0 ? (
+      {roster.length === 0 ? (
         <div className="py-12 text-center border border-dashed border-subtle rounded-[12px]">
           <p className="text-body text-ink-soft">No hay estudiantes todavía.</p>
-          <p className="text-caption text-ink-mute mt-1">Aparecen automáticamente al presentar un quiz, o agrégalos manualmente.</p>
+          <p className="text-caption text-ink-mute mt-1">Solicitan acceso desde la página pública de la clase, o agrégalos manualmente.</p>
         </div>
       ) : (
         <div className="rounded-[12px] border border-subtle overflow-hidden">
@@ -255,11 +321,10 @@ export function RosterClient({ classId, initialEnrollments }: Props) {
               </tr>
             </thead>
             <tbody>
-              {enrollments.map((e, i) => (
-                <>
+              {roster.map((e, i) => (
+                <Fragment key={e.id}>
                   {/* Main row */}
                   <tr
-                    key={e.id}
                     className={`border-b border-[rgba(0,0,0,0.04)] ${editingId === e.id ? "" : "last:border-0"} ${i % 2 === 0 ? "bg-surface" : "bg-surface-alt/30"}`}
                   >
                     <td className="px-4 py-3">
@@ -329,7 +394,7 @@ export function RosterClient({ classId, initialEnrollments }: Props) {
 
                   {/* Inline edit row */}
                   {editingId === e.id && (
-                    <tr key={`${e.id}-edit`} className={`border-b border-[rgba(0,0,0,0.04)] last:border-0 ${i % 2 === 0 ? "bg-surface" : "bg-surface-alt/30"}`}>
+                    <tr className={`border-b border-[rgba(0,0,0,0.04)] last:border-0 ${i % 2 === 0 ? "bg-surface" : "bg-surface-alt/30"}`}>
                       <td colSpan={4} className="px-4 py-3">
                         <div className="flex flex-wrap items-end gap-3">
                           <div>
@@ -370,7 +435,7 @@ export function RosterClient({ classId, initialEnrollments }: Props) {
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               ))}
             </tbody>
           </table>

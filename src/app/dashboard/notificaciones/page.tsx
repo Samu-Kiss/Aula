@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { ClipboardCheck } from "lucide-react";
+import { ClipboardCheck, UserPlus } from "lucide-react";
 import { formatDate } from "@/lib/dates";
 
 type NotifPayload = {
@@ -89,13 +89,17 @@ export default async function NotificationsPage() {
 function NotifRow({ n }: { n: Notif }) {
   const p = n.payload;
   const isUnread = !n.read_at;
+  const isAccessRequest = n.type === "access_request";
   const pct =
     p.score != null && p.max_score != null && p.max_score > 0
       ? Math.round((p.score / p.max_score) * 1000) / 10
       : null;
 
-  const href =
-    p.class_id && p.attempt_id
+  const href = isAccessRequest
+    ? p.class_id
+      ? `/dashboard/clases/${p.class_id}/estudiantes`
+      : null
+    : p.class_id && p.attempt_id
       ? `/dashboard/clases/${p.class_id}/intentos/${p.attempt_id}`
       : null;
 
@@ -110,22 +114,37 @@ function NotifRow({ n }: { n: Notif }) {
       <div className={`mt-0.5 shrink-0 w-7 h-7 rounded-[8px] flex items-center justify-center ${
         isUnread ? "bg-indigo/10 text-indigo" : "bg-surface-alt text-ink-mute"
       }`}>
-        <ClipboardCheck size={15} />
+        {isAccessRequest ? <UserPlus size={15} /> : <ClipboardCheck size={15} />}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-body text-ink leading-snug">
-          <span className="font-medium">
-            {p.student_name ?? p.student_email ?? "Estudiante"}
-          </span>{" "}
-          entregó{" "}
-          <span className="font-medium">{p.content_title ?? "una evaluación"}</span>
-          {p.class_title ? ` en ${p.class_title}` : ""}
-        </p>
+        {isAccessRequest ? (
+          <p className="text-body text-ink leading-snug">
+            <span className="font-medium">
+              {p.student_name ?? p.student_email ?? "Un estudiante"}
+            </span>{" "}
+            solicitó acceso
+            {p.class_title ? (
+              <>
+                {" "}a <span className="font-medium">{p.class_title}</span>
+              </>
+            ) : " a tu clase"}
+          </p>
+        ) : (
+          <p className="text-body text-ink leading-snug">
+            <span className="font-medium">
+              {p.student_name ?? p.student_email ?? "Estudiante"}
+            </span>{" "}
+            entregó{" "}
+            <span className="font-medium">{p.content_title ?? "una evaluación"}</span>
+            {p.class_title ? ` en ${p.class_title}` : ""}
+          </p>
+        )}
         <p className="text-mono text-ink-mute mt-0.5 flex items-center gap-2 flex-wrap">
-          {pct !== null && (
+          {isAccessRequest && p.student_email && <span>{p.student_email}</span>}
+          {!isAccessRequest && pct !== null && (
             <span>{pct}% &middot; {p.score}/{p.max_score} pts</span>
           )}
-          {p.has_pending_manual && (
+          {!isAccessRequest && p.has_pending_manual && (
             <span className="text-ambar">Requiere revisión manual</span>
           )}
           <span>{relativeTime(n.created_at)}</span>

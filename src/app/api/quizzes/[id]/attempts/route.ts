@@ -70,7 +70,8 @@ export async function POST(
     return NextResponse.json({ error: "quiz_closed" }, { status: 403 });
   }
 
-  // 2b. Auto-inscribir al estudiante en la clase si aún no está en el roster
+  // 2b. Solo estudiantes con inscripción aprobada pueden presentar el quiz.
+  // Si no tiene inscripción, se crea como 'pending' para que el profesor la vea.
   // contents.class_id no existe — hay que pasar por modules
   if (quiz.content_id) {
     const { data: contentRow } = await supabase
@@ -85,12 +86,25 @@ export async function POST(
         .eq("id", contentRow.module_id)
         .maybeSingle();
       if (moduleRow?.class_id) {
-        await supabase
+        const { data: enrollment } = await supabase
           .from("class_students")
-          .upsert(
-            { class_id: moduleRow.class_id, student_id: student.student_id, status: "active" },
-            { onConflict: "class_id,student_id" }
-          );
+          .select("status")
+          .eq("class_id", moduleRow.class_id)
+          .eq("student_id", student.student_id)
+          .maybeSingle();
+
+        if (!enrollment) {
+          await supabase
+            .from("class_students")
+            .upsert(
+              { class_id: moduleRow.class_id, student_id: student.student_id, status: "pending" },
+              { onConflict: "class_id,student_id", ignoreDuplicates: true }
+            );
+          return NextResponse.json({ error: "not_approved" }, { status: 403 });
+        }
+        if (enrollment.status !== "active") {
+          return NextResponse.json({ error: "not_approved" }, { status: 403 });
+        }
       }
     }
   }

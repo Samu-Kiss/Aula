@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { loginAction } from "./actions";
+import { PasswordField } from "@/components/PasswordField";
 
 interface Props {
   searchParams: Promise<{ error?: string; next?: string }>;
@@ -41,21 +43,21 @@ export default async function LoginPage({ searchParams }: Props) {
           </div>
 
           <div className="space-y-1">
-            <label
-              htmlFor="password"
-              className="text-caption text-ink-soft block"
-            >
-              Contraseña
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              autoComplete="current-password"
-              className="w-full h-11 px-3 rounded-[8px] border-subtle bg-surface text-body text-ink placeholder:text-ink-mute focus:outline-none focus:ring-2 focus:ring-accent"
-              placeholder="••••••••"
-            />
+            <div className="flex items-center justify-between">
+              <label
+                htmlFor="password"
+                className="text-caption text-ink-soft block"
+              >
+                Contraseña
+              </label>
+              <Link
+                href="/login/recuperar"
+                className="text-caption text-ink-mute hover:text-ink transition-colors"
+              >
+                ¿La olvidaste?
+              </Link>
+            </div>
+            <PasswordField id="password" name="password" />
           </div>
 
           {error && (

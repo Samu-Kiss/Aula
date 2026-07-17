@@ -147,13 +147,36 @@ export const AULA_MAP_STYLE: StyleSpecification = {
       },
     },
     {
+      // Regiones / estados / departamentos (Streets v8: class "region").
+      id: "region-labels",
+      type: "symbol",
+      source: "composite",
+      "source-layer": "place_label",
+      filter: ["==", ["get", "class"], "region"],
+      maxzoom: 9,
+      layout: {
+        "text-field": ["coalesce", ["get", "name_es"], ["get", "name"]],
+        "text-font": ["DIN Pro Medium", "Arial Unicode MS Regular"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 4, 10, 8, 13],
+        "text-letter-spacing": 0.04,
+        "text-transform": "uppercase",
+      },
+      paint: {
+        "text-color": "#6c6658",
+        "text-halo-color": "#f4f1eb",
+        "text-halo-width": 1.2,
+        "text-opacity": 0.7,
+      },
+    },
+    {
+      // Asentamientos: en Streets v8 ciudades/pueblos/aldeas son class "settlement".
       id: "settlement-labels",
       type: "symbol",
       source: "composite",
       "source-layer": "place_label",
-      filter: ["in", ["get", "class"], ["literal", ["city", "town", "village"]]],
+      filter: ["==", ["get", "class"], "settlement"],
       layout: {
-        "text-field": ["get", "name"],
+        "text-field": ["coalesce", ["get", "name_es"], ["get", "name"]],
         "text-font": ["DIN Pro Medium", "Arial Unicode MS Regular"],
         "text-size": ["interpolate", ["linear"], ["zoom"], 4, 10, 8, 13, 12, 16],
         "text-letter-spacing": 0.02,
@@ -173,7 +196,7 @@ export const AULA_MAP_STYLE: StyleSpecification = {
       "source-layer": "natural_label",
       minzoom: 5,
       layout: {
-        "text-field": ["get", "name"],
+        "text-field": ["coalesce", ["get", "name_es"], ["get", "name"]],
         "text-font": ["DIN Pro Italic", "Arial Unicode MS Regular"],
         "text-size": ["interpolate", ["linear"], ["zoom"], 5, 10, 10, 13],
         "text-letter-spacing": 0.03,
@@ -197,7 +220,7 @@ export const AULA_MAP_STYLE: StyleSpecification = {
         ["literal", ["sea", "ocean", "bay", "water", "reservoir", "lagoon", "strait", "lake", "river", "stream", "canal"]],
       ],
       layout: {
-        "text-field": ["get", "name"],
+        "text-field": ["coalesce", ["get", "name_es"], ["get", "name"]],
         "text-font": ["DIN Pro Italic", "Arial Unicode MS Regular"],
         "text-size": ["interpolate", ["linear"], ["zoom"], 4, 10, 10, 14],
         "symbol-placement": "point",

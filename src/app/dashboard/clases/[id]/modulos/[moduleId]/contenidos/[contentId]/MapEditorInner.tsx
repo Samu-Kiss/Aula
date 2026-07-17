@@ -368,7 +368,10 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
       const color = m.color ?? accentColor;
       const el = document.createElement("div");
       el.setAttribute("data-mk", m.id);
-      el.style.position = "relative";
+      // Tamaño explícito = tamaño del pin; ver nota en MapRenderer: sin esto el
+      // elemento toma el ancho del mapa y el anchor corre los pines de su punto.
+      el.style.width = "26px";
+      el.style.height = "26px";
       el.innerHTML = `
         <div style="width:26px;height:26px;background:${color};border:3px solid white;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 6px rgba(0,0,0,0.3);cursor:pointer">
           <span style="transform:rotate(45deg);display:block;text-align:center;line-height:20px;color:white;font-size:10px;font-weight:bold">${i + 1}</span>
@@ -377,7 +380,9 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
       `;
       el.addEventListener("click", (e) => { e.stopPropagation(); setSelectedId({ type: "marker", id: m.id }); });
       markerEls.current.push(
-        new mapboxgl.Marker({ element: el, anchor: "bottom-left" }).setLngLat([m.lng, m.lat]).addTo(map)
+        // Anchor en la punta del pin rotado (centro-abajo, ~5px fuera de la
+        // caja); con "bottom-left" el pin se corría del punto al hacer zoom.
+        new mapboxgl.Marker({ element: el, anchor: "bottom", offset: [0, -5] }).setLngLat([m.lng, m.lat]).addTo(map)
       );
     });
   }, [markers, accentColor]);
