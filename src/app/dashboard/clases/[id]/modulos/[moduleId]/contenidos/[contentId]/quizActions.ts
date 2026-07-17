@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import * as Sentry from "@sentry/nextjs";
 import { createClient } from "@/lib/supabase/server";
 import { quizRepo } from "@/server/repositories/quizRepo";
 import type { Quiz, QuizQuestion } from "@/lib/types/db";
@@ -27,7 +28,14 @@ async function authedSupabase() {
 }
 
 function actionError(e: unknown, fallback: string): { ok: false; error: string } {
-  return { ok: false, error: e instanceof NotAuthenticatedError ? SESSION_EXPIRED : fallback };
+  if (e instanceof NotAuthenticatedError) {
+    return { ok: false, error: SESSION_EXPIRED };
+  }
+  // El error real (RLS, constraint, red) solo vive aquí — sin esto, en
+  // producción el fallo queda invisible detrás del mensaje genérico.
+  console.error("[quizActions]", e);
+  Sentry.captureException(e);
+  return { ok: false, error: fallback };
 }
 
 export async function ensureQuizAction(contentId: string): Promise<Quiz> {
