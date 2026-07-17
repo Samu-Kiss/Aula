@@ -35,7 +35,21 @@ function actionError(e: unknown, fallback: string): { ok: false; error: string }
   // producción el fallo queda invisible detrás del mensaje genérico.
   console.error("[quizActions]", e);
   Sentry.captureException(e);
-  return { ok: false, error: fallback };
+
+  const { code, message } = (e ?? {}) as { code?: string; message?: string };
+  // 23514 = violación de check constraint (p. ej. prompt de 5–1000 caracteres,
+  // puntos 0.25–100). La UI valida antes, pero si algo se cuela, decirlo claro.
+  if (code === "23514") {
+    return {
+      ok: false,
+      error:
+        "La pregunta no cumple las validaciones: enunciado de 5 a 1000 caracteres y puntos entre 0.25 y 100.",
+    };
+  }
+  // Solo profesores ven estos mensajes — incluir el detalle técnico acorta el
+  // diagnóstico sin necesidad de logs.
+  const detail = [code, message].filter(Boolean).join(": ").slice(0, 180);
+  return { ok: false, error: detail ? `${fallback} (${detail})` : fallback };
 }
 
 export async function ensureQuizAction(contentId: string): Promise<Quiz> {

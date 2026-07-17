@@ -140,6 +140,13 @@ function QuestionForm({ quizId, classId, question, orderIndex, onSaved, onCancel
 
   function handleSave() {
     if (!prompt.trim()) { setError("El enunciado es obligatorio."); return; }
+    // La DB exige 5–1000 caracteres y puntos 0.25–100; validar aquí evita que
+    // el check constraint reviente con un error genérico.
+    if (prompt.trim().length < 5) { setError("El enunciado debe tener al menos 5 caracteres."); return; }
+    if (prompt.trim().length > 1000) { setError("El enunciado no puede superar los 1000 caracteres."); return; }
+    if (!Number.isFinite(points) || points < 0.25 || points > 100) {
+      setError("Los puntos deben estar entre 0.25 y 100."); return;
+    }
     if ((type === "single_choice" || type === "multi_choice")) {
       const opts = body.options as ChoiceOption[];
       if (opts.some((o) => !o.text.trim())) { setError("Todas las opciones deben tener texto."); return; }
