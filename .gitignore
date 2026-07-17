@@ -44,3 +44,6 @@ docs/deploy.md
 .env.sentry-build-plugin
 
 .claude/
+
+# Capturas originales del manual (solo se usan los .jpg)
+docs/manual-usuario/img/*.png

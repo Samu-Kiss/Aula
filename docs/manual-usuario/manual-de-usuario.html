@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Aula — Manual de usuario</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Fraunces:ital,wght@1,400&family=JetBrains+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --page: #FAF8F3;
+    --surface: #FFFFFF;
+    --surface-alt: #F0EDE5;
+    --ink: #1A1814;
+    --ink-soft: #6B665C;
+    --ink-mute: #6F6960;
+    --accent: #4C51BF;
+    --bosque: #24755B;
+    --borgona: #922F41;
+    --ambar: #8A6419;
+    --hairline: rgba(0, 0, 0, 0.08);
+    --font-sans: "Inter", system-ui, sans-serif;
+    --font-serif: "Fraunces", Georgia, serif;
+    --font-mono: "JetBrains Mono", monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  @page {
+    size: letter;
+    margin: 18mm 16mm 20mm 16mm;
+  }
+
+  html { background: var(--page); }
+
+  body {
+    background: var(--page);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  .doc { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+
+  /* ── Tipografía del sistema ─────────────────────── */
+  .eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--ink-mute);
+  }
+  .serif-title {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+  }
+  .mono { font-family: var(--font-mono); font-size: 11px; }
+
+  /* ── Portada ────────────────────────────────────── */
+  .cover {
+    min-height: 88vh;
+    display: flex; flex-direction: column; justify-content: center;
+    page-break-after: always;
+  }
+  .cover .eyebrow { margin-bottom: 24px; }
+  .cover h1 {
+    font-size: 92px; line-height: 0.9; font-weight: 900;
+    letter-spacing: -0.03em; margin-bottom: 8px;
+  }
+  .cover h1 .accent-word {
+    font-family: var(--font-serif); font-style: italic; font-weight: 400;
+    color: var(--accent); display: block; font-size: 80px;
+  }
+  .cover .subtitle {
+    font-family: var(--font-serif); font-style: italic;
+    font-size: 20px; color: var(--ink-soft); margin-top: 24px; max-width: 46ch;
+  }
+  .cover .meta {
+    margin-top: 56px; padding-top: 16px;
+    border-top: 0.5px solid rgba(0,0,0,0.12);
+    display: flex; gap: 40px;
+  }
+  .cover .meta div p:first-child {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--ink-mute); margin-bottom: 2px;
+  }
+  .cover .meta div p:last-child { font-family: var(--font-mono); font-size: 12px; }
+
+  /* ── Índice ─────────────────────────────────────── */
+  .toc { page-break-after: always; padding-top: 32px; }
+  .toc h2 { margin-bottom: 28px; }
+  .toc ol { list-style: none; counter-reset: toc; }
+  .toc li {
+    counter-increment: toc;
+    display: flex; align-items: baseline; gap: 12px;
+    padding: 9px 0;
+    border-bottom: 0.5px solid var(--hairline);
+    font-size: 14px; font-weight: 500;
+  }
+  .toc li::before {
+    content: counter(toc, decimal-leading-zero);
+    font-family: var(--font-mono); font-size: 11px; color: var(--accent);
+  }
+  .toc li .who {
+    margin-left: auto;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+
+  /* ── Secciones ──────────────────────────────────── */
+  section.chapter { page-break-before: always; padding-top: 8px; }
+  section.chapter:first-of-type { page-break-before: avoid; }
+
+  .ch-head { margin-bottom: 24px; }
+  .ch-head .eyebrow { color: var(--accent); margin-bottom: 6px; }
+  h2 {
+    font-family: var(--font-serif); font-style: italic; font-weight: 400;
+    font-size: 30px; line-height: 1.15; letter-spacing: -0.01em;
+  }
+  h3 {
+    font-size: 15px; font-weight: 600; margin: 26px 0 8px;
+    page-break-after: avoid;
+  }
+  h4 {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--ink-soft);
+    margin: 20px 0 6px; page-break-after: avoid;
+  }
+  p { margin-bottom: 10px; color: var(--ink); }
+  p.soft { color: var(--ink-soft); }
+
+  ul, ol { margin: 0 0 12px 20px; }
+  li { margin-bottom: 5px; }
+
+  strong { font-weight: 600; }
+
+  code {
+    font-family: var(--font-mono); font-size: 11px;
+    background: var(--surface-alt);
+    padding: 0.15em 0.4em; border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  /* ── Figuras ────────────────────────────────────── */
+  figure {
+    margin: 18px 0 22px;
+    page-break-inside: avoid;
+  }
+  figure img {
+    width: 100%;
+    border: 0.5px solid rgba(0,0,0,0.14);
+    border-radius: 12px;
+    display: block;
+  }
+  figcaption {
+    margin-top: 8px;
+    font-family: var(--font-mono); font-size: 10.5px;
+    color: var(--ink-mute);
+    display: flex; gap: 8px; align-items: baseline;
+  }
+  figcaption .fig-n { color: var(--accent); font-weight: 400; }
+
+  /* ── Componentes editoriales ────────────────────── */
+  .callout {
+    background: var(--surface);
+    border: 0.5px solid var(--hairline);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 12px 12px 0;
+    padding: 12px 16px;
+    margin: 14px 0;
+    page-break-inside: avoid;
+  }
+  .callout.warn { border-left-color: var(--ambar); }
+  .callout.ok { border-left-color: var(--bosque); }
+  .callout .label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-mute); margin-bottom: 3px;
+  }
+  .callout p:last-child { margin-bottom: 0; }
+
+  table {
+    width: 100%; border-collapse: collapse; margin: 14px 0 18px;
+    font-size: 12px;
+    page-break-inside: avoid;
+    background: var(--surface);
+    border: 0.5px solid var(--hairline);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  th {
+    text-align: left;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ink-mute);
+    background: var(--surface-alt);
+    padding: 8px 12px;
+    border-bottom: 0.5px solid var(--hairline);
+  }
+  td {
+    padding: 8px 12px;
+    border-bottom: 0.5px solid rgba(0,0,0,0.05);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+
+  .steps { list-style: none; margin-left: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step;
+    position: relative;
+    padding-left: 38px;
+    margin-bottom: 10px;
+  }
+  .steps li::before {
+    content: counter(step);
+    position: absolute; left: 0; top: 1px;
+    width: 22px; height: 22px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--page);
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .rule {
+    border: none; border-top: 0.5px solid rgba(0,0,0,0.12);
+    margin: 28px 0;
+  }
+
+  .pill {
+    display: inline-block;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 2px 10px; border-radius: 999px;
+    background: var(--surface-alt); color: var(--ink-soft);
+  }
+  .pill.green { background: rgba(36,117,91,.12); color: var(--bosque); }
+  .pill.red { background: rgba(146,47,65,.12); color: var(--borgona); }
+
+  .two-col { display: flex; gap: 20px; }
+  .two-col > * { flex: 1; }
+
+  @media print {
+    body { font-size: 12px; }
+    .cover { min-height: 92vh; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <!-- ════════ PORTADA ════════ -->
+  <div class="cover">
+    <p class="eyebrow">Plataforma de clases</p>
+    <h1><span class="accent-word">Manual</span>de usuario</h1>
+    <p class="subtitle">Guía completa de Aula: crea clases, publica contenidos, evalúa a tus estudiantes y administra calificaciones — todo desde un solo lugar.</p>
+    <div class="meta">
+      <div><p>Producto</p><p>Aula</p></div>
+      <div><p>Versión</p><p>Junio 2026</p></div>
+      <div><p>Audiencia</p><p>Profesor · Estudiante</p></div>
+    </div>
+  </div>
+
+  <!-- ════════ ÍNDICE ════════ -->
+  <div class="toc">
+    <p class="eyebrow" style="margin-bottom:6px">Contenido</p>
+    <h2>Índice</h2>
+    <ol>
+      <li>Qué es Aula <span class="who">General</span></li>
+      <li>Iniciar sesión y el dashboard <span class="who">Profesor</span></li>
+      <li>Crear y configurar una clase <span class="who">Profesor</span></li>
+      <li>Módulos y contenidos <span class="who">Profesor</span></li>
+      <li>Evaluaciones (quizzes) <span class="who">Profesor</span></li>
+      <li>Estudiantes <span class="who">Profesor</span></li>
+      <li>Calificaciones <span class="who">Profesor</span></li>
+      <li>Revisión de intentos <span class="who">Profesor</span></li>
+      <li>Compartir la clase: QR, proyección y vista previa <span class="who">Profesor</span></li>
+      <li>Notificaciones y archivo <span class="who">Profesor</span></li>
+      <li>Acceder a una clase <span class="who">Estudiante</span></li>
+      <li>Presentar una evaluación <span class="who">Estudiante</span></li>
+      <li>Preguntas frecuentes <span class="who">General</span></li>
+    </ol>
+  </div>
+
+  <!-- ════════ 1. QUÉ ES AULA ════════ -->
+  <section class="chapter">
+    <div class="ch-head">
+      <p class="eyebrow">Capítulo 01 · General</p>
+      <h2>Qué es Aula</h2>
+    </div>
+    <p>Aula es una plataforma web para crear, organizar y publicar contenidos didácticos. El profesor administra todo desde un <strong>dashboard</strong> privado; los estudiantes acceden a cada clase mediante una <strong>URL pública</strong> propia, sin necesidad de crear una cuenta ni recordar contraseñas.</p>
+
+    <h3>Cómo se organiza el contenido</h3>
+    <p>Cada <strong>clase</strong> contiene <strong>módulos</strong> (unidades temáticas), y cada módulo contiene <strong>contenidos</strong>: lecturas con texto enriquecido, videos, mapas interactivos, archivos descargables y evaluaciones (quizzes).</p>
+    <table>
+      <tr><th>Nivel</th><th>Qué es</th><th>Ejemplo</th></tr>
+      <tr><td><strong>Clase</strong></td><td>El curso completo, con su URL pública e identidad visual propia.</td><td>Geografía de Colombia</td></tr>
+      <tr><td><strong>Módulo</strong></td><td>Una unidad temática dentro de la clase. Puede abrirse o cerrarse por fechas.</td><td>Regiones naturales</td></tr>
+      <tr><td><strong>Contenido</strong></td><td>Una pieza individual: lectura, video, mapa, archivo o evaluación.</td><td>Quiz: regiones naturales</td></tr>
+    </table>
+
+    <h3>Los dos roles</h3>
+    <ul>
+      <li><strong>Profesor:</strong> inicia sesión con correo y contraseña. Crea clases, publica contenidos, controla la disponibilidad, califica y administra el libro de calificaciones.</li>
+      <li><strong>Estudiante:</strong> no se registra. Navega el contenido público libremente y solo se identifica (correo + código de verificación) cuando va a presentar una evaluación.</li>
+    </ul>
+    <div class="callout">
+      <p class="label">Bueno saber</p>
+      <p>Cada clase tiene su propio color de acento e identidad visual, que los estudiantes ven en la página pública, y la plataforma funciona en móvil, tablet y escritorio.</p>
+    </div>
+  </section>
+
+  <!-- ════════ 2. LOGIN Y DASHBOARD ════════ -->
+  <section class="chapter">
+    <div class="ch-head">
+      <p class="eyebrow">Capítulo 02 · Profesor</p>
+      <h2>Iniciar sesión y el dashboard</h2>
+    </div>
+    <p>Ingresa a <code>/login</code> con tu correo y contraseña de profesor.</p>
+    <figure>
+      <img src="img/01-login.jpg" alt="Pantalla de inicio de sesión">
+      <figcaption><span class="fig-n">FIG. 01</span> Pantalla de inicio de sesión del profesor.</figcaption>
+    </figure>
+    <p>Al entrar verás <strong>Tus clases</strong>: una tarjeta por cada clase con su estado de publicación y su URL pública. Desde la barra lateral accedes a <strong>Clases</strong>, <strong>Notificaciones</strong> y <strong>Archivo</strong>.</p>
+    <figure>
+      <img src="img/02-dashboard.jpg" alt="Dashboard con la lista de clases">
+      <figcaption><span class="fig-n">FIG. 02</span> El dashboard: tus clases, su estado y el botón "Nueva clase".</figcaption>
+    </figure>
+  </section>
+
+  <!-- ════════ 3. CREAR Y CONFIGURAR UNA CLASE ════════ -->
+  <section class="chapter">
+    <div class="ch-head">
+      <p class="eyebrow">Capítulo 03 · Profesor</p>
+      <h2>Crear y configurar una clase</h2>
+    </div>
+    <h3>Crear una clase nueva</h3>
+    <ol class="steps">
+      <li>En el dashboard, pulsa <strong>+ Nueva clase</strong>.</li>
+      <li>Escribe el <strong>título</strong> (3–80 caracteres) y una <strong>descripción</strong> opcional.</li>
+      <li>Define el <strong>slug</strong>: el identificador de la URL pública, por ejemplo <code>geografia-de-colombia</code> → <code>/c/geografia-de-colombia</code>. Solo minúsculas, números y guiones.</li>
+      <li>Elige el <strong>color de acento</strong> entre las 8 tintas disponibles (índigo, terracota, bosque, ciruela, ámbar, pizarra, borgoña y salvia). Define la identidad visual que verán los estudiantes.</li>
+      <li>Guarda. La clase nace <strong>sin publicar</strong>: solo tú puedes verla hasta que la publiques.</li>
+    </ol>
+    <figure>
+      <img src="img/03-nueva-clase.jpg" alt="Formulario de nueva clase">
+      <figcaption><span class="fig-n">FIG. 03</span> Formulario de creación de clase: título, slug, descripción y acento.</figcaption>
+    </figure>
+
+    <h3>La vista general de la clase</h3>
+    <p>Al abrir una clase llegas a su <strong>vista general</strong>: el número de módulos, cuántos están publicados, la URL pública y el <strong>QR de acceso</strong> listo para compartir, proyectar o descargar. La barra lateral izquierda lista los módulos y da acceso a Calificaciones, Estudiantes, Intentos, Configuración y Vista previa.</p>
+    <figure>
+      <img src="img/04-editor-clase.jpg" alt="Vista general de la clase">
+      <figcaption><span class="fig-n">FIG. 04</span> Vista general: resumen, QR de acceso y navegación de la clase.</figcaption>
+    </figure>
+
+    <h3>Configuración de la clase</h3>
+    <p>En <strong>Configuración</strong> ajustas título, descripción, slug, color de acento, visibilidad y el estado de publicación. Aquí también defines la <strong>escala de calificación</strong> de la clase.</p>
+    <figure>
+      <img src="img/08-configuracion.jpg" alt="Configuración de la clase">
+      <figcaption><span class="fig-n">FIG. 05</span> Configuración: identidad, URL, publicación y zona de peligro.</figcaption>
+    </figure>
+    <div class="callout warn">
+      <p class="label">Cuidado</p>
+      <p><strong>Eliminar clase</strong> pide escribir el nombre exacto de la clase para confirmar. Las clases eliminadas van al <strong>Archivo</strong> y son recuperables durante 30 días; después se borran definitivamente.</p>
+    </div>
+  </section>
+
+  <!-- ════════ 4. MÓDULOS Y CONTENIDOS ════════ -->
+  <section class="chapter">
+    <div class="ch-head">
+      <p class="eyebrow">Capítulo 04 · Profesor</p>
+      <h2>Módulos y contenidos</h2>
+    </div>
+    <h3>Módulos</h3>
+    <p>Crea un módulo con el botón <strong>+</strong> de la barra lateral. Cada módulo tiene título, descripción y su propia lista de contenidos. Puedes <strong>reordenar</strong> módulos arrastrándolos (icono ⠿), <strong>duplicarlos</strong> o <strong>eliminarlos</strong>.</p>
+    <figure>
+      <img src="img/05-modulo.jpg" alt="Editor de módulo">
+      <figcaption><span class="fig-n">FIG. 06</span> Un módulo con sus contenidos: lectura y evaluación, ambos publicados.</figcaption>
+    </figure>
+
+    <h4>Disponibilidad del módulo</h4>
+    <p>Cada módulo combina tres controles que determinan lo que ve el estudiante:</p>
+    <table>
+      <tr><th>Control</th><th>Efecto</th></tr>
+      <tr><td><strong>Publicado</strong></td><td>Si está apagado, el módulo es invisible en la página pública (borrador).</td></tr>
+      <tr><td><strong>Disponible</strong></td><td>Interruptor maestro. Apagado = el módulo aparece bloqueado con candado.</td></tr>
+      <tr><td><strong>Ventana de fechas</strong></td><td>Apertura y cierre programados. Antes de abrir, el módulo aparece con candado y fecha ("genera anticipación"); después del cierre aparece como cerrado.</td></tr>
+    </table>
+
+    <h3>Tipos de contenido</h3>
+    <ul>
+      <li><strong>Lectura</strong> — texto enriquecido con títulos, listas, citas, código y enlaces.</li>
+      <li><strong>Video</strong> — video embebido (por ejemplo YouTube).</li>
+      <li><strong>Mapa</strong> — mapa interactivo con marcadores en el color de la clase.</li>
+      <li><strong>Archivo</strong> — documento descargable (PDF, DOCX, XLSX, PPTX, ZIP, MP3, MP4; máx. 25 MB).</li>
+      <li><strong>Evaluación</strong> — un quiz calificable (capítulo 5).</li>
+    </ul>
+
+    <h3>El editor de texto</h3>
+    <p>El editor guarda tu <strong>borrador automáticamente</strong> cada pocos segundos (indicador "Guardado"). Lo que escribes no se hace público hasta que pulses <strong>Publicar cambios</strong>: el borrador y la versión publicada viven separados, así puedes editar con calma una lectura que los estudiantes ya están viendo.</p>
+    <figure>
+      <img src="img/06-editor-texto.jpg" alt="Editor de texto enriquecido">
+      <figcaption><span class="fig-n">FIG. 07</span> Editor de lectura: barra de formato, autoguardado y "Publicar cambios".</figcaption>
+    </figure>
+    <div class="callout ok">
+      <p class="label">Flujo recomendado</p>
+      <p>Escribe → revisa con <strong>Vista previa</strong> → <strong>Publicar cambios</strong>. Si te arrepientes, <strong>Despublicar</strong> retira el contenido de la página pública sin borrarlo.</p>
+    </div>
+  </section>
+
+  <!-- ════════ 5. EVALUACIONES ════════ -->
+  <section class="chapter">
+    <div class="ch-head">
+      <p class="eyebrow">Capítulo 05 · Profesor</p>
+      <h2>Evaluaciones (quizzes)</h2>
+    </div>
+    <p>Un contenido de tipo <strong>Evaluación</strong> abre el editor de quiz: preguntas a la izquierda, configuración a la derecha.</p>
+    <figure>
+      <img src="img/07-editor-quiz.jpg" alt="Editor de quiz">
+      <figcaption><span class="fig-n">FIG. 08</span> Editor de evaluación: preguntas, puntos y panel de configuración.</figcaption>
+    </figure>
+
+    <h3>Tipos de pregunta</h3>
+    <table>
+      <tr><th>Tipo</th><th>Cómo se califica</th></tr>
+      <tr><td><strong>Opción única</strong></td><td>Automática — una sola opción correcta.</td></tr>
+      <tr><td><strong>Opción múltiple</strong></td><td>Automática — varias opciones correctas.</td></tr>
+      <tr><td><strong>Verdadero / falso</strong></td><td>Automática.</td></tr>
+      <tr><td><strong>Respuesta corta</strong></td><td>Automática si defines respuestas aceptadas; si no, queda <em>pendiente de revisión manual</em>.</td></tr>
+      <tr><td><strong>Punto en mapa</strong></td><td>Automática — el estudiante marca una ubicación y se valida contra una tolerancia en km.</td></tr>
+    </table>
+
+    <h3>Configuración del quiz</h3>
+    <ul>
+      <li><strong>Tiempo límite</strong> (1–180 min): el contador corre desde que el estudiante inicia; al llegar a cero se entrega automáticamente con lo respondido.</li>
+      <li><strong>Intentos permitidos</strong> (1–5) y <strong>puntaje del quiz</strong>: con varios intentos eliges si cuenta el <em>mejor</em> o el <em>promedio</em>.</li>
+      <li><strong>Puntaje mínimo</strong> para aprobar (opcional).</li>
+      <li><strong>Barajar preguntas</strong>: cada estudiante las ve en orden distinto.</li>
+      <li><strong>Mostrar respuestas correctas</strong>: nunca, inmediatamente tras entregar, o solo cuando cierre el período de la evaluación.</li>
+      <li><strong>Disponibilidad</strong>: igual que los módulos — interruptor + ventana de fechas. Si un estudiante está presentando cuando llega el cierre, tiene 15 minutos de gracia para terminar.</li>
+    </ul>
+    <div class="callout">
+      <p class="label">Actividad durante el intento</p>
+      <p>Durante un intento la plataforma registra eventos como cambios de pestaña o copiar/pegar, y bloquea que el quiz se abra en dos ventanas a la vez. Los eventos se muestran al revisar el intento, como contexto — no prueban fraude por sí solos.</p>
+    </div>
+  </section>
+
+  <!-- ════════ 6. ESTUDIANTES ════════ -->
+  <section class="chapter">
+    <div class="ch-head">
+      <p class="eyebrow">Capítulo 06 · Profesor</p>
+      <h2>Estudiantes</h2>
+    </div>
+    <p>La sección <strong>Estudiantes</strong> muestra el roster de la clase: quiénes se han identificado, su correo, nombre y actividad. Los estudiantes se agregan solos al identificarse para una evaluación, o puedes <strong>importarlos</strong> de antemano para tener el roster completo desde el primer día.</p>
+    <figure>
+      <img src="img/09-estudiantes.jpg" alt="Roster de estudiantes">
+      <figcaption><span class="fig-n">FIG. 09</span> Roster de la clase con los estudiantes identificados.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ════════ 7. CALIFICACIONES ════════ -->
+  <section class="chapter">
+    <div class="ch-head">
+      <p class="eyebrow">Capítulo 07 · Profesor</p>
+      <h2>Calificaciones</h2>
+    </div>
+    <p>El libro de calificaciones tiene dos pestañas: <strong>Notas</strong> (el libro ponderado por categorías) y <strong>Por quiz</strong> (resultados directos de las evaluaciones).</p>
+
+    <h3>Categorías con peso</h3>
+    <p>Antes de usar la pestaña Notas, define <strong>categorías</strong> con su peso porcentual — por ejemplo Quizzes 40%, Trabajos 40%, Participación 20%. La suma debe dar 100. Dentro de cada categoría creas <strong>items</strong> calificables: ligados a un quiz (se llenan solos cuando los estudiantes entregan) o manuales (tú escribes la nota).</p>
+    <figure>
+      <img src="img/10-calificaciones.jpg" alt="Libro de calificaciones">
+      <figcaption><span class="fig-n">FIG. 10</span> El libro de calificaciones invita a configurar categorías la primera vez.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/12-categorias.jpg" alt="Categorías de calificación">
+      <figcaption><span class="fig-n">FIG. 11</span> Categorías con peso: la base del cálculo de la nota final.</figcaption>
+    </figure>
+
+    <h3>Pestaña "Por quiz"</h3>
+    <p>Una tabla con un estudiante por fila y un quiz por columna: porcentaje, puntaje, número de intentos y el indicador verde/rojo de aprobado/reprobado según el puntaje mínimo. Incluye <strong>exportación a CSV</strong> para llevar las notas a Excel.</p>
+    <figure>
+      <img src="img/11-calificaciones-quices.jpg" alt="Calificaciones por quiz">
+      <figcaption><span class="fig-n">FIG. 12</span> Resultados por quiz, con promedio por estudiante y exportación CSV.</figcaption>
+    </figure>
+    <div class="callout">
+      <p class="label">Auditoría</p>
+      <p>Cada cambio manual de una nota queda registrado (nota anterior, nota nueva, fecha y quién la cambió), con espacio para anotar la razón.</p>
+    </div>
+  </section>
+
+  <!-- ════════ 8. REVISIÓN DE INTENTOS ════════ -->
+  <section class="chapter">
+    <div class="ch-head">
+      <p class="eyebrow">Capítulo 08 · Profesor</p>
+      <h2>Revisión de intentos</h2>
+    </div>
+    <p>La sección <strong>Intentos</strong> agrupa los intentos por quiz y resalta los que tienen preguntas <strong>pendientes de revisión manual</strong> (respuestas cortas sin auto-calificación).</p>
+    <figure>
+      <img src="img/13-intentos.jpg" alt="Cola de intentos">
+      <figcaption><span class="fig-n">FIG. 13</span> Intentos agrupados por evaluación.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/13b-intentos-lista.jpg" alt="Lista de intentos de un quiz">
+      <figcaption><span class="fig-n">FIG. 14</span> Lista de intentos de un quiz: estudiante, estado, puntaje y fecha.</figcaption>
+    </figure>
+
+    <h3>Calificar un intento</h3>
+    <ol class="steps">
+      <li>Abre el intento desde la lista (<strong>Ver</strong>).</li>
+      <li>Revisa cada respuesta. Las auto-calificadas ya tienen puntos; a las pendientes les asignas el puntaje y, si quieres, un comentario de retroalimentación.</li>
+      <li>Al guardar, el sistema recalcula el puntaje total y el intento pasa a <span class="pill green">Calificado</span>. La nota fluye automáticamente al libro de calificaciones si el quiz está ligado a un item.</li>
+    </ol>
+    <figure>
+      <img src="img/13c-revisar-intento.jpg" alt="Revisión de un intento">
+      <figcaption><span class="fig-n">FIG. 15</span> Detalle del intento: respuestas, calificación manual y eventos de actividad.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ════════ 9. COMPARTIR ════════ -->
+  <section class="chapter">
+    <div class="ch-head">
+      <p class="eyebrow">Capítulo 09 · Profesor</p>
+      <h2>Compartir la clase</h2>
+    </div>
+    <p>Los estudiantes entran por la URL pública (<code>/c/tu-clase</code>). Para compartirla tienes tres herramientas en la vista general:</p>
+    <ul>
+      <li><strong>QR de acceso</strong> — descárgalo como PNG para imprimirlo o pegarlo en una presentación.</li>
+      <li><strong>Proyectar</strong> — abre una pantalla limpia a tamaño completo con el QR y la URL, pensada para el video-proyector del salón.</li>
+      <li><strong>Vista previa</strong> — navega la clase exactamente como la vería un estudiante, sin salir del dashboard.</li>
+    </ul>
+    <figure>
+      <img src="img/28-proyectar.jpg" alt="Pantalla de proyección">
+      <figcaption><span class="fig-n">FIG. 16</span> Modo proyección: QR gigante y URL para que el salón entre en segundos.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/27-vista-previa.jpg" alt="Vista previa de la clase">
+      <figcaption><span class="fig-n">FIG. 17</span> Vista previa: la clase tal como la ve el estudiante.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ════════ 10. NOTIFICACIONES Y ARCHIVO ════════ -->
+  <section class="chapter">
+    <div class="ch-head">
+      <p class="eyebrow">Capítulo 10 · Profesor</p>
+      <h2>Notificaciones y archivo</h2>
+    </div>
+    <h3>Notificaciones</h3>
+    <p>El centro de notificaciones te avisa cuando llega un intento nuevo, cuando hay respuestas que requieren revisión manual, cuando una evaluación está por cerrar o un módulo abre hoy.</p>
+    <figure>
+      <img src="img/14-notificaciones.jpg" alt="Centro de notificaciones">
+      <figcaption><span class="fig-n">FIG. 18</span> Centro de notificaciones del profesor.</figcaption>
+    </figure>
+    <h3>Archivo</h3>
+    <p>Todo lo que eliminas — clases, módulos o contenidos — pasa al <strong>Archivo</strong>, donde puede restaurarse durante <strong>30 días</strong>. Pasado ese plazo se elimina definitivamente.</p>
+    <figure>
+      <img src="img/15-archivo.jpg" alt="Archivo de elementos eliminados">
+      <figcaption><span class="fig-n">FIG. 19</span> El archivo: papelera con recuperación a 30 días.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ════════ 11. ESTUDIANTE: ACCEDER ════════ -->
+  <section class="chapter">
+    <div class="ch-head">
+      <p class="eyebrow">Capítulo 11 · Estudiante</p>
+      <h2>Acceder a una clase</h2>
+    </div>
+    <p>Entra con el enlace o el QR que comparte tu profesor. La página de la clase muestra la lista de módulos; no necesitas cuenta ni contraseña para leer el contenido.</p>
+    <figure>
+      <img src="img/16-clase-publica.jpg" alt="Página pública de la clase">
+      <figcaption><span class="fig-n">FIG. 20</span> Página pública de la clase, con la identidad visual elegida por el profesor.</figcaption>
+    </figure>
+    <p>Dentro de un módulo verás los contenidos en orden: lecturas, videos, mapas, archivos y evaluaciones. Los módulos con candado aún no están disponibles — si tienen fecha, ahí dice cuándo abren.</p>
+    <figure>
+      <img src="img/17-modulo-publico.jpg" alt="Módulo público">
+      <figcaption><span class="fig-n">FIG. 21</span> Un módulo con su lista de contenidos.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/18-lectura.jpg" alt="Lectura">
+      <figcaption><span class="fig-n">FIG. 22</span> Una lectura, en formato cómodo para leer en cualquier pantalla.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ════════ 12. ESTUDIANTE: PRESENTAR QUIZ ════════ -->
+  <section class="chapter">
+    <div class="ch-head">
+      <p class="eyebrow">Capítulo 12 · Estudiante</p>
+      <h2>Presentar una evaluación</h2>
+    </div>
+    <h3>Identifícate (solo la primera vez)</h3>
+    <ol class="steps">
+      <li>Al abrir una evaluación, escribe tu <strong>correo, nombre y apellido</strong>. Marca "Recordarme" para no repetir esto durante 30 días en tu dispositivo.</li>
+      <li>Recibirás un <strong>código de 6 dígitos</strong> en tu correo. Escríbelo para verificar tu identidad.</li>
+      <li>Listo — quedas identificado y ves la pantalla de la evaluación.</li>
+    </ol>
+    <div class="two-col">
+      <figure>
+        <img src="img/19-quiz-identificacion.jpg" alt="Identificación">
+        <figcaption><span class="fig-n">FIG. 23</span> Identificación con correo y nombre.</figcaption>
+      </figure>
+      <figure>
+        <img src="img/20-quiz-verificacion.jpg" alt="Verificación">
+        <figcaption><span class="fig-n">FIG. 24</span> Verificación con el código de 6 dígitos.</figcaption>
+      </figure>
+    </div>
+    <div class="callout">
+      <p class="label">Equipos compartidos</p>
+      <p>Si el computador es compartido, usa <strong>"No soy yo"</strong> en la cabecera para cambiar de identidad antes de presentar.</p>
+    </div>
+
+    <h3>Antes de empezar</h3>
+    <p>La pantalla previa muestra el tiempo límite, los intentos disponibles, el puntaje mínimo y tu historial de intentos. Cuando estés listo, pulsa <strong>Iniciar evaluación</strong> — desde ese momento corre el reloj.</p>
+    <figure>
+      <img src="img/21-quiz-lobby.jpg" alt="Pantalla previa del quiz">
+      <figcaption><span class="fig-n">FIG. 25</span> Resumen de la evaluación e historial de intentos.</figcaption>
+    </figure>
+
+    <h3>Durante el intento</h3>
+    <ul>
+      <li>El <strong>contador</strong> está siempre visible arriba a la derecha; recibirás avisos cuando quede poco tiempo.</li>
+      <li>Tus respuestas se <strong>guardan solas</strong> (indicador "Guardado"). Si se va el internet o recargas la página, no pierdes nada: el tiempo sigue corriendo, pero tus respuestas están a salvo.</li>
+      <li>Navega entre preguntas con <strong>Anterior / Siguiente</strong> o con la numeración.</li>
+      <li>Mantén el quiz en <strong>una sola ventana</strong>: abrirlo en dos pestañas a la vez bloquea la primera.</li>
+    </ul>
+    <figure>
+      <img src="img/23-quiz-intento.jpg" alt="Intento en curso">
+      <figcaption><span class="fig-n">FIG. 26</span> Intento en curso: progreso, contador y opciones de respuesta.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/24-quiz-pregunta2.jpg" alt="Pregunta de respuesta corta">
+      <figcaption><span class="fig-n">FIG. 27</span> Pregunta de respuesta corta con autoguardado.</figcaption>
+    </figure>
+
+    <h3>Entregar y ver tu resultado</h3>
+    <p>Pulsa <strong>Entregar evaluación</strong> y confirma. Si el tiempo se agota, el sistema entrega automáticamente con lo que llevas respondido.</p>
+    <figure>
+      <img src="img/25-quiz-confirmar.jpg" alt="Confirmación de entrega">
+      <figcaption><span class="fig-n">FIG. 28</span> Confirmación de entrega — después de esto no puedes cambiar respuestas.</figcaption>
+    </figure>
+    <p>El resultado muestra tu porcentaje, si aprobaste y la revisión pregunta por pregunta. Las preguntas de revisión manual aparecen como <span class="pill">Revisión pendiente</span> hasta que el profesor las califique; las respuestas correctas se muestran según la política que haya definido el profesor.</p>
+    <figure>
+      <img src="img/26-quiz-entregado.jpg" alt="Resultado del intento">
+      <figcaption><span class="fig-n">FIG. 29</span> Resultado: puntaje, estado y revisión de respuestas.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ════════ 13. FAQ ════════ -->
+  <section class="chapter">
+    <div class="ch-head">
+      <p class="eyebrow">Capítulo 13 · General</p>
+      <h2>Preguntas frecuentes</h2>
+    </div>
+
+    <h4>¿Los estudiantes necesitan cuenta?</h4>
+    <p>No. Solo se identifican con su correo (verificado con un código) cuando presentan evaluaciones. El contenido se lee sin identificarse.</p>
+
+    <h4>Edité una lectura publicada, ¿los estudiantes ven mis cambios a medias?</h4>
+    <p>No. El autoguardado solo toca tu borrador; la versión pública cambia únicamente cuando pulsas <strong>Publicar cambios</strong>.</p>
+
+    <h4>¿Qué pasa si un estudiante pierde la conexión durante un quiz?</h4>
+    <p>Sus respuestas se guardan localmente y se sincronizan al reconectar. El tiempo no se pausa, y un aviso en pantalla le indica que está sin conexión.</p>
+
+    <h4>¿Puedo dar más tiempo a un quiz ya iniciado?</h4>
+    <p>Puedes cambiar el tiempo límite del quiz, pero solo aplica a intentos futuros: los que ya están en curso conservan su tiempo original. Además existe una gracia de 15 minutos para quien esté presentando cuando llega la hora de cierre.</p>
+
+    <h4>Eliminé algo por error, ¿lo puedo recuperar?</h4>
+    <p>Sí — clases, módulos y contenidos eliminados quedan en <strong>Archivo</strong> durante 30 días.</p>
+
+    <h4>¿Cómo se calcula la nota final?</h4>
+    <p>Por categorías ponderadas: la nota de cada categoría es el promedio de sus items (en %), y la final es la suma de cada categoría multiplicada por su peso. Los quizzes ligados a items se llenan solos al calificarse.</p>
+
+    <h4>¿Los eventos de actividad (cambio de pestaña, pegar) penalizan al estudiante?</h4>
+    <p>No automáticamente. Se registran y se muestran al profesor como contexto al revisar el intento; la decisión siempre es del profesor.</p>
+
+    <hr class="rule">
+    <p class="soft" style="text-align:center">
+      <span class="serif-title" style="font-size:16px">Aula</span><br>
+      <span class="mono">Manual de usuario · Junio 2026</span>
+    </p>
+  </section>
+
+</div>
+</body>
+</html>
