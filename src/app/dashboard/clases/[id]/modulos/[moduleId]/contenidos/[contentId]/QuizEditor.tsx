@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect, useRef, Suspense, lazy } from "react";
+import { useState, useTransition, useEffect, useRef, Suspense, lazy, type ChangeEvent } from "react";
 import {
   DndContext,
   closestCenter,
@@ -82,6 +82,177 @@ const SHOW_ANSWERS_OPTIONS: { value: Quiz["show_correct_answers"]; label: string
   { value: "after_submit", label: "Al enviar" },
   { value: "after_close", label: "Después del cierre" },
 ];
+
+// ─── Importar preguntas ────────────────────────────────────────────────────────
+
+type NewQuestion = { type: QuestionType; prompt: string; points: number; body: Record<string, unknown> };
+
+const IMPORTABLE_TYPES: QuestionType[] = ["single_choice", "multi_choice", "true_false", "short_answer", "map_pin"];
+
+const PIN_LABELS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+function asBool(v: unknown, dflt: boolean): boolean {
+  return typeof v === "boolean" ? v : dflt;
+}
+
+// Acepta claves en español (las de la plantilla) o en inglés (las internas), para
+// que un archivo exportado a mano de cualquiera de las dos formas funcione.
+function parseImportedQuestions(raw: string): { questions: NewQuestion[]; error: string | null } {
+  let data: unknown;
+  try { data = JSON.parse(raw); }
+  catch { return { questions: [], error: "El archivo no es JSON válido." }; }
+
+  const root = (data ?? {}) as Record<string, unknown>;
+  const arr = Array.isArray(data) ? data : (root.preguntas ?? root.questions);
+  if (!Array.isArray(arr) || arr.length === 0) {
+    return { questions: [], error: "No se encontró un arreglo 'preguntas' con al menos una pregunta." };
+  }
+
+  const out: NewQuestion[] = [];
+  for (let i = 0; i < arr.length; i++) {
+    const q = (arr[i] ?? {}) as Record<string, unknown>;
+    const n = i + 1;
+    const type = (q.tipo ?? q.type) as QuestionType;
+    if (!IMPORTABLE_TYPES.includes(type)) {
+      return { questions: [], error: `Pregunta ${n}: tipo no válido o no importable ("${String(q.tipo ?? q.type ?? "")}"). Usa: ${IMPORTABLE_TYPES.join(", ")}.` };
+    }
+    const prompt = String(q.enunciado ?? q.prompt ?? "").trim();
+    if (prompt.length < 5 || prompt.length > 1000) {
+      return { questions: [], error: `Pregunta ${n}: el enunciado debe tener entre 5 y 1000 caracteres.` };
+    }
+    const points = Number(q.puntos ?? q.points ?? 1);
+    if (!Number.isFinite(points) || points < 0.25 || points > 100) {
+      return { questions: [], error: `Pregunta ${n}: los puntos deben estar entre 0.25 y 100.` };
+    }
+
+    let body: Record<string, unknown>;
+    if (type === "single_choice" || type === "multi_choice") {
+      const rawOpts = q.opciones ?? q.options;
+      if (!Array.isArray(rawOpts) || rawOpts.length < 2) {
+        return { questions: [], error: `Pregunta ${n}: necesita al menos 2 opciones.` };
+      }
+      const options: ChoiceOption[] = rawOpts.map((o) => {
+        const oo = (o ?? {}) as Record<string, unknown>;
+        return {
+          id: newId(),
+          text: String(oo.texto ?? oo.text ?? "").trim(),
+          is_correct: asBool(oo.correcta ?? oo.is_correct ?? oo.correct, false),
+        };
+      });
+      if (options.some((o) => !o.text)) {
+        return { questions: [], error: `Pregunta ${n}: todas las opciones deben tener texto.` };
+      }
+      if (!options.some((o) => o.is_correct)) {
+        return { questions: [], error: `Pregunta ${n}: marca al menos una opción como correcta.` };
+      }
+      body = { options, explanation: String(q.explicacion ?? q.explanation ?? "") };
+    } else if (type === "true_false") {
+      const correct = q.correcta ?? q.correct;
+      if (typeof correct !== "boolean") {
+        return { questions: [], error: `Pregunta ${n}: 'correcta' debe ser true o false.` };
+      }
+      body = { correct, explanation: String(q.explicacion ?? q.explanation ?? "") };
+    } else if (type === "map_pin") {
+      const rawMarkers = q.marcadores ?? q.markers;
+      if (!Array.isArray(rawMarkers) || rawMarkers.length < 2) {
+        return { questions: [], error: `Pregunta ${n}: necesita al menos 2 marcadores.` };
+      }
+      let correctId = "";
+      const markers = rawMarkers.map((mk, mi) => {
+        const m = (mk ?? {}) as Record<string, unknown>;
+        const id = newId();
+        if (asBool(m.correcto ?? m.correct ?? m.is_correct, false) && !correctId) correctId = id;
+        return {
+          id,
+          lng: Number(m.lng ?? m.longitud),
+          lat: Number(m.lat ?? m.latitud),
+          label: String(m.etiqueta ?? m.label ?? PIN_LABELS[mi] ?? String(mi + 1)),
+        };
+      });
+      if (markers.some((m) => !Number.isFinite(m.lng) || !Number.isFinite(m.lat))) {
+        return { questions: [], error: `Pregunta ${n}: cada marcador necesita 'lng' y 'lat' numéricos.` };
+      }
+      if (!correctId) {
+        return { questions: [], error: `Pregunta ${n}: marca el marcador correcto con "correcto": true.` };
+      }
+      const centerRaw = q.centro ?? q.center;
+      const center: [number, number] = Array.isArray(centerRaw) && centerRaw.length === 2
+        ? [Number(centerRaw[0]), Number(centerRaw[1])]
+        : [markers[0].lng, markers[0].lat];
+      const zoom = Number(q.zoom ?? 11);
+      body = { center, zoom: Number.isFinite(zoom) ? zoom : 11, markers, correct_marker_id: correctId };
+    } else {
+      const rawAns = q.respuestas_aceptadas ?? q.accepted_answers;
+      const answers = Array.isArray(rawAns) ? rawAns.map((a) => String(a).trim()).filter(Boolean) : [];
+      if (answers.length === 0) {
+        return { questions: [], error: `Pregunta ${n}: necesita al menos una respuesta aceptada.` };
+      }
+      body = {
+        accepted_answers: answers,
+        case_sensitive: asBool(q.sensible_mayusculas ?? q.case_sensitive, false),
+        auto_grade: asBool(q.calificar_automatico ?? q.auto_grade, true),
+      };
+    }
+    out.push({ type, prompt, points, body });
+  }
+  return { questions: out, error: null };
+}
+
+// Plantilla de ejemplo, documentada. JSON no admite comentarios, así que los
+// campos "_instrucciones" describen qué se usa; el importador los ignora.
+function buildQuestionTemplate() {
+  return {
+    _instrucciones: {
+      formato: "Rellena el arreglo 'preguntas'. Cada una necesita 'tipo', 'enunciado' y 'puntos', más los campos propios de su tipo.",
+      tipos: {
+        single_choice: "Selección única: 'opciones' [{texto, correcta}]; marca UNA con correcta:true. 'explicacion' opcional.",
+        multi_choice: "Selección múltiple: igual que single_choice, pero puedes marcar varias con correcta:true.",
+        true_false: "Verdadero/Falso: 'correcta' true o false. 'explicacion' opcional.",
+        short_answer: "Respuesta corta: 'respuestas_aceptadas' [texto…]; 'sensible_mayusculas' y 'calificar_automatico' opcionales.",
+        map_pin: "Pin en mapa: 'marcadores' [{lng, lat, etiqueta?, correcto?}] (mínimo 2); marca UNO con correcto:true. 'centro' [lng, lat] y 'zoom' opcionales.",
+      },
+      reglas: "enunciado: 5 a 1000 caracteres. puntos: entre 0.25 y 100. Coordenadas en [longitud, latitud] (¡lng primero!).",
+      nota: "Los campos que empiezan con '_' son notas y se ignoran al importar.",
+    },
+    preguntas: [
+      {
+        tipo: "single_choice", enunciado: "¿Cuál es la capital de Colombia?", puntos: 1,
+        opciones: [
+          { texto: "Bogotá", correcta: true },
+          { texto: "Medellín", correcta: false },
+          { texto: "Cali", correcta: false },
+        ],
+        explicacion: "Bogotá es la capital de Colombia.",
+      },
+      {
+        tipo: "multi_choice", enunciado: "¿Cuáles de estos son números primos?", puntos: 2,
+        opciones: [
+          { texto: "2", correcta: true },
+          { texto: "3", correcta: true },
+          { texto: "4", correcta: false },
+        ],
+        explicacion: "",
+      },
+      {
+        tipo: "true_false", enunciado: "La Tierra es plana.", puntos: 1,
+        correcta: false, explicacion: "La Tierra es aproximadamente esférica.",
+      },
+      {
+        tipo: "short_answer", enunciado: "Escribe el símbolo químico del agua.", puntos: 1,
+        respuestas_aceptadas: ["H2O", "h2o"], sensible_mayusculas: false, calificar_automatico: true,
+      },
+      {
+        tipo: "map_pin", enunciado: "Ubica la capital de Colombia en el mapa.", puntos: 2,
+        centro: [-74.2973, 4.5709], zoom: 5,
+        marcadores: [
+          { lng: -74.0721, lat: 4.7110, etiqueta: "A", correcto: true },
+          { lng: -75.5636, lat: 6.2518, etiqueta: "B", correcto: false },
+          { lng: -76.5320, lat: 3.4516, etiqueta: "C", correcto: false },
+        ],
+      },
+    ],
+  };
+}
 
 // ─── QuestionForm ─────────────────────────────────────────────────────────────
 
@@ -739,6 +910,10 @@ export function QuizEditor({ contentId, classId, initialQuiz, initialQuestions, 
   const [published, setPublished] = useState(isPublished);
   const [initializing, startInit] = useTransition();
   const [publishing, startPublish] = useTransition();
+  const importInputRef = useRef<HTMLInputElement>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importMsg, setImportMsg] = useState<string | null>(null);
+  const [importing, startImport] = useTransition();
 
   useEffect(() => {
     if (!quiz) {
@@ -765,6 +940,43 @@ export function QuizEditor({ contentId, classId, initialQuiz, initialQuestions, 
     }));
     setQuestions(reordered);
     reorderQuestionsAction(reordered.map((q) => ({ id: q.id, order_index: q.order_index })));
+  }
+
+  function handleDownloadQuestionTemplate() {
+    const blob = new Blob([JSON.stringify(buildQuestionTemplate(), null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "plantilla-preguntas.json"; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function handleImportFile(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // permite reimportar el mismo archivo
+    if (!file || !quiz) return;
+    setImportError(null);
+    setImportMsg(null);
+    const text = await file.text();
+    const { questions: parsed, error } = parseImportedQuestions(text);
+    if (error) { setImportError(error); return; }
+    startImport(async () => {
+      const created: QuizQuestion[] = [];
+      let idx = questions.length;
+      for (const nq of parsed) {
+        const res = await upsertQuestionAction(quiz.id, classId, nq, idx++);
+        if (!res.ok) {
+          setImportError(`Se importaron ${created.length} de ${parsed.length}. Error en la pregunta ${created.length + 1}: ${res.error}`);
+          break;
+        }
+        created.push(res.question);
+      }
+      if (created.length) {
+        setQuestions((prev) => [...prev, ...created]);
+        if (created.length === parsed.length) {
+          setImportMsg(`${created.length} pregunta${created.length !== 1 ? "s" : ""} importada${created.length !== 1 ? "s" : ""}.`);
+        }
+      }
+    });
   }
 
   if (initializing || !quiz) {
@@ -831,10 +1043,37 @@ export function QuizEditor({ contentId, classId, initialQuiz, initialQuestions, 
 
       {tab === "questions" && (
         <div className="space-y-3">
-          {questions.length > 0 && (
+          <div className="flex items-center justify-between gap-3">
             <p className="text-caption text-ink-mute">
-              {questions.length} pregunta{questions.length !== 1 ? "s" : ""} · {totalPoints} punto{totalPoints !== 1 ? "s" : ""} en total
+              {questions.length > 0
+                ? `${questions.length} pregunta${questions.length !== 1 ? "s" : ""} · ${totalPoints} punto${totalPoints !== 1 ? "s" : ""} en total`
+                : "Aún no hay preguntas."}
             </p>
+            <div className="inline-flex items-center border border-subtle rounded-[6px] divide-x divide-subtle shrink-0">
+              <input ref={importInputRef} type="file" accept=".json,application/json"
+                onChange={handleImportFile} className="hidden" />
+              <button onClick={() => importInputRef.current?.click()} disabled={importing}
+                title="Importar preguntas desde un archivo JSON"
+                className="text-mono text-[12px] px-2.5 h-6 text-ink-soft hover:text-ink hover:bg-surface-alt transition-colors rounded-l-[5px] disabled:opacity-50">
+                {importing ? "Importando…" : "Importar"}
+              </button>
+              <button onClick={handleDownloadQuestionTemplate}
+                title="Descargar plantilla JSON de ejemplo"
+                className="text-mono text-[12px] px-2.5 h-6 text-ink-soft hover:text-ink hover:bg-surface-alt transition-colors rounded-r-[5px]">
+                Plantilla
+              </button>
+            </div>
+          </div>
+
+          {importError && (
+            <div className="px-3 py-2 bg-red-50 border border-red-200 rounded-[8px] text-[12px] text-red-600">
+              {importError}
+            </div>
+          )}
+          {importMsg && (
+            <div className="px-3 py-2 bg-bosque/10 border border-bosque/30 rounded-[8px] text-[12px] text-bosque">
+              {importMsg}
+            </div>
           )}
 
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>

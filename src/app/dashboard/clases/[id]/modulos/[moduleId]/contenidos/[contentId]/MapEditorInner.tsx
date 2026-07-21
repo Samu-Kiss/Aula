@@ -630,6 +630,23 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
     const d = 0.008; // ~900 m offset
     const sample = {
       type: "FeatureCollection",
+      // Los campos que empiezan con "_" son solo notas para quien edita la
+      // plantilla; el importador los ignora. JSON no admite comentarios, así
+      // que documentamos aquí qué campos se usan.
+      _instrucciones: {
+        formato: "GeoJSON estándar. Edita el arreglo 'features'; cada elemento es un punto, ruta o área.",
+        geometria: {
+          Point: "Un punto (marcador). coordinates: [lng, lat].",
+          LineString: "Una ruta. coordinates: [[lng, lat], [lng, lat], …].",
+          Polygon: "Un área. coordinates: [[[lng, lat], …, primer punto repetido]].",
+        },
+        properties: {
+          title: "Título de la tarjeta (también se acepta 'name' o 'label').",
+          description: "Texto de la tarjeta, opcional (también 'body' o 'text').",
+          color: "Color del elemento en formato hex #RRGGBB, opcional.",
+        },
+        nota: "Las coordenadas son [longitud, latitud] en grados decimales (¡lng primero!).",
+      },
       features: [
         {
           type: "Feature",

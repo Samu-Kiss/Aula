@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Maximize, Minimize } from "lucide-react";
+import { Maximize, Minimize, ChevronLeft, ChevronRight } from "lucide-react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { accentHex } from "@/lib/accentColors";
@@ -103,6 +103,80 @@ export function MapRenderer({ body, accent }: Props) {
   function areaColor(a: MapArea, i: number) {
     return a.color ?? MAP_PALETTE[i % MAP_PALETTE.length];
   }
+
+  // ── Navegación entre elementos con carta ────────────────────────────────────
+  // Lista ordenada (puntos → rutas → áreas) de todo lo que tiene tarjeta, es
+  // decir lo mismo que se puede abrir haciendo clic. Permite recorrer el mapa
+  // con los botones ‹ › o las flechas del teclado sin tener que buscar el
+  // siguiente elemento a mano.
+  function itemHasContent(card: MapCard) {
+    return !!(card.title || (card.body && Object.keys(card.body).length > 0));
+  }
+  const navItems: SelectedCard[] = [
+    ...markers.map((m, i): SelectedCard | null => {
+      const card = m.card ?? { title: m.label ?? "", body: {} };
+      return itemHasContent(card)
+        ? { type: "marker", index: i, card, color: markerColor(m, i), points: [[m.lng, m.lat]] }
+        : null;
+    }),
+    ...routes.map((r, i): SelectedCard | null => {
+      const card = r.card ?? { title: r.name ?? "", body: {} };
+      return itemHasContent(card)
+        ? { type: "route", index: i, card, color: routeColor(r, i), points: r.points }
+        : null;
+    }),
+    ...areas.map((a, i): SelectedCard | null => {
+      const card = a.card ?? { title: a.name ?? "", body: {} };
+      return itemHasContent(card)
+        ? { type: "area", index: i, card, color: areaColor(a, i), points: a.points }
+        : null;
+    }),
+  ].filter((x): x is SelectedCard => x !== null);
+
+  const navIndex = selectedCard
+    ? navItems.findIndex((n) => n.type === selectedCard.type && n.index === selectedCard.index)
+    : -1;
+
+  function centerOnCard(item: SelectedCard) {
+    const map = mapRef.current;
+    if (!map || !item.points.length) return;
+    const pts = item.points;
+    if (pts.length === 1) {
+      map.flyTo({ center: pts[0], zoom: Math.max(map.getZoom(), 14), speed: 1.4 });
+    } else {
+      const bounds = pts.reduce(
+        (b, pt) => b.extend(pt),
+        new mapboxgl.LngLatBounds(pts[0], pts[0])
+      );
+      map.fitBounds(bounds, { padding: 80, maxZoom: 16, duration: 700 });
+    }
+  }
+
+  function goToOffset(delta: number) {
+    if (navItems.length === 0) return;
+    // Sin selección previa, ‹ abre el último y › el primero. Con selección,
+    // avanza en circular para poder recorrer el mapa como una visita guiada.
+    const base = navIndex === -1 ? (delta > 0 ? -1 : 0) : navIndex;
+    const next = (((base + delta) % navItems.length) + navItems.length) % navItems.length;
+    const item = navItems[next];
+    setSelectedCard(item);
+    centerOnCard(item);
+  }
+
+  // Flechas ← → recorren los elementos mientras hay una carta abierta.
+  const goToRef = useRef(goToOffset);
+  useEffect(() => { goToRef.current = goToOffset; });
+  useEffect(() => {
+    if (!selectedCard) return;
+    function onKey(e: KeyboardEvent) {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      if (e.key === "ArrowRight") { e.preventDefault(); goToRef.current(1); }
+      else if (e.key === "ArrowLeft") { e.preventDefault(); goToRef.current(-1); }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [selectedCard]);
 
   const setSelectedRef = useRef(setSelectedCard);
   useEffect(() => { setSelectedRef.current = setSelectedCard; }, []);
@@ -341,20 +415,7 @@ export function MapRenderer({ body, accent }: Props) {
         <div ref={cardPanelRef} className={`bg-surface rounded-[12px] border border-subtle p-5 relative md:w-[340px] md:shrink-0 md:self-start md:overflow-y-auto ${isFullscreen ? "md:max-h-full shrink-0 max-h-[40vh] overflow-y-auto" : "md:max-h-[560px]"}`}>
           <div className="absolute top-3 right-3 flex items-center gap-1">
             <button
-              onClick={() => {
-                const map = mapRef.current;
-                if (!map || !selectedCard.points.length) return;
-                const pts = selectedCard.points;
-                if (pts.length === 1) {
-                  map.flyTo({ center: pts[0], zoom: Math.max(map.getZoom(), 14), speed: 1.4 });
-                } else {
-                  const bounds = pts.reduce(
-                    (b, pt) => b.extend(pt),
-                    new mapboxgl.LngLatBounds(pts[0], pts[0])
-                  );
-                  map.fitBounds(bounds, { padding: 80, maxZoom: 16, duration: 700 });
-                }
-              }}
+              onClick={() => centerOnCard(selectedCard)}
               title="Centrar en el mapa"
               className="w-7 h-7 flex items-center justify-center rounded-full text-ink-mute hover:bg-surface-alt hover:text-ink transition-colors text-[15px]"
               aria-label="Centrar en el mapa"
@@ -380,6 +441,23 @@ export function MapRenderer({ body, accent }: Props) {
           {selectedCard.card.title && <h3 className="text-h3 text-ink mb-3">{selectedCard.card.title}</h3>}
           {selectedCard.card.body && Object.keys(selectedCard.card.body).length > 0 && (
             <RichTextRenderer body={selectedCard.card.body} accent={accent} />
+          )}
+          {navItems.length > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-3">
+              <button
+                onClick={() => goToOffset(-1)}
+                title="Anterior (←)"
+                className="flex items-center gap-0.5 h-6 pl-1 pr-2 rounded-[6px] text-[11px] text-ink-soft hover:bg-surface-alt hover:text-ink transition-colors whitespace-nowrap"
+              ><ChevronLeft size={13} className="shrink-0" /> Anterior</button>
+              <span className="text-mono text-ink-mute text-[10px] tabular-nums select-none whitespace-nowrap shrink-0">
+                {navIndex === -1 ? "—" : navIndex + 1} / {navItems.length}
+              </span>
+              <button
+                onClick={() => goToOffset(1)}
+                title="Siguiente (→)"
+                className="flex items-center gap-0.5 h-6 pl-2 pr-1 rounded-[6px] text-[11px] text-ink-soft hover:bg-surface-alt hover:text-ink transition-colors whitespace-nowrap"
+              >Siguiente <ChevronRight size={13} className="shrink-0" /></button>
+            </div>
           )}
         </div>
       )}
