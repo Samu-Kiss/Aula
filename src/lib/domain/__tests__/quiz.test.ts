@@ -6,6 +6,8 @@ import {
   canSubmitAttempt,
   calculateAttemptScore,
   sanitizeQuestionForPublic,
+  sanitizeSnapshotForStudent,
+  sanitizeQuestionsForStudent,
 } from "../quiz";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -254,5 +256,65 @@ describe("sanitizeQuestionForPublic", () => {
     expect("accepted_answers" in sanitized).toBe(false);
     expect("case_sensitive" in sanitized).toBe(false);
     expect(sanitized.auto_grade).toBe(true);
+  });
+});
+
+// ─── sanitizeSnapshotForStudent (answer-key must never reach the browser) ───────
+
+describe("sanitizeSnapshotForStudent", () => {
+  it("strips is_correct from single/multi choice options but keeps id+text", () => {
+    const snap = {
+      options: [
+        { id: "a", text: "Uno", is_correct: true },
+        { id: "b", text: "Dos", is_correct: false },
+      ],
+      explanation: "porque sí",
+    };
+    const out = sanitizeSnapshotForStudent("single_choice", snap);
+    const opts = out.options as Record<string, unknown>[];
+    expect(opts).toEqual([
+      { id: "a", text: "Uno" },
+      { id: "b", text: "Dos" },
+    ]);
+    expect(opts.every((o) => !("is_correct" in o))).toBe(true);
+    expect("explanation" in out).toBe(false);
+  });
+
+  it("strips correct and explanation from true_false", () => {
+    const out = sanitizeSnapshotForStudent("true_false", { correct: true, explanation: "x" });
+    expect("correct" in out).toBe(false);
+    expect("explanation" in out).toBe(false);
+  });
+
+  it("strips accepted_answers from short_answer", () => {
+    const out = sanitizeSnapshotForStudent("short_answer", {
+      accepted_answers: ["Paris"],
+      case_sensitive: false,
+    });
+    expect("accepted_answers" in out).toBe(false);
+  });
+
+  it("strips correct_marker_id from map_pin but keeps markers", () => {
+    const out = sanitizeSnapshotForStudent("map_pin", {
+      center: [0, 0],
+      zoom: 5,
+      markers: [{ id: "m1", lng: 0, lat: 0 }],
+      correct_marker_id: "m1",
+    });
+    expect("correct_marker_id" in out).toBe(false);
+    expect(out.markers).toEqual([{ id: "m1", lng: 0, lat: 0 }]);
+  });
+
+  it("does not mutate the original snapshot", () => {
+    const snap = { options: [{ id: "a", text: "Uno", is_correct: true }] };
+    sanitizeSnapshotForStudent("single_choice", snap);
+    expect((snap.options[0] as Record<string, unknown>).is_correct).toBe(true);
+  });
+
+  it("sanitizeQuestionsForStudent maps over a list", () => {
+    const out = sanitizeQuestionsForStudent([
+      { type: "true_false", body_snapshot: { correct: false } },
+    ]);
+    expect("correct" in out[0].body_snapshot).toBe(false);
   });
 });

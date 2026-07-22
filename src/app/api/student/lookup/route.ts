@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 // GET /api/student/lookup?email=... — devuelve nombre/apellido si el estudiante existe
 export async function GET(request: NextRequest) {
@@ -9,6 +10,17 @@ export async function GET(request: NextRequest) {
   }
 
   const svc = createServiceClient();
+
+  // Endpoint sin autenticar que confirma si un correo existe y revela el nombre.
+  // Rate limit por IP para frenar la enumeración masiva de correos/PII.
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
+    "unknown";
+  const rl = await checkRateLimit(svc, ip, "student_lookup", 20, 60);
+  if (!rl.allowed) {
+    return NextResponse.json({}, { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } });
+  }
   const { data } = await svc
     .from("students")
     .select("first_name, last_name")

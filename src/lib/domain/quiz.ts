@@ -187,3 +187,58 @@ export function sanitizeQuestionForPublic(question: {
 
   return body;
 }
+
+/**
+ * Strip correct-answer data from an attempt question's `body_snapshot` before
+ * sending it to the student who is taking the quiz. The full snapshot (with the
+ * answer key) is kept server-side for auto-grading, but must never reach the
+ * browser during an in-progress attempt.
+ *
+ * Mirrors the `quiz_questions_public` DB view and covers `map_pin`, whose answer
+ * lives in `correct_marker_id`.
+ */
+export function sanitizeSnapshotForStudent(
+  type: string,
+  snapshot: Record<string, unknown>
+): Record<string, unknown> {
+  const body = { ...snapshot };
+
+  if (type === "single_choice" || type === "multi_choice") {
+    const opts = body.options as { id: string; text: string }[] | undefined;
+    const { explanation: _e, ...rest } = body;
+    void _e;
+    rest.options = opts?.map(({ id, text }) => ({ id, text })) ?? [];
+    return rest;
+  }
+
+  if (type === "true_false") {
+    const { correct: _c, explanation: _e, ...rest } = body;
+    void _c;
+    void _e;
+    return rest;
+  }
+
+  if (type === "short_answer") {
+    const { accepted_answers: _aa, ...rest } = body;
+    void _aa;
+    return rest;
+  }
+
+  if (type === "map_pin") {
+    const { correct_marker_id: _m, ...rest } = body;
+    void _m;
+    return rest;
+  }
+
+  return body;
+}
+
+/** Apply {@link sanitizeSnapshotForStudent} to a list of attempt questions. */
+export function sanitizeQuestionsForStudent<
+  T extends { type: string; body_snapshot: Record<string, unknown> }
+>(questions: T[]): T[] {
+  return questions.map((q) => ({
+    ...q,
+    body_snapshot: sanitizeSnapshotForStudent(q.type, q.body_snapshot),
+  }));
+}

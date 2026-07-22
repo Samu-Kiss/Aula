@@ -67,7 +67,7 @@ export async function updateCategoryAction(
     return { ok: false, error: `El peso total excedería 100% (resto: ${total.toFixed(1)}%)` };
   }
 
-  const { error } = await repo.updateCategory(categoryId, name, weight);
+  const { error } = await repo.updateCategory(categoryId, classId, name, weight);
   if (error) return { ok: false, error: error.message };
 
   revalidatePath(`/dashboard/clases/${classId}/calificaciones`);
@@ -83,7 +83,7 @@ export async function deleteCategoryAction(
   if (!svc) return { ok: false, error: "not_authenticated" };
 
   const repo = gradeRepo(svc);
-  const { error } = await repo.deleteCategory(categoryId);
+  const { error } = await repo.deleteCategory(categoryId, classId);
   if (error) return { ok: false, error: error.message };
 
   revalidatePath(`/dashboard/clases/${classId}/calificaciones`);
@@ -138,7 +138,7 @@ export async function updateItemAction(
   if (isNaN(maxScore) || maxScore <= 0) return { ok: false, error: "invalid_max_score" };
 
   const repo = gradeRepo(svc);
-  const { error } = await repo.updateItem(itemId, { title, maxScore, quizId, dueAt, missingPolicy });
+  const { error } = await repo.updateItem(itemId, classId, { title, maxScore, quizId, dueAt, missingPolicy });
   if (error) return { ok: false, error: error.message };
 
   revalidatePath(`/dashboard/clases/${classId}/calificaciones`);
@@ -154,7 +154,7 @@ export async function deleteItemAction(
   if (!svc) return { ok: false, error: "not_authenticated" };
 
   const repo = gradeRepo(svc);
-  const { error } = await repo.deleteItem(itemId);
+  const { error } = await repo.deleteItem(itemId, classId);
   if (error) return { ok: false, error: error.message };
 
   revalidatePath(`/dashboard/clases/${classId}/calificaciones`);
@@ -177,6 +177,13 @@ export async function upsertGradeAction(
   if (score !== null && (isNaN(score) || score < 0)) return { ok: false, error: "invalid_score" };
 
   const repo = gradeRepo(svc);
+
+  // El grade item debe pertenecer a esta clase (evita escribir notas en otra clase
+  // pasando un gradeItemId ajeno, ya que el service client ignora RLS).
+  if (!(await repo.itemBelongsToClass(gradeItemId, classId))) {
+    return { ok: false, error: "not_found" };
+  }
+
   const { error } = await repo.upsertGradeWithNotes(gradeItemId, studentId, score, notes);
   if (error) return { ok: false, error: error.message };
 

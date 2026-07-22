@@ -30,6 +30,27 @@ const DASH_SEQ = [
   [0,1.5,3,2.5],[0,2,3,2],[0,2.5,3,1.5],[0,3,3,1],[0,3.5,3,0.5],
 ];
 
+// Los pines se construyen con innerHTML e interpolan datos del contenido del
+// mapa (título de la tarjeta, color), que se guarda como JSON libre sin
+// validar. Sin escapar, un título como `<img src=x onerror=...>` o un color
+// que rompa el atributo style ejecutarían JS en el navegador del estudiante
+// (XSS almacenado). Estas dos funciones neutralizan ambos vectores.
+function escapeHtml(value: unknown): string {
+  return String(value ?? "").replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string)
+  );
+}
+
+function safeCssColor(value: unknown): string {
+  const s = typeof value === "string" ? value.trim() : "";
+  const ok =
+    /^#[0-9a-fA-F]{3,8}$/.test(s) ||
+    /^rgba?\(\s*[\d.,%\s/]+\)$/.test(s) ||
+    /^hsla?\(\s*[\d.,%\s/]+\)$/.test(s) ||
+    /^[a-zA-Z]{1,24}$/.test(s);
+  return ok ? s : "#1d4ed8";
+}
+
 export function MapRenderer({ body, accent }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cardPanelRef = useRef<HTMLDivElement>(null);
@@ -257,7 +278,7 @@ export function MapRenderer({ body, accent }: Props) {
         // Numbered waypoints
         route.points.forEach((pt, pi) => {
           const el = document.createElement("div");
-          el.innerHTML = `<div style="width:18px;height:18px;background:${color};border:2px solid white;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.2);font-size:9px;color:white;font-weight:bold">${pi + 1}</div>`;
+          el.innerHTML = `<div style="width:18px;height:18px;background:${safeCssColor(color)};border:2px solid white;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.2);font-size:9px;color:white;font-weight:bold">${pi + 1}</div>`;
           const m = new mapboxgl.Marker({ element: el, anchor: "center" }).setLngLat(pt).addTo(map);
           cleanup.push(() => m.remove());
         });
@@ -296,10 +317,10 @@ export function MapRenderer({ body, accent }: Props) {
         el.style.width = "28px";
         el.style.height = "28px";
         el.innerHTML = `
-          <div data-pin style="width:28px;height:28px;background:${color};border:3px solid white;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 6px rgba(0,0,0,0.25);cursor:${hasContent ? "pointer" : "default"}">
+          <div data-pin style="width:28px;height:28px;background:${safeCssColor(color)};border:3px solid white;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 6px rgba(0,0,0,0.25);cursor:${hasContent ? "pointer" : "default"}">
             <span style="transform:rotate(45deg);display:block;text-align:center;line-height:22px;color:white;font-size:11px;font-weight:bold">${i + 1}</span>
           </div>
-          ${card.title ? `<div style="position:absolute;left:32px;top:0;white-space:nowrap;background:white;border-radius:4px;padding:2px 6px;font-size:11px;color:#1A1814;box-shadow:0 1px 4px rgba(0,0,0,0.15);pointer-events:none">${card.title}</div>` : ""}
+          ${card.title ? `<div style="position:absolute;left:32px;top:0;white-space:nowrap;background:white;border-radius:4px;padding:2px 6px;font-size:11px;color:#1A1814;box-shadow:0 1px 4px rgba(0,0,0,0.15);pointer-events:none">${escapeHtml(card.title)}</div>` : ""}
         `;
         if (hasContent) {
           el.querySelector("[data-pin]")?.addEventListener("click", (e) => {

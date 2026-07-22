@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { presignUpload } from "@/lib/r2";
+import { keyReferencesOwnedContent } from "@/lib/auth/uploadKey";
 import { z } from "zod";
 
 const ALLOWED_FILE_TYPES = [
@@ -43,6 +44,12 @@ export async function POST(request: NextRequest) {
   }
 
   const { key, contentType, bucket } = parsed.data;
+
+  // La clave debe pertenecer a un contenido del propio profesor; si no, podría
+  // presignar un PUT sobre objetos de otro profesor y sobrescribirlos.
+  if (!(await keyReferencesOwnedContent(supabase, key, user.id))) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
 
   // Images can go to public bucket; other files must use private
   const isImage = contentType.startsWith("image/");

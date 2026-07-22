@@ -10,6 +10,7 @@ import { contentRepo } from "@/server/repositories/contentRepo";
 import { createClient } from "@/lib/supabase/server";
 import { ClassNav } from "@/components/public/ClassNav";
 import { AttemptView } from "@/components/quiz/AttemptView";
+import { sanitizeQuestionsForStudent } from "@/lib/domain/quiz";
 
 interface Props {
   params: Promise<{
@@ -89,7 +90,7 @@ export default async function AttemptPage({ params }: Props) {
       <div className="px-5 py-8 md:px-10 max-w-3xl mx-auto">
         <AttemptView
           attempt={attempt}
-          questions={questions}
+          questions={sanitizeQuestionsForStudent(questions)}
           initialAnswers={answers}
           quiz={quiz}
           student={student}

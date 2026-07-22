@@ -5,6 +5,7 @@ import { getStudentFromCookie } from "@/lib/auth/studentJwt";
 import { quizRepo } from "@/server/repositories/quizRepo";
 import { attemptRepo } from "@/server/repositories/attemptRepo";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { sanitizeQuestionsForStudent } from "@/lib/domain/quiz";
 
 function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
@@ -125,7 +126,7 @@ export async function POST(
 
       const response = NextResponse.json({
         attempt: existing,
-        questions,
+        questions: sanitizeQuestionsForStudent(questions),
         answers,
         session_token: sessionToken,
         resumed: true,
@@ -196,7 +197,7 @@ export async function POST(
         const as = await aRepo.listAnswers(retry.id);
         return NextResponse.json({
           attempt: retry,
-          questions: qs,
+          questions: sanitizeQuestionsForStudent(qs),
           answers: as,
           session_token: sessionToken,
           resumed: true,
@@ -213,7 +214,7 @@ export async function POST(
 
   const response = NextResponse.json({
     attempt,
-    questions: attemptQuestions,
+    questions: sanitizeQuestionsForStudent(attemptQuestions),
     answers: [],
     session_token: sessionToken,
     resumed: false,

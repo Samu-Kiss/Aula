@@ -34,8 +34,14 @@ export async function verifyStudentJwt(token: string): Promise<StudentPayload | 
   try {
     const { payload } = await jwtVerify(token, getSecret(), {
       issuer: process.env.STUDENT_JWT_ISSUER ?? "aula",
+      // Restringir explícitamente el algoritmo: sin esto un token con alg "none"
+      // o un algoritmo distinto podría intentar saltarse la verificación de firma.
+      algorithms: ["HS256"],
     });
-    return payload as unknown as StudentPayload;
+    if (typeof payload.student_id !== "string" || typeof payload.email !== "string") {
+      return null;
+    }
+    return { student_id: payload.student_id, email: payload.email };
   } catch {
     return null;
   }

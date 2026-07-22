@@ -16,6 +16,18 @@ export async function enrollInClassAction(
 
   const svc = createServiceClient();
 
+  // Solo se puede auto-inscribir en una clase existente y publicada. Sin esto,
+  // un estudiante podría invocar la acción con classIds arbitrarios y generar
+  // solicitudes/notificaciones basura a cualquier profesor.
+  const { data: klass } = await svc
+    .from("classes")
+    .select("id, is_published, deleted_at")
+    .eq("id", classId)
+    .maybeSingle();
+  if (!klass || !klass.is_published || klass.deleted_at) {
+    return { ok: false, error: "class_not_available" };
+  }
+
   // Enroll — find or insert to avoid upsert constraint issues
   const { data: existing } = await svc
     .from("class_students")

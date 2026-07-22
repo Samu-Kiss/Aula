@@ -13,19 +13,62 @@ export async function gradeAnswerAction(
   classId: string,
   attemptId: string
 ): Promise<{ ok: boolean; error?: string }> {
-  // Verificar que el profe está autenticado
+  // Verificar que el profe está autenticado y es dueño de la clase
   const authSupabase = await createClient();
   const { data: { user } } = await authSupabase.auth.getUser();
   if (!user) return { ok: false, error: "not_authenticated" };
 
+  const { data: cls } = await authSupabase
+    .from("classes")
+    .select("id")
+    .eq("id", classId)
+    .eq("professor_id", user.id)
+    .maybeSingle();
+  if (!cls) return { ok: false, error: "forbidden" };
+
   // Usar service client para escribir datos de estudiantes (RLS no permite al profe)
   const svc = createServiceClient();
+
+  // El intento debe pertenecer a un quiz de esta clase, y la respuesta al intento.
+  // Sin estas comprobaciones, cualquier profesor autenticado podría calificar
+  // respuestas de cualquier alumno en cualquier clase (el service client ignora RLS).
+  const { data: attemptRow } = await svc
+    .from("attempts")
+    .select("id, quiz_id")
+    .eq("id", attemptId)
+    .maybeSingle();
+  if (!attemptRow?.quiz_id) return { ok: false, error: "not_found" };
+
+  const { data: quizRow } = await svc
+    .from("quizzes")
+    .select("content_id")
+    .eq("id", attemptRow.quiz_id)
+    .maybeSingle();
+  const { data: contentRow } = quizRow?.content_id
+    ? await svc.from("contents").select("module_id").eq("id", quizRow.content_id).maybeSingle()
+    : { data: null };
+  const { data: moduleRow } = contentRow?.module_id
+    ? await svc.from("modules").select("class_id").eq("id", contentRow.module_id).maybeSingle()
+    : { data: null };
+
+  if (moduleRow?.class_id !== classId) {
+    return { ok: false, error: "not_found" };
+  }
+
+  const { data: answerRow } = await svc
+    .from("answers")
+    .select("id")
+    .eq("id", answerId)
+    .eq("attempt_id", attemptId)
+    .maybeSingle();
+  if (!answerRow) return { ok: false, error: "not_found" };
 
   // Actualizar la respuesta
   const { error: answerError } = await svc
     .from("answers")
     .update({ points_awarded: pointsAwarded, feedback, is_correct: pointsAwarded > 0 })
-    .eq("id", answerId);
+    .eq("id", answerId)
+    .eq("attempt_id", attemptId);
   if (answerError) return { ok: false, error: answerError.message };
 
   // Recalcular score del intento sumando todos los points_awarded

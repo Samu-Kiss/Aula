@@ -92,7 +92,7 @@ export async function setEnrollmentStatusAction(
   if (!svc) return { ok: false, error: "not_authenticated" };
 
   const repo = gradeRepo(svc);
-  const { error } = await repo.setEnrollmentStatus(enrollmentId, status);
+  const { error } = await repo.setEnrollmentStatus(enrollmentId, classId, status);
   if (error) return { ok: false, error: error.message };
 
   revalidatePath(`/dashboard/clases/${classId}/estudiantes`);
@@ -110,6 +110,14 @@ export async function updateStudentAction(
   if (!svc) return { ok: false, error: "not_authenticated" };
 
   const repo = gradeRepo(svc);
+
+  // El estudiante debe estar inscrito en esta clase para poder editar su nombre.
+  // `students` es global (una fila por email); sin esta comprobación un profesor
+  // podría renombrar a cualquier estudiante de la plataforma vía service client.
+  if (!(await repo.studentBelongsToClass(studentId, classId))) {
+    return { ok: false, error: "not_found" };
+  }
+
   const { error } = await repo.updateStudentProfile(studentId, firstName, lastName);
   if (error) return { ok: false, error: error.message };
 
@@ -135,7 +143,7 @@ export async function removeFromRosterAction(
     const { error } = await repo.blockImplicitStudent(classId, studentId);
     if (error) return { ok: false, error: error.message };
   } else {
-    const { error } = await repo.removeEnrollment(enrollmentId);
+    const { error } = await repo.removeEnrollment(enrollmentId, classId);
     if (error) return { ok: false, error: error.message };
   }
 

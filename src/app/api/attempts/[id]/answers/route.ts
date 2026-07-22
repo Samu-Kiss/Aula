@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getStudentFromCookie } from "@/lib/auth/studentJwt";
+import { isActiveAttemptSession } from "@/lib/auth/attemptSession";
 import { attemptRepo } from "@/server/repositories/attemptRepo";
 
 // POST /api/attempts/[id]/answers — batch autosave de respuestas
@@ -29,6 +30,11 @@ export async function POST(
   }
   if (attempt.status !== "in_progress") {
     return NextResponse.json({ error: "attempt_not_in_progress" }, { status: 409 });
+  }
+  // Solo la sesión de intento activa puede guardar (evita escrituras desde una
+  // segunda sesión/dispositivo abierto en paralelo sobre el mismo intento).
+  if (!(await isActiveAttemptSession(attemptId, attempt.attempt_session_token_hash))) {
+    return NextResponse.json({ error: "session_superseded" }, { status: 409 });
   }
 
   await aRepo.batchUpsertAnswers(

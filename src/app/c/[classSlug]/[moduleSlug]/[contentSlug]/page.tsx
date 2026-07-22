@@ -8,6 +8,7 @@ import { quizRepo } from "@/server/repositories/quizRepo";
 import { attemptRepo } from "@/server/repositories/attemptRepo";
 import { getStudentFromCookie } from "@/lib/auth/studentJwt";
 import { getStudentAccess, getStudentDisplayName } from "@/lib/auth/studentAccess";
+import { sanitizeQuestionsForStudent } from "@/lib/domain/quiz";
 import { ClassNav } from "@/components/public/ClassNav";
 import { StudentAccessGate } from "@/components/public/StudentAccessGate";
 import { RichTextRenderer } from "@/components/content/RichTextRenderer";
@@ -120,9 +121,16 @@ export default async function ContentPage({ params, searchParams }: Props) {
           svc.from("students").select("first_name, last_name, email").eq("id", attempt.student_id).single(),
         ]);
         const s = studentRow.data;
+        // El snapshot completo trae las respuestas correctas. Solo puede llegar al
+        // navegador cuando la política del quiz permite mostrarlas; si no, se envía
+        // sanitizado para no filtrar la clave de respuestas en el payload de la página.
+        const quizClosed = quiz?.closes_at ? new Date(quiz.closes_at) < new Date() : false;
+        const showAnswers =
+          quiz?.show_correct_answers === "after_submit" ||
+          (quiz?.show_correct_answers === "after_close" && quizClosed);
         resultData = {
           attempt,
-          questions,
+          questions: showAnswers ? questions : sanitizeQuestionsForStudent(questions),
           answers,
           studentName: {
             firstName: s?.first_name ?? "",

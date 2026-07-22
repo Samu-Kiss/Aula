@@ -24,6 +24,23 @@ function slugify(s: string) {
     .slice(0, 60);
 }
 
+// La política RLS de lectura pública devuelve módulos/contenidos publicados de
+// otros profesores. Estas comprobaciones evitan que acciones que leen por id y
+// luego tienen efectos secundarios (borrar objetos en R2, copiar borradores)
+// operen sobre recursos ajenos, aunque los UPDATE/INSERT los frene RLS.
+async function ownsContent(supabase: SupabaseClient, contentId: string, userId: string): Promise<boolean> {
+  const { data: c } = await supabase.from("contents").select("module_id").eq("id", contentId).maybeSingle();
+  if (!c?.module_id) return false;
+  return ownsModule(supabase, c.module_id, userId);
+}
+
+async function ownsModule(supabase: SupabaseClient, moduleId: string, userId: string): Promise<boolean> {
+  const { data: m } = await supabase.from("modules").select("class_id").eq("id", moduleId).maybeSingle();
+  if (!m?.class_id) return false;
+  const { data: cl } = await supabase.from("classes").select("professor_id").eq("id", m.class_id).maybeSingle();
+  return cl?.professor_id === userId;
+}
+
 export async function createModuleAction(classId: string, formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -98,6 +115,13 @@ export async function deleteContentAction(contentId: string, classId: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "No autenticado." };
+
+  // Sin esto, un profesor podría pasar el id de un contenido publicado ajeno y
+  // disparar el borrado de sus archivos/imágenes en R2 (el softDelete lo frena
+  // RLS, pero deleteObjects se ejecuta igual).
+  if (!(await ownsContent(supabase, contentId, user.id))) {
+    return { error: "No autorizado." };
+  }
 
   // Fetch content before deleting to collect R2 references
   const { data: content } = await supabase
@@ -344,6 +368,11 @@ export async function duplicateContentAction(contentId: string, moduleId: string
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "No autenticado." };
 
+  // Evitar copiar (y así exfiltrar el borrador de) un contenido ajeno.
+  if (!(await ownsContent(supabase, contentId, user.id))) {
+    return { error: "No autorizado." };
+  }
+
   const { data: source } = await supabase.from("contents").select("*").eq("id", contentId).single();
   if (!source) return { error: "Contenido no encontrado." };
 
@@ -375,6 +404,11 @@ export async function duplicateModuleAction(moduleId: string, classId: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "No autenticado." };
+
+  // Evitar copiar (y así exfiltrar los borradores de) un módulo ajeno.
+  if (!(await ownsModule(supabase, moduleId, user.id))) {
+    return { error: "No autorizado." };
+  }
 
   const { data: source } = await supabase.from("modules").select("*").eq("id", moduleId).single();
   if (!source) return { error: "Módulo no encontrado." };

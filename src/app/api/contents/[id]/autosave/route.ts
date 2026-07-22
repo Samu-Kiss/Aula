@@ -13,6 +13,27 @@ export async function POST(
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const { id } = await params;
+
+  // Verificar propiedad ANTES de tocar nada. La política RLS de lectura pública
+  // devuelve también contenidos publicados de otros profesores, así que sin este
+  // check un profesor podría pasar el id de un contenido ajeno y disparar el
+  // borrado de sus imágenes en R2 (deleteObjects más abajo), aunque el UPDATE lo
+  // bloquee RLS. Comprobamos que el contenido pertenezca a una clase suya.
+  const { data: contentOwn } = await supabase
+    .from("contents")
+    .select("module_id")
+    .eq("id", id)
+    .maybeSingle();
+  const { data: moduleOwn } = contentOwn?.module_id
+    ? await supabase.from("modules").select("class_id").eq("id", contentOwn.module_id).maybeSingle()
+    : { data: null };
+  const { data: classOwn } = moduleOwn?.class_id
+    ? await supabase.from("classes").select("professor_id").eq("id", moduleOwn.class_id).maybeSingle()
+    : { data: null };
+  if (classOwn?.professor_id !== user.id) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
   const body = await request.json();
   const parsed = autosaveContentSchema.safeParse(body);
   if (!parsed.success) {

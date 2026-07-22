@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getStudentFromCookie } from "@/lib/auth/studentJwt";
+import { isActiveAttemptSession } from "@/lib/auth/attemptSession";
 import { attemptRepo } from "@/server/repositories/attemptRepo";
 import { gradeRepo } from "@/server/repositories/gradeRepo";
 import { sendAttemptReceived } from "@/lib/email/sendAttemptReceived";
@@ -25,6 +26,11 @@ export async function POST(
   }
   if (attempt.status !== "in_progress") {
     return NextResponse.json({ error: "attempt_not_in_progress" }, { status: 409 });
+  }
+  // Solo la sesión de intento activa puede entregar (una segunda sesión abierta
+  // en paralelo sobre el mismo intento no puede finalizarlo).
+  if (!(await isActiveAttemptSession(attemptId, attempt.attempt_session_token_hash))) {
+    return NextResponse.json({ error: "session_superseded" }, { status: 409 });
   }
 
   // Cargar preguntas y respuestas
@@ -91,7 +97,11 @@ export async function POST(
     )
   );
 
-  // Marcar intento como submitted + score
+  // Marcar intento como submitted + score.
+  // La guarda `.eq("status", "in_progress")` hace la transición atómica: si dos
+  // peticiones concurrentes (p. ej. doble clic o dos sesiones) entran a la vez,
+  // solo una gana y finaliza el intento; la otra recibe 0 filas y sale sin
+  // volver a poblar la calificación ni reenviar correos/notificaciones.
   const maxScore = attempt.max_score ?? questions.reduce((acc, q) => acc + q.points, 0);
   const updated = await supabase
     .from("attempts")
@@ -102,8 +112,21 @@ export async function POST(
       max_score: maxScore,
     })
     .eq("id", attemptId)
+    .eq("status", "in_progress")
     .select()
-    .single();
+    .maybeSingle();
+
+  if (!updated.data) {
+    // Otra petición ya finalizó este intento. Devolver el estado actual sin
+    // duplicar efectos secundarios.
+    const { data: current } = await supabase.from("attempts").select().eq("id", attemptId).maybeSingle();
+    return NextResponse.json({
+      ok: true,
+      attempt: current,
+      score: current?.score ?? totalScore,
+      max_score: current?.max_score ?? maxScore,
+    });
+  }
 
   // Auto-populate grade_items + send confirmation email (best-effort)
   try {

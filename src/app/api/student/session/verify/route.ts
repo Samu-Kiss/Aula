@@ -3,6 +3,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { studentSessionVerifySchema } from "@/lib/schemas/student";
 import { hashCode } from "@/lib/auth/emailCode";
 import { signStudentJwt, buildStudentCookie } from "@/lib/auth/studentJwt";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 // POST /api/student/session/verify — verificar código y emitir cookie JWT
 export async function POST(request: NextRequest) {
@@ -18,6 +19,17 @@ export async function POST(request: NextRequest) {
   const { email, code, first_name, last_name, remember_me } = parsed.data;
   const codeHash = hashCode(code);
   const supabase = createServiceClient();
+
+  // Rate limiting: máx 10 intentos de verificación por email en 10 min.
+  // Sin esto, el código de 6 dígitos (900k combinaciones) es susceptible a
+  // fuerza bruta durante su ventana de validez.
+  const rl = await checkRateLimit(supabase, email, "verify_code", 10, 600);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "rate_limited", message: "Demasiados intentos. Espera unos minutos." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } }
+    );
+  }
 
   // Buscar el código más reciente válido para este email
   const { data: emailCode, error: codeError } = await supabase

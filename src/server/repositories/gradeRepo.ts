@@ -31,19 +31,21 @@ export function gradeRepo(supabase: SupabaseClient) {
     return { data, error };
   }
 
-  async function updateCategory(id: string, name: string, weight: number) {
+  async function updateCategory(id: string, classId: string, name: string, weight: number) {
     const { error } = await supabase
       .from("grade_categories")
       .update({ name, weight })
-      .eq("id", id);
+      .eq("id", id)
+      .eq("class_id", classId);
     return { error };
   }
 
-  async function deleteCategory(id: string) {
+  async function deleteCategory(id: string, classId: string) {
     const { error } = await supabase
       .from("grade_categories")
       .update({ deleted_at: new Date().toISOString() })
-      .eq("id", id);
+      .eq("id", id)
+      .eq("class_id", classId);
     return { error };
   }
 
@@ -98,6 +100,7 @@ export function gradeRepo(supabase: SupabaseClient) {
 
   async function updateItem(
     id: string,
+    classId: string,
     fields: {
       title?: string;
       maxScore?: number;
@@ -112,16 +115,80 @@ export function gradeRepo(supabase: SupabaseClient) {
     if ("quizId" in fields) payload.quiz_id = fields.quizId ?? null;
     if ("dueAt" in fields) payload.due_at = fields.dueAt ?? null;
     if (fields.missingPolicy !== undefined) payload.missing_policy = fields.missingPolicy;
-    const { error } = await supabase.from("grade_items").update(payload).eq("id", id);
+    const { error } = await supabase
+      .from("grade_items")
+      .update(payload)
+      .eq("id", id)
+      .eq("class_id", classId);
     return { error };
   }
 
-  async function deleteItem(id: string) {
+  async function deleteItem(id: string, classId: string) {
     const { error } = await supabase
       .from("grade_items")
       .update({ deleted_at: new Date().toISOString() })
-      .eq("id", id);
+      .eq("id", id)
+      .eq("class_id", classId);
     return { error };
+  }
+
+  /** True if the grade item exists in the given class (and is not deleted). */
+  async function itemBelongsToClass(gradeItemId: string, classId: string): Promise<boolean> {
+    const { data } = await supabase
+      .from("grade_items")
+      .select("id")
+      .eq("id", gradeItemId)
+      .eq("class_id", classId)
+      .is("deleted_at", null)
+      .maybeSingle();
+    return !!data;
+  }
+
+  /**
+   * True if the student is reachable from the class roster — either through an
+   * explicit `class_students` row, or implicitly by having a quiz attempt on a
+   * quiz that belongs to the class (the roster lists both kinds).
+   */
+  async function studentBelongsToClass(studentId: string, classId: string): Promise<boolean> {
+    const { data: explicit } = await supabase
+      .from("class_students")
+      .select("id")
+      .eq("class_id", classId)
+      .eq("student_id", studentId)
+      .maybeSingle();
+    if (explicit) return true;
+
+    // Implicit: student has an attempt on a quiz in one of this class's modules.
+    const { data: moduleRows } = await supabase
+      .from("modules")
+      .select("id")
+      .eq("class_id", classId);
+    const moduleIds = (moduleRows ?? []).map((m) => m.id);
+    if (moduleIds.length === 0) return false;
+
+    const { data: contentRows } = await supabase
+      .from("contents")
+      .select("id")
+      .in("module_id", moduleIds)
+      .eq("type", "quiz");
+    const contentIds = (contentRows ?? []).map((c) => c.id);
+    if (contentIds.length === 0) return false;
+
+    const { data: quizRows } = await supabase
+      .from("quizzes")
+      .select("id")
+      .in("content_id", contentIds);
+    const quizIds = (quizRows ?? []).map((q) => q.id);
+    if (quizIds.length === 0) return false;
+
+    const { data: attempt } = await supabase
+      .from("attempts")
+      .select("id")
+      .eq("student_id", studentId)
+      .in("quiz_id", quizIds)
+      .limit(1)
+      .maybeSingle();
+    return !!attempt;
   }
 
   // ── Grades ──────────────────────────────────────────────────────────────────
@@ -310,11 +377,16 @@ export function gradeRepo(supabase: SupabaseClient) {
     return { studentId: student.id };
   }
 
-  async function setEnrollmentStatus(enrollmentId: string, status: "active" | "inactive") {
+  async function setEnrollmentStatus(
+    enrollmentId: string,
+    classId: string,
+    status: "active" | "inactive"
+  ) {
     const { error } = await supabase
       .from("class_students")
       .update({ status })
-      .eq("id", enrollmentId);
+      .eq("id", enrollmentId)
+      .eq("class_id", classId);
     return { error };
   }
 
@@ -331,12 +403,13 @@ export function gradeRepo(supabase: SupabaseClient) {
     return { error };
   }
 
-  /** Hard-delete an explicit class_students row. */
-  async function removeEnrollment(enrollmentId: string) {
+  /** Hard-delete an explicit class_students row scoped to its class. */
+  async function removeEnrollment(enrollmentId: string, classId: string) {
     const { error } = await supabase
       .from("class_students")
       .delete()
-      .eq("id", enrollmentId);
+      .eq("id", enrollmentId)
+      .eq("class_id", classId);
     return { error };
   }
 
@@ -361,6 +434,8 @@ export function gradeRepo(supabase: SupabaseClient) {
     deleteCategory,
     listItems,
     findItemByQuiz,
+    itemBelongsToClass,
+    studentBelongsToClass,
     createItem,
     updateItem,
     deleteItem,

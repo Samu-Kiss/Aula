@@ -5,6 +5,24 @@ interface Props {
   accent?: string | null;
 }
 
+/**
+ * Only allow safe URL schemes for links authored in the rich-text editor.
+ * The content body is stored as free-form JSON, so a link `href` could be
+ * `javascript:...` (or `data:`/`vbscript:`), which would run as XSS when a
+ * student clicks it. Anything not clearly http(s)/mailto/tel/relative is
+ * dropped (rendered as a non-navigating anchor).
+ */
+function safeHref(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const href = value.trim();
+  if (href === "") return undefined;
+  // Relative or anchor/protocol-relative links are safe.
+  if (/^(\/|#|\.|\?)/.test(href)) return href;
+  if (/^(https?:|mailto:|tel:)/i.test(href)) return href;
+  // Reject javascript:, data:, vbscript:, and any other scheme.
+  return undefined;
+}
+
 export function RichTextRenderer({ body, accent }: Props) {
   const doc = body?.doc as { content?: TiptapNode[] } | undefined;
   if (!doc?.content) return null;
@@ -98,8 +116,9 @@ function TiptapNode({ node, inList }: { node: TiptapNode; inList?: boolean }) {
           else if (mark.type === "strike") el = <s>{el}</s>;
           else if (mark.type === "code") el = <code>{el}</code>;
           else if (mark.type === "link") {
+            const href = safeHref(mark.attrs?.href);
             el = (
-              <a href={mark.attrs?.href as string} target="_blank" rel="noopener noreferrer">
+              <a href={href} target="_blank" rel="noopener noreferrer nofollow">
                 {el}
               </a>
             );

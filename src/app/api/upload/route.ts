@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { putObject, R2_PUBLIC_URL } from "@/lib/r2";
+import { keyReferencesOwnedContent } from "@/lib/auth/uploadKey";
 
 // Allow large file uploads (up to 50 MB)
 export const maxDuration = 60;
@@ -69,6 +70,12 @@ export async function POST(request: NextRequest) {
 
   const safeFilename = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
   const key = `${prefix}${Date.now()}-${safeFilename}`;
+
+  // El prefix lo propone el cliente; exigir que la clave resultante referencie
+  // un contenido del propio profesor evita escribir bajo rutas de otras clases.
+  if (!(await keyReferencesOwnedContent(supabase, key, user.id))) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
 
   try {
     const buffer = Buffer.from(await file.arrayBuffer());

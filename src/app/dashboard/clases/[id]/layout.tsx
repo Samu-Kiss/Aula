@@ -24,8 +24,14 @@ export default async function ClassEditorLayout({ children, params }: Props) {
   const { id } = await params;
   const supabase = await createClient();
 
+  // `getById` se resuelve con RLS, cuya política de lectura pública también
+  // devuelve clases publicadas de otros profesores. Sin verificar propiedad, un
+  // profesor podría abrir el panel (roster, calificaciones, intentos) de una
+  // clase publicada ajena. Verificar el dueño protege todo el subárbol.
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) notFound();
   const cls = await classService(supabase).getById(id);
-  if (!cls) notFound();
+  if (!cls || cls.professor_id !== user.id) notFound();
 
   const modules = await moduleRepo(supabase).listByClass(id);
 

@@ -29,14 +29,34 @@ export default async function AttemptDetailPage({ params }: Props) {
   const { id: classId, attemptId } = await params;
   const supabase = await createClient();
 
+  // `getById` usa RLS, que también devuelve clases publicadas de OTROS profesores
+  // (política de lectura pública). Verificar propiedad explícitamente para que un
+  // profesor no pueda abrir la clase de otro.
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) notFound();
   const cls = await classService(supabase).getById(classId);
-  if (!cls) notFound();
+  if (!cls || cls.professor_id !== user.id) notFound();
 
   const svc = createServiceClient();
   const aRepo = attemptRepo(svc);
 
   const attempt = await aRepo.findById(attemptId);
   if (!attempt) notFound();
+
+  // El intento se carga con service client (ignora RLS); hay que confirmar que
+  // pertenece a un quiz de ESTA clase. Sin esto, cualquier profesor podría leer
+  // las respuestas y datos personales de un alumno de otra clase por attemptId.
+  const attemptClassId = attempt.quiz_id
+    ? await (async () => {
+        const { data: q } = await svc.from("quizzes").select("content_id").eq("id", attempt.quiz_id!).maybeSingle();
+        if (!q?.content_id) return null;
+        const { data: c } = await svc.from("contents").select("module_id").eq("id", q.content_id).maybeSingle();
+        if (!c?.module_id) return null;
+        const { data: m } = await svc.from("modules").select("class_id").eq("id", c.module_id).maybeSingle();
+        return m?.class_id ?? null;
+      })()
+    : null;
+  if (attemptClassId !== classId) notFound();
 
   const [questions, answers, events] = await Promise.all([
     aRepo.listQuestions(attemptId),

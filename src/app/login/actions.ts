@@ -3,12 +3,24 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
+/**
+ * Solo permite rutas internas como destino post-login. El `next` llega desde
+ * `/login?next=...` (campo oculto del formulario), así que sin validarlo un
+ * atacante podría enviar `/login?next=https://evil.com` y usar el login como
+ * open redirect para phishing. Se rechaza cualquier cosa que no sea una ruta
+ * relativa del propio sitio (debe empezar por "/" y no por "//").
+ */
+function safeNext(value: FormDataEntryValue | null): string {
+  const next = typeof value === "string" ? value : "";
+  return next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
+}
+
 export async function loginAction(formData: FormData) {
   const supabase = await createClient();
 
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
-  const next = (formData.get("next") as string) || "/dashboard";
+  const next = safeNext(formData.get("next"));
 
   let authFailed = false;
   let serviceDown = false;
