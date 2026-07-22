@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { moduleRepo } from "@/server/repositories/moduleRepo";
 import { contentRepo } from "@/server/repositories/contentRepo";
 import { CreateContentForm } from "./CreateContentForm";
 import { ContentList } from "./ContentList";
@@ -35,12 +34,13 @@ export default async function ModuleEditorPage({ params }: Props) {
   const { id: classId, moduleId } = await params;
   const supabase = await createClient();
 
-  const mod = await moduleRepo(supabase).findBySlug(classId, moduleId).catch(() => null);
-  // findBySlug uses slug, but here we have the ID — fetch by ID instead
+  // La ruta trae el ID del módulo (no el slug). Excluimos módulos borrados
+  // (soft-delete) para que un módulo eliminado no siga siendo accesible por URL.
   const { data: modData } = await supabase
     .from("modules")
     .select("*")
     .eq("id", moduleId)
+    .is("deleted_at", null)
     .single();
   if (!modData) notFound();
 

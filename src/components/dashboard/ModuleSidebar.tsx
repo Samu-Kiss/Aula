@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   DndContext,
   closestCenter,
@@ -27,10 +27,12 @@ function SortableModule({
   mod,
   classId,
   active,
+  onDeleted,
 }: {
   mod: Module;
   classId: string;
   active: boolean;
+  onDeleted: (id: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: mod.id });
@@ -57,6 +59,7 @@ function SortableModule({
     e.stopPropagation();
     startDelete(async () => {
       await deleteModuleAction(mod.id, classId);
+      onDeleted(mod.id);
     });
   }
 
@@ -152,12 +155,22 @@ interface Props {
 
 export function ModuleSidebar({ classId, initialModules }: Props) {
   const pathname = usePathname();
+  const router = useRouter();
   const [modules, setModules] = useState(initialModules);
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("");
   const [isPending, startTransition] = useTransition();
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+
+  function handleDeleted(id: string) {
+    setModules((prev) => prev.filter((m) => m.id !== id));
+    // Si el módulo borrado es el que se está viendo, la vista queda huérfana:
+    // volvemos a la vista general de la clase.
+    if (pathname.includes(id)) {
+      router.push(`/dashboard/clases/${classId}`);
+    }
+  }
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -261,6 +274,7 @@ export function ModuleSidebar({ classId, initialModules }: Props) {
                 mod={mod}
                 classId={classId}
                 active={pathname.includes(mod.id)}
+                onDeleted={handleDeleted}
               />
             ))}
           </SortableContext>
