@@ -789,7 +789,9 @@ export function MapEditorInner({ contentId, classId, initialDraft, isPublished, 
       {/* ── Map + Card panel (responsive: side-by-side on md+, stacked below) ── */}
       <div className="flex flex-col md:flex-row gap-3">
         {/* Map */}
-        <div ref={containerRef} className="md:flex-1 rounded-[12px] overflow-hidden border border-subtle"
+        {/* `isolate`: contiene los z-index internos de Mapbox (controles, marcadores,
+            popups) para que no suban al contexto de apilamiento raíz — ver MapRenderer. */}
+        <div ref={containerRef} className="md:flex-1 isolate rounded-[12px] overflow-hidden border border-subtle"
           style={{ height: 440 }} />
 
         {/* Card panel */}

@@ -91,7 +91,14 @@ body {
   background: color-mix(in srgb, var(--class-accent) 22%, transparent);
 }
 
-/* Noise texture sutil sobre todos los fondos.
+/* Escala de z-index del proyecto:
+     z-10  contenido (sidebar fija, cabeceras de tabla sticky, controles del mapa —
+           siempre dentro de un contenedor con `isolate`)
+     z-30  navegación sticky (ClassNav)
+     z-40  grano
+     z-50  modales, overlays y mapas a pantalla completa
+
+   Noise texture sutil sobre todos los fondos.
    z-index 40: por debajo de modales/overlays (z-50+) para no granular
    diálogos, mapas a pantalla completa ni QR ampliados. */
 body::after {

@@ -399,10 +399,13 @@ export function MapRenderer({ body, accent }: Props) {
       }
     >
       <div className={`flex flex-col md:flex-row gap-4 items-stretch ${isFullscreen ? "flex-1 min-h-0" : ""}`}>
-      {/* Map — containerRef goes on this div so Mapbox reads correct dimensions */}
+      {/* Map — containerRef goes on this div so Mapbox reads correct dimensions.
+          `isolate` es imprescindible: sin él los z-index de los botones y de los
+          controles internos de Mapbox suben al contexto de apilamiento raíz y se
+          pintan encima del nav sticky al hacer scroll. */}
       <div
         ref={containerRef}
-        className="relative flex-1 min-w-0 rounded-[12px] overflow-hidden shadow-sm"
+        className="relative isolate flex-1 min-w-0 rounded-[12px] overflow-hidden shadow-sm"
         style={isFullscreen ? { minHeight: 0 } : { height: 560 }}
       >
         <button
