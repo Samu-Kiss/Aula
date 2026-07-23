@@ -1,7 +1,7 @@
 import type React from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Lock } from "lucide-react";
+import { Lock, Eye } from "lucide-react";
 import { formatDate } from "@/lib/dates";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
@@ -44,6 +44,8 @@ export default async function ClassLandingPage({ params }: Props) {
     getStudentAccess(cls.id),
   ]);
   const student = access.student;
+  // Profesor dueño previsualizando la vista pública (sin identidad de estudiante).
+  const isProfessorPreview = access.state === "approved" && access.student === null;
   const enrollmentStatus: EnrollmentStatus | null =
     access.state === "approved"
       ? "active"
@@ -111,14 +113,24 @@ export default async function ClassLandingPage({ params }: Props) {
         <hr className="rule mt-10" />
       </header>
 
-      {/* Self-enroll banner */}
+      {/* Self-enroll banner — o aviso de vista previa para el profesor */}
       <section className="px-6 pb-8 md:px-12 max-w-4xl mx-auto">
-        <SelfEnrollBanner
-          classId={cls.id}
-          existingEmail={student?.email ?? null}
-          existingName={studentName}
-          enrollmentStatus={enrollmentStatus}
-        />
+        {isProfessorPreview ? (
+          <div className="flex items-center gap-3 py-3 px-4 bg-surface-alt rounded-[10px]">
+            <Eye size={16} className="text-ink-mute shrink-0" aria-hidden />
+            <p className="text-body text-ink-soft">
+              <span className="text-ink font-medium">Vista previa.</span> Estás viendo
+              esta clase como la ve un estudiante.
+            </p>
+          </div>
+        ) : (
+          <SelfEnrollBanner
+            classId={cls.id}
+            existingEmail={student?.email ?? null}
+            existingName={studentName}
+            enrollmentStatus={enrollmentStatus}
+          />
+        )}
       </section>
 
       {/* Módulos — índice de libro: filas separadas por hairlines */}
